@@ -1,8 +1,14 @@
 from pathlib import Path
+import json, base64
 ROOT=Path(__file__).parent
 html=(ROOT/'page.html').read_text()
-code='\n;\n'.join((ROOT/f).read_text() for f in ['core.js','viewer.js','territory-painter.js','app.js'])
+files=['packages/core/index.js','packages/ui/tree-menu.js','packages/ui/windows.js','packages/ui/map-view.js','packages/ui/index.js','packages/platform/browser.js','extensions/nations.js','extensions/history.js','extensions/files.js','app.js']
+code='\n;\n'.join((ROOT/f).read_text() for f in files)
 assert '</script' not in code.lower()
-html=html.replace('/*__CSS__*/',(ROOT/'style.css').read_text()).replace('/*__DATA__*/',(ROOT/'default-project.json').read_text().replace('<','\\u003c')).replace('/*__JS__*/',code)
+data=json.loads((ROOT/'default-project.json').read_text())
+original=ROOT/'assets'/'original-map.png'
+if not data.get('originalImage') and original.exists(): data['originalImage']='data:image/png;base64,'+base64.b64encode(original.read_bytes()).decode()
+elif not data.get('originalImage'): raise FileNotFoundError('Add originalImage to default-project.json.')
+html=html.replace('/*__CSS__*/',(ROOT/'style.css').read_text()).replace('/*__DATA__*/',json.dumps(data,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')).replace('/*__JS__*/',code)
 (ROOT/'dist'/'index.html').write_text(html)
 print(f'Built standalone HTML: {len(html.encode()):,} bytes')

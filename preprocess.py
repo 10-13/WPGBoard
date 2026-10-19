@@ -19,7 +19,14 @@ def data_url(image):
 
 
 def main():
-    original = Image.open(SOURCE).convert('RGB')
+    source_image = Image.open(SOURCE)
+    original = source_image.convert('RGB')
+    if source_image.format == 'PNG':
+        original_bytes = SOURCE.read_bytes()
+    else:
+        original_stream = BytesIO()
+        original.save(original_stream, format='PNG')
+        original_bytes = original_stream.getvalue()
     pixels = np.asarray(original)
     # The original has exact gray land, black borders and blue water.
     mask = np.all(pixels == (128, 128, 128), axis=2)
@@ -46,9 +53,10 @@ def main():
     styled[mask] = (246, 242, 231)
     project = {
         'schemaVersion': 1, 'saveId': 'atlas-default-v1',
-        'title': 'Новая кампания', 'mapName': 'Пустая карта.png',
+        'title': 'Новая кампания', 'mapName': SOURCE.name,
         'width': original.width, 'height': original.height,
         'baseImage': data_url(Image.fromarray(styled)),
+        'originalImage': 'data:image/png;base64,' + base64.b64encode(original_bytes).decode(),
         'indexImage': data_url(Image.fromarray(encoded)),
         'provinces': provinces, 'owners': {}, 'regionAssignments': {}, 'provinceNames': {},
         'nations': [
@@ -58,6 +66,8 @@ def main():
         ], 'regions': [],
     }
     (ROOT / 'default-project.json').write_text(json.dumps(project, ensure_ascii=False, separators=(',', ':')))
+    (ROOT / 'assets').mkdir(exist_ok=True)
+    (ROOT / 'assets' / 'original-map.png').write_bytes(original_bytes)
     Image.fromarray(styled).resize((1872,1000)).save(ROOT / 'map-preview.png')
     print(f'{count} provinces, {original.width}×{original.height}; land coverage {int(mask.sum()):,} pixels')
     assert sum(p['area'] for p in provinces) == int(mask.sum())
