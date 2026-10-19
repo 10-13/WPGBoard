@@ -2,7 +2,7 @@ from pathlib import Path
 import json, base64
 ROOT=Path(__file__).parent
 html=(ROOT/'page.html').read_text()
-files=['packages/core/index.js','packages/ui/tree-menu.js','packages/ui/windows.js','packages/ui/map-view.js','packages/ui/index.js','packages/platform/browser.js','extensions/nations.js','extensions/history.js','extensions/files.js','app.js']
+files=['packages/core/index.js','packages/ui/tree-menu.js','packages/ui/windows.js','packages/ui/map-view.js','packages/ui/index.js','packages/platform/browser.js','extensions/nation-borders.js','extensions/nations.js','extensions/history.js','extensions/files.js','app.js']
 code='\n;\n'.join((ROOT/f).read_text() for f in files)
 assert '</script' not in code.lower()
 data=json.loads((ROOT/'default-project.json').read_text())

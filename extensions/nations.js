@@ -39,7 +39,7 @@
   }
   class NationPainter {
     constructor(ctx, model) {
-      this.state = ctx.state; this.model = model; this.layer = ctx.layer({ id: 'ownership', order: 10 });
+      this.state = ctx.state; this.ui = ctx.ui; this.model = model; this.layer = ctx.layer({ id: 'ownership', order: 10 }); this.borderLayer = ctx.layer({ id: 'internal-borders', order: 11 });
       this.state.on('change', e => this.update(e), { signal: ctx.signal }); ctx.ui.on('map:ready', () => this.drawAll(), { signal: ctx.signal }); this.drawAll();
     }
     drawRegion(id) {
@@ -48,12 +48,22 @@
       if (validColor(color)) ctx.fillStyle = color;
       index.forEachRun(id, (start, length) => { const x = start % index.width, y = Math.floor(start / index.width); if (validColor(color)) ctx.fillRect(x, y, length, 1); else ctx.clearRect(x, y, length, 1); });
     }
-    drawAll() { this.layer.context.clearRect(0, 0, this.layer.canvas.width, this.layer.canvas.height); for (const id of Object.keys(this.model.data.owners)) this.drawRegion(Number(id)); }
-    update({ before, after }) {
-      const old = before.meta.nations || EMPTY, next = after.meta.nations || EMPTY;
-      for (const id of new Set([...Object.keys(old.owners || {}), ...Object.keys(next.owners || {})])) {
-        if (old.owners?.[id] !== next.owners?.[id] || old.items?.[old.owners?.[id]]?.color !== next.items?.[next.owners?.[id]]?.color) this.drawRegion(Number(id));
+    drawAll() {
+      const index = this.state.regionIndex;
+      if (this.borderIndex !== index) {
+        const source = document.createElement('canvas'); source.width = index.width; source.height = index.height;
+        try { const context = source.getContext('2d', { willReadFrequently: true }); context.drawImage(this.ui.viewport.originalImage, 0, 0); this.borders = new root.AtlasExtensions.NationBorders(index, context.getImageData(0, 0, index.width, index.height).data); this.borderIndex = index; }
+        finally { source.width = source.height = 1; }
       }
+      this.layer.context.clearRect(0, 0, this.layer.canvas.width, this.layer.canvas.height); for (const id of Object.keys(this.model.data.owners)) this.drawRegion(Number(id));
+      this.borderLayer.context.clearRect(0, 0, this.borderLayer.canvas.width, this.borderLayer.canvas.height); this.borders.redraw(this.borderLayer.context, this.model.data);
+    }
+    update({ before, after }) {
+      const old = before.meta.nations || EMPTY, next = after.meta.nations || EMPTY, changed = [];
+      for (const id of new Set([...Object.keys(old.owners || {}), ...Object.keys(next.owners || {})])) {
+        if (old.owners?.[id] !== next.owners?.[id] || old.items?.[old.owners?.[id]]?.color !== next.items?.[next.owners?.[id]]?.color) { this.drawRegion(Number(id)); changed.push(Number(id)); }
+      }
+      this.borders?.redraw(this.borderLayer.context, next, changed);
     }
   }
   const definition = {

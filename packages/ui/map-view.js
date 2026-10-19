@@ -19,11 +19,13 @@
     }
     async load() {
       const generation = ++this.#loadGeneration; this.ready = false;
-      const map = this.state.map, image = new Image(); image.src = this.baseStyle === 'light' && map.displayImage ? map.displayImage : map.original.dataURL;
-      await image.decode(); if (generation !== this.#loadGeneration) return;
-      this.image = image; this.canvas.width = map.original.width; this.canvas.height = map.original.height; this.ctx.drawImage(image, 0, 0);
+      const map = this.state.map, original = new Image(); original.src = map.original.dataURL;
+      const image = this.baseStyle === 'light' && map.displayImage ? new Image() : original;
+      if (image !== original) image.src = map.displayImage;
+      await Promise.all([original.decode(), image === original ? null : image.decode()]); if (generation !== this.#loadGeneration) return;
+      this.originalImage = original; this.image = image; this.canvas.width = map.original.width; this.canvas.height = map.original.height; this.ctx.imageSmoothingEnabled = false; this.ctx.drawImage(image, 0, 0);
       this.stage.style.width = image.width + 'px'; this.stage.style.height = image.height + 'px';
-      for (const layer of this.#layers.values()) { layer.canvas.width = image.width; layer.canvas.height = image.height; }
+      for (const layer of this.#layers.values()) { layer.canvas.width = image.width; layer.canvas.height = image.height; layer.context.imageSmoothingEnabled = false; }
       this.selectedId = null; this.hoverId = null; this.hoverCanvas.width = 1; this.selectedCanvas.width = 1; this.cancel(); this.ready = true; this.fit();
       this.emit('ready', { viewport: this }); this.input.emit('selection:change', { id: null, region: null });
     }
@@ -34,9 +36,10 @@
       canvas.width = this.canvas.width; canvas.height = this.canvas.height; this.stage.append(canvas);
       const dispose = () => { canvas.remove(); this.#layers.delete(id); signal?.removeEventListener('abort', dispose); };
       const layer = { canvas, context: canvas.getContext('2d', { willReadFrequently: true }), dispose, order };
+      layer.context.imageSmoothingEnabled = false;
       this.#layers.set(id, layer); signal?.addEventListener('abort', dispose, { once: true }); if (signal?.aborted) dispose(); return layer;
     }
-    exportCanvas() { const out = document.createElement('canvas'); out.width = this.canvas.width; out.height = this.canvas.height; const ctx = out.getContext('2d'); ctx.drawImage(this.canvas, 0, 0); for (const layer of [...this.#layers.values()].sort((a, b) => a.order - b.order)) ctx.drawImage(layer.canvas, 0, 0); if (this.showIds) this.#drawIds(ctx, 1, 0, 0, out.width, out.height, 14); return out; }
+    exportCanvas() { const out = document.createElement('canvas'); out.width = this.canvas.width; out.height = this.canvas.height; const ctx = out.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.drawImage(this.canvas, 0, 0); for (const layer of [...this.#layers.values()].sort((a, b) => a.order - b.order)) ctx.drawImage(layer.canvas, 0, 0); if (this.showIds) this.#drawIds(ctx, 1, 0, 0, out.width, out.height, 14); return out; }
     local(e) { const r = this.element.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
     world(p) { return { x: (p.x - this.tx) / this.scale, y: (p.y - this.ty) / this.scale }; }
     fitScale() { return Math.max(.01, Math.min((this.element.clientWidth - 28) / this.canvas.width, (this.element.clientHeight - 56) / this.canvas.height)); }
