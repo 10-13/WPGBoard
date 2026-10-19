@@ -1,0 +1,6 @@
+_qa.html
+dist/_qa.html
+map-preview.png
+upload-fixture.png
+__pycache__/
+*.tar.gz

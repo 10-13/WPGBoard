@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#192d35">
+<meta name="description" content="АТЛАС — карта вашей военно-политической игры. Назначайте провинции нациям, создавайте регионы и экспортируйте карту.">
+<title>АТЛАС — редактор ВПИ</title>
+<style>/*__CSS__*/</style>
+</head>
+<body>
+<header class="app-header">
+  <a class="brand" href="#" aria-label="АТЛАС, главная"><span class="brand-mark">✧</span><span>АТЛАС<span class="brand-caption">ВОЕННО-ПОЛИТИЧЕСКАЯ ИГРА</span></span></a>
+  <div class="header-project"><span class="live-dot"></span><span id="header-title">Новая кампания</span><span class="local-badge">Локальная партия</span></div>
+  <div class="header-actions"><button id="file-menu-button" class="button ghost" aria-expanded="false" aria-controls="file-menu"><span data-icon="folder"></span>Файл<span data-icon="chevron"></span></button><button id="export-png" class="button primary"><span data-icon="download"></span><span>Экспорт PNG</span></button></div>
+  <div id="file-menu" class="dropdown" hidden>
+    <button id="save-json"><span data-icon="save"></span><span>Сохранить партию<small>JSON · карта и все назначения</small></span></button>
+    <button id="open-json"><span data-icon="folder"></span><span>Открыть партию<small>Продолжить из файла JSON</small></span></button>
+    <button id="save-html"><span data-icon="share"></span><span>HTML для друзей<small>Один файл · откроется без установки</small></span></button>
+    <div class="menu-separator"></div>
+    <button id="upload-map"><span data-icon="upload"></span><span>Загрузить другую карту<small>Изображение с замкнутыми границами</small></span></button>
+  </div>
+</header>
+<div class="app-layout">
+<aside class="sidebar">
+  <div class="campaign-block"><div class="eyebrow">ВАШ МИР · ВАШИ ПРАВИЛА</div><label class="sr-only" for="campaign-title">Название кампании</label><input id="campaign-title" maxlength="70" value="Новая кампания" title="Переименовать кампанию"><div class="map-caption"><span data-icon="globe"></span><span id="map-name">Пустая карта.png</span></div></div>
+  <div class="sidebar-scroll">
+    <section class="nation-section"><div class="section-heading"><h2>Нации <span id="nation-count" class="counter">3</span></h2><button id="add-nation" class="icon-button" title="Создать нацию" aria-label="Создать нацию"><span data-icon="plus"></span></button></div><p class="section-hint">Выберите нацию и нажмите на провинцию.</p><div id="nation-list" class="nation-list"></div><button id="add-nation-wide" class="add-button"><span data-icon="plus"></span>Создать нацию</button><div class="neutral-row"><span class="neutral-dot"></span><span>Свободные территории</span><strong id="neutral-count">—</strong></div></section>
+    <section class="regions-section"><div class="section-heading"><h2>Регионы <span id="region-count" class="counter">0</span></h2><button id="add-region" class="icon-button" title="Создать регион" aria-label="Создать регион"><span data-icon="plus"></span></button></div><p class="section-hint">Объединяйте провинции в свои группы.</p><div id="region-list"></div></section>
+    <section class="province-section"><div class="section-heading"><h2>Провинция</h2><span id="selected-id" class="province-id">НЕ ВЫБРАНА</span></div><div id="province-empty" class="empty-province"><span data-icon="crosshair"></span><p>Нажмите на сушу,<br>чтобы увидеть подробности.</p></div><div id="province-details" hidden><label>Название<input id="province-name" placeholder="Без названия" maxlength="80"></label><label>Владелец<select id="province-owner"></select></label><label>Регион<select id="province-region"></select></label><button id="paint-selected-region" class="add-button" hidden><span data-icon="brush"></span>Закрасить весь регион</button><p class="province-meta" id="province-meta"></p></div></section>
+  </div>
+  <div class="sidebar-footer"><span class="save-dot" id="save-dot"></span><div><span id="save-status">Подготовка карты…</span><small>Изменения хранятся в этом браузере</small></div></div>
+</aside>
+<main class="workspace">
+  <div class="map-toolbar"><button id="toggle-sidebar" class="icon-button sidebar-toggle" title="Скрыть или показать панель наций" aria-label="Панель наций" aria-expanded="true"><span data-icon="layers"></span></button><div class="tool-group" role="group" aria-label="Инструмент"><button class="tool active" data-tool="paint" aria-pressed="true" title="Закрасить (B)"><span data-icon="brush"></span><span>Закрасить</span></button><button class="tool" data-tool="inspect" aria-pressed="false" title="Выбрать (I)"><span data-icon="cursor"></span><span>Выбрать</span></button><button class="tool" data-tool="erase" aria-pressed="false" title="Освободить (E)"><span data-icon="eraser"></span><span>Стереть</span></button><button class="tool" data-tool="pan" aria-pressed="false" title="Перемещение (H)"><span data-icon="hand"></span></button></div><div class="toolbar-divider"></div><button id="undo" class="icon-button" title="Отменить (Ctrl / ⌘ Z)" aria-label="Отменить" disabled><span data-icon="undo"></span></button><button id="redo" class="icon-button" title="Повторить (Ctrl / ⌘ Shift Z)" aria-label="Повторить" disabled><span data-icon="redo"></span></button><label class="numbers-switch"><input id="show-ids" type="checkbox"><span>#</span><span>Номера</span></label><button id="help" class="icon-button help-button" title="Как пользоваться" aria-label="Как пользоваться"><span data-icon="help"></span></button></div>
+  <div id="viewport" tabindex="0" aria-label="Карта провинций. Тяните для перемещения, колесо для масштаба; плюс и минус на клавиатуре меняют масштаб.">
+    <div class="map-heading"><span class="eyebrow">ПОЛИТИЧЕСКАЯ КАРТА</span><span id="map-summary">Индексируем мир</span></div>
+    <div class="compass" aria-hidden="true"><span>N</span><div>✧</div></div>
+    <div id="map-stage"><canvas id="map-canvas"></canvas><canvas id="selection-canvas" class="province-overlay"></canvas><canvas id="hover-canvas" class="province-overlay"></canvas></div>
+    <canvas id="numbers-canvas" aria-hidden="true"></canvas>
+    <div id="map-tooltip" role="status" hidden></div>
+    <div class="map-bottom-left"><div class="map-legend"><span id="active-color"></span><span id="active-nation">Выберите нацию</span></div><span class="map-instruction">Клик — действие · тяните — перемещение · колесо — масштаб</span></div>
+    <div class="zoom-controls"><button id="zoom-out" aria-label="Уменьшить" title="Уменьшить (−)"><span data-icon="minus"></span></button><span id="zoom-level">100%</span><button id="zoom-in" aria-label="Увеличить" title="Увеличить (+)"><span data-icon="plus"></span></button><span class="zoom-divider"></span><button id="fit-map" aria-label="Показать всю карту" title="Вся карта (0)"><span data-icon="fit"></span></button></div>
+    <div id="loading-overlay" class="loading-overlay"><span class="loader"></span><h2 id="loading-title">Собираем ваш мир</h2><p id="loading-detail">Загрузка карты и индекса провинций…</p><button id="recover-default" class="button" hidden>Открыть исходную карту</button></div>
+  </div>
+  <footer class="status-bar"><span><span class="status-dot"></span><span id="status-left">Подготовка</span></span><span id="coords">X — &nbsp; Y —</span><span id="dimensions">5616 × 3000 px</span></footer>
+</main>
+</div>
+<div id="toast" class="toast" role="status" hidden></div>
+<dialog id="nation-dialog"><form id="nation-form"><div class="dialog-heading"><span class="eyebrow">ПОЛИТИЧЕСКАЯ КАРТА</span><button type="button" class="icon-button" data-close aria-label="Закрыть"><span data-icon="close"></span></button></div><h2 id="nation-dialog-title">Новая нация</h2><p>Название и цвет появятся в списке и на карте.</p><label>Название<input id="nation-name" maxlength="70" required placeholder="Например, Северный союз"></label><label>Цвет территории</label><div class="color-picker"><input id="nation-color" type="color" value="#bd745e" aria-label="Цвет нации"><span id="color-value">#BD745E</span><div id="color-presets"></div></div><div class="dialog-actions"><button type="button" id="delete-nation" class="button danger" hidden>Удалить нацию</button><button type="button" class="button ghost" data-close>Отмена</button><button type="submit" class="button primary">Сохранить</button></div></form></dialog>
+<dialog id="region-dialog"><form id="region-form"><div class="dialog-heading"><span class="eyebrow">ГРУППА ПРОВИНЦИЙ</span><button type="button" class="icon-button" data-close aria-label="Закрыть"><span data-icon="close"></span></button></div><h2 id="region-dialog-title">Новый регион</h2><p>После создания выберите провинцию и назначьте ей регион в панели слева.</p><label>Название<input id="region-name" maxlength="70" required placeholder="Например, Северное побережье"></label><div class="dialog-actions"><button type="button" id="delete-region" class="button danger" hidden>Удалить регион</button><button type="button" class="button ghost" data-close>Отмена</button><button type="submit" class="button primary">Сохранить</button></div></form></dialog>
+<dialog id="map-dialog"><form id="map-form"><div class="dialog-heading"><span class="eyebrow">ИМПОРТ ИЗОБРАЖЕНИЯ</span><button type="button" class="icon-button" data-close aria-label="Закрыть"><span data-icon="close"></span></button></div><h2>Загрузить карту</h2><p>Каждая замкнутая область одного цвета станет провинцией. Лучше всего подходит PNG с чёткими границами без разрывов.</p><label class="file-drop">Изображение карты<input id="map-file" type="file" accept="image/png,image/jpeg,image/webp" required></label><div class="map-import-fields"><label>Цвет суши<input id="land-color" type="color" value="#808080"></label><label>Допуск цвета<input id="color-tolerance" type="number" min="0" max="80" value="12"></label></div><p class="notice">Откроется новая карта. Чтобы позже вернуться к текущей партии, сохраните её в JSON через меню «Файл» перед загрузкой.</p><div class="dialog-actions"><button type="button" class="button ghost" data-close>Отмена</button><button class="button primary" type="submit">Разобрать на провинции</button></div></form></dialog>
+<dialog id="help-dialog"><div class="dialog-heading"><span class="eyebrow">БЫСТРЫЙ СТАРТ</span><button class="icon-button" data-close aria-label="Закрыть"><span data-icon="close"></span></button></div><h2>Мир начинается с карты.</h2><div class="help-step"><strong>01</strong><div><h3>Выберите нацию</h3><p>Нажмите на нацию слева, затем на провинцию. Для просмотра без закрашивания включите «Выбрать».</p></div></div><div class="help-step"><strong>02</strong><div><h3>Исследуйте территории</h3><p>Тяните карту для перемещения, вращайте колесо для масштаба. На сенсорном экране используйте два пальца для масштаба.</p></div></div><div class="help-step"><strong>03</strong><div><h3>Сохраните и поделитесь</h3><p>PNG — готовая картинка. JSON — редактируемая партия. «HTML для друзей» — карта и редактор в одном файле.</p></div></div><div class="help-note">Каждый игрок работает со своей копией. Совместной синхронизации в этой версии нет. Номера провинций постоянны в пределах одной карты. Границы и отдельные острова определяются по исходному изображению.</div><div class="keyboard-hints"><kbd>B</kbd> кисть <kbd>I</kbd> выбор <kbd>E</kbd> ластик <kbd>H</kbd> рука <kbd>0</kbd> вся карта</div><button class="button primary full-width" data-close>К карте</button></dialog>
+<input id="json-file" class="sr-only" type="file" accept=".json,application/json" tabindex="-1">
+<script id="atlas-data" type="application/json">/*__DATA__*/</script>
+<script>/*__JS__*/</script>
+</body>
+</html>
