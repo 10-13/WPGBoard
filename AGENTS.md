@@ -30,6 +30,10 @@ Named regions are an independent extension (`regions-model.js`, `regions.js`),
 stored in `meta.regions`. Obsolete nation groups have no runtime API or UI and
 must not be migrated into regions. Keep the context tree rooted at Мир,
 Провинция, Прочее; domain extensions register their own subtrees.
+The regions module owns the `regions:boundaries` overlay: exterior contours
+and names, with no seams between provinces of the same named region.
+Province highlights share `AtlasUI.drawRegionSet`; their pixel contour must
+check all four neighbors, including above/below, holes and map edges.
 
 Overlay definitions and local display preferences belong to `state.overlays`.
 Visibility and composition order are not game actions: never put them in game

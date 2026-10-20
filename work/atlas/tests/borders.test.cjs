@@ -24,6 +24,15 @@ test('internal strokes are colored across their whole width; exterior and unowne
   f.borders.redraw(f.context, nations({ 1: 'a' }), [2]); assert.equal(f.painted.size, 0);
   f.borders.redraw(f.context, nations(), [2]); assert.equal(f.at(6, 5), '#293f55');
 });
+test('nation shading and war borders treat top/bottom neighbors exactly like left/right neighbors', () => {
+  const vertical = Array(11).fill('11111###22222'), horizontal = [...vertical[0]].map((_, x) => vertical.map(row => row[x]).join(''));
+  const a = fixture(vertical), b = fixture(horizontal);
+  for (const data of [nations(), { ...nations({ 1: 'a', 2: 'b' }), wars: { [warKey('a', 'b')]: ['a', 'b'] } }]) {
+    a.borders.redraw(a.context, data); b.borders.redraw(b.context, data);
+    for (let y = 0; y < vertical.length; y++) for (let x = 0; x < vertical[0].length; x++) assert.equal(b.at(y, x), a.at(x, y), `${x},${y}`);
+    assert.equal(b.at(5, 6), data.wars ? WAR_BORDER_COLOR : '#293f55');
+  }
+});
 test('water and coastlines are not bridged, including narrow water between provinces', () => {
   for (const row of ['11111#.......', '11111#.#22222']) { const f = fixture(Array(11).fill(row)); f.borders.redraw(f.context, nations()); assert.equal(f.painted.size, 0, row); }
 });

@@ -24,13 +24,25 @@
       return this.ids;
     }
   }
-  function drawRegionSet(context, index, ids, { fill = 'rgba(225,181,88,.27)', edge = '#e8c87c' } = {}) {
+  function drawRegionSet(context, index, ids, { fill = 'rgba(225,181,88,.27)', edge = '#e8c87c', offsetX = 0, offsetY = 0 } = {}) {
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
     if (!index) return;
+    const selected = [...new Set(ids)];
     context.fillStyle = fill;
-    for (const id of ids) index.forEachRun(id, (start, length) => context.fillRect(start % index.width, Math.floor(start / index.width), length, 1));
+    for (const id of selected) index.forEachRun(id, (start, length) => context.fillRect(start % index.width - offsetX, Math.floor(start / index.width) - offsetY, length, 1));
     context.fillStyle = edge;
-    for (const id of ids) index.forEachRun(id, (start, length) => { const x = start % index.width, y = Math.floor(start / index.width); context.fillRect(x, y, 1, 1); if (length > 1) context.fillRect(x + length - 1, y, 1, 1); });
+    for (const id of selected) index.forEachRun(id, (start, length) => {
+      const left = start % index.width, right = left + length - 1, y = Math.floor(start / index.width); let edgeStart = null;
+      // RLE endpoints cover left/right edges only. Compare the rows above and
+      // below too, including concave corners, holes and the image perimeter.
+      for (let x = left; x <= right; x++) {
+        const boundary = x === left || x === right || index.idAt(x, y - 1) !== id || index.idAt(x, y + 1) !== id;
+        if (boundary && edgeStart === null) edgeStart = x;
+        if (edgeStart !== null && (!boundary || x === right)) {
+          context.fillRect(edgeStart - offsetX, y - offsetY, x - edgeStart + (boundary ? 1 : 0), 1); edgeStart = null;
+        }
+      }
+    });
   }
   Object.assign(root.AtlasUI ||= {}, { RegionSelection, drawRegionSet });
   if (typeof module !== 'undefined' && module.exports) module.exports = { RegionSelection, drawRegionSet };

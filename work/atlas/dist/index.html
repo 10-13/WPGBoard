@@ -954,13 +954,25 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       return this.ids;
     }
   }
-  function drawRegionSet(context, index, ids, { fill = 'rgba(225,181,88,.27)', edge = '#e8c87c' } = {}) {
+  function drawRegionSet(context, index, ids, { fill = 'rgba(225,181,88,.27)', edge = '#e8c87c', offsetX = 0, offsetY = 0 } = {}) {
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
     if (!index) return;
+    const selected = [...new Set(ids)];
     context.fillStyle = fill;
-    for (const id of ids) index.forEachRun(id, (start, length) => context.fillRect(start % index.width, Math.floor(start / index.width), length, 1));
+    for (const id of selected) index.forEachRun(id, (start, length) => context.fillRect(start % index.width - offsetX, Math.floor(start / index.width) - offsetY, length, 1));
     context.fillStyle = edge;
-    for (const id of ids) index.forEachRun(id, (start, length) => { const x = start % index.width, y = Math.floor(start / index.width); context.fillRect(x, y, 1, 1); if (length > 1) context.fillRect(x + length - 1, y, 1, 1); });
+    for (const id of selected) index.forEachRun(id, (start, length) => {
+      const left = start % index.width, right = left + length - 1, y = Math.floor(start / index.width); let edgeStart = null;
+      // RLE endpoints cover left/right edges only. Compare the rows above and
+      // below too, including concave corners, holes and the image perimeter.
+      for (let x = left; x <= right; x++) {
+        const boundary = x === left || x === right || index.idAt(x, y - 1) !== id || index.idAt(x, y + 1) !== id;
+        if (boundary && edgeStart === null) edgeStart = x;
+        if (edgeStart !== null && (!boundary || x === right)) {
+          context.fillRect(edgeStart - offsetX, y - offsetY, x - edgeStart + (boundary ? 1 : 0), 1); edgeStart = null;
+        }
+      }
+    });
   }
   Object.assign(root.AtlasUI ||= {}, { RegionSelection, drawRegionSet });
   if (typeof module !== 'undefined' && module.exports) module.exports = { RegionSelection, drawRegionSet };
@@ -1241,14 +1253,13 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       if (!gesture.moved && !gesture.multi && !this.panOnly && e.button === 0) { const p = this.world(this.local(e)), region = this.state.regionIndex.at(p.x, p.y); this.select(region?.id || null, { fromClick: true }); const event = { id: region?.id || null, region, province: region, x: p.x, y: p.y, clientX: e.clientX, clientY: e.clientY, originalEvent: e }; this.input.emit('province:click', event); window.dispatchEvent(new CustomEvent('province:click', { detail: event })); }
     }
     cancel() { this.pointers.clear(); this.gesture = null; this.pinch = null; this.element.classList.remove('dragging'); this.setHover(null); }
-    setHover(id, position = {}) { if (this.hoverId === id) return; this.hoverId = id; this.#highlight(this.hoverCanvas, id, false); const event = { id, region: this.state.regionIndex?.get(id) || null, ...position }; this.input.emit('province:hover', event); }
+    setHover(id, position = {}) { if (this.hoverId === id) return; this.hoverId = id; this.#highlight(this.hoverCanvas, id); const event = { id, region: this.state.regionIndex?.get(id) || null, ...position }; this.input.emit('province:hover', event); }
     select(id, { fromClick = false } = {}) { this.selectedId = id; this.input.emit('selection:change', { id, region: this.state.regionIndex?.get(id) || null, fromClick }); }
     focusRegion(id) { const r = this.state.regionIndex.get(id); if (!r) return; this.scale = Math.min(6, Math.max(this.scale, Math.min(this.element.clientWidth / (r.bbox[2] * 2.8), this.element.clientHeight / (r.bbox[3] * 2.8)))); this.tx = this.element.clientWidth / 2 - r.anchor[0] * this.scale; this.ty = this.element.clientHeight / 2 - r.anchor[1] * this.scale; this.constrain(); this.transform(); this.select(id); }
-    #highlight(canvas, id, selected) {
+    #highlight(canvas, id) {
       const index = this.state.regionIndex, region = index?.get(id); if (!region) { canvas.width = 1; canvas.height = 1; return; }
       const [x, y, w, h] = region.bbox; canvas.width = w; canvas.height = h; canvas.style.left = x + 'px'; canvas.style.top = y + 'px'; const ctx = canvas.getContext('2d');
-      ctx.fillStyle = selected ? 'rgba(225,181,88,.24)' : 'rgba(225,237,241,.32)'; index.forEachRun(id, (start, length) => ctx.fillRect(start % index.width - x, Math.floor(start / index.width) - y, length, 1));
-      ctx.fillStyle = selected ? '#e8c87c' : '#d8e9ef'; index.forEachRun(id, (start, length) => { const xx = start % index.width - x, yy = Math.floor(start / index.width) - y; ctx.fillRect(xx, yy, 1, 1); ctx.fillRect(xx + length - 1, yy, 1, 1); });
+      root.AtlasUI.drawRegionSet(ctx, index, [id], { fill: 'rgba(225,237,241,.32)', edge: '#d8e9ef', offsetX: x, offsetY: y });
     }
     #drawIds(ctx, scale, tx, ty, width, height) {
       const type = getComputedStyle(this.element); ctx.font = type.fontSize + ' ' + type.fontFamily; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.strokeStyle = '#162832'; ctx.fillStyle = '#e1e8eb'; ctx.lineWidth = 3;
@@ -1829,13 +1840,171 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 })(globalThis);
 
 ;
+/* Derived outlines and label anchors for named regions. No game state or rendering APIs. */
+(function (root) {
+  'use strict';
+  class RegionGeometry {
+    #index; #ink; #gaps = new Map();
+    constructor(index, rgba) {
+      this.#index = index; this.width = index.width; this.height = index.height;
+      if (rgba.length !== this.width * this.height * 4) throw new Error('Размер изображения не совпадает с индексом регионов.');
+      this.#ink = new Uint8Array(this.width * this.height);
+      for (let p = 0; p < this.#ink.length; p++) { const i = p * 4; this.#ink[p] = rgba[i + 3] > 128 && Math.max(rgba[i], rgba[i + 1], rgba[i + 2]) <= 48 ? 1 : 0; }
+    }
+    #gap(x, y) {
+      const p = y * this.width + x; if (this.#gaps.has(p)) return this.#gaps.get(p);
+      const distances = new Map(); let exterior = !this.#ink[p];
+      if (!exterior) for (const [dx, dy] of [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]]) {
+        for (let distance = 1; distance <= 4; distance++) {
+          const xx = x + dx * distance, yy = y + dy * distance;
+          if (xx < 0 || yy < 0 || xx >= this.width || yy >= this.height) { exterior = true; break; }
+          const id = this.#index.idAt(xx, yy);
+          if (id) { distances.set(id, Math.min(distances.get(id) || Infinity, distance)); break; }
+          // Never join shores across even a one-pixel strip of water.
+          if (!this.#ink[yy * this.width + xx]) { exterior = true; break; }
+        }
+        if (exterior) break;
+      }
+      const limit = [...distances.values()].sort((a, b) => a - b)[1] ?? Infinity;
+      const result = { exterior, ids: [...distances].filter(([, distance]) => distance <= limit).map(([id]) => id) };
+      this.#gaps.set(p, result); return result;
+    }
+    build(data) {
+      const assignments = new Map(), members = new Map(), items = data?.items || {};
+      for (const [provinceId, regionId] of Object.entries(data?.assignments || {})) {
+        const id = Number(provinceId); if (!Object.hasOwn(items, regionId) || !this.#index.get(id)) continue;
+        assignments.set(id, regionId); if (!members.has(regionId)) members.set(regionId, []); members.get(regionId).push(id);
+      }
+      const result = [];
+      for (const [id, provinceIds] of members) {
+        const points = [], sourceRuns = []; let area = 0, sumX = 0, sumY = 0;
+        for (const provinceId of provinceIds) this.#index.forEachRun(provinceId, (start, length) => {
+          const x = start % this.width, y = Math.floor(start / this.width); sourceRuns.push(start, length);
+          area += length; sumX += (2 * x + length - 1) * length / 2; sumY += y * length;
+          for (let xx = x; xx < x + length; xx++) {
+            let edge = false;
+            for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+              const nx = xx + dx, ny = y + dy;
+              if (nx < 0 || ny < 0 || nx >= this.width || ny >= this.height) { edge = true; break; }
+              const neighbor = this.#index.idAt(nx, ny);
+              if (neighbor) { if (assignments.get(neighbor) !== id) { edge = true; break; } }
+              else {
+                const gap = this.#gap(nx, ny);
+                if (gap.exterior || gap.ids.length < 2 || gap.ids.some(neighborId => assignments.get(neighborId) !== id)) { edge = true; break; }
+              }
+            }
+            if (edge) points.push(y * this.width + xx);
+          }
+        });
+        // The centroid can fall in a lake or between islands. Snap to real member pixels.
+        const cx = sumX / area, cy = sumY / area; let anchor = null, best = Infinity;
+        for (let i = 0; i < sourceRuns.length; i += 2) {
+          const start = sourceRuns[i], length = sourceRuns[i + 1], y = Math.floor(start / this.width), left = start % this.width;
+          const x = Math.max(left, Math.min(left + length - 1, Math.round(cx))), distance = (x - cx) ** 2 + (y - cy) ** 2;
+          if (distance < best) { best = distance; anchor = [x, y]; }
+        }
+        points.sort((a, b) => a - b); const runs = [];
+        for (const p of points) { const n = runs.length; if (n && runs[n - 2] + runs[n - 1] === p && p % this.width) runs[n - 1]++; else runs.push(p, 1); }
+        result.push({ id, name: String(items[id].name || id), area, anchor, runs: new Uint32Array(runs) });
+      }
+      return result;
+    }
+  }
+  function wrapRegionName(name, measure, maxWidth) {
+    const lines = []; let line = '';
+    for (const word of String(name).split(/\s+/u).filter(Boolean)) {
+      if (line && measure(line + ' ' + word) <= maxWidth) { line += ' ' + word; continue; }
+      if (line) { lines.push(line); line = ''; }
+      for (const character of word) {
+        if (line && measure(line + character) > maxWidth) { lines.push(line); line = ''; }
+        line += character;
+      }
+    }
+    if (line) lines.push(line); return lines;
+  }
+  Object.assign(root.AtlasExtensions ||= {}, { RegionGeometry, wrapRegionName });
+  if (typeof module !== 'undefined' && module.exports) module.exports = { RegionGeometry, wrapRegionName };
+})(globalThis);
+
+;
+/* One registered screen overlay: sharp raster contours plus fixed-size region names. */
+(function (root) {
+  'use strict';
+  const { equal } = root.AtlasCore;
+  const { RegionGeometry, wrapRegionName } = root.AtlasExtensions;
+  class RegionOverlay {
+    constructor(ctx, model) {
+      this.state = ctx.state; this.viewport = ctx.ui.viewport; this.model = model; this.regions = [];
+      // This offscreen bitmap is a cache within the one overlay, never a second map plane.
+      this.raster = document.createElement('canvas'); this.raster.width = this.raster.height = 1;
+      this.overlay = ctx.overlay({ id: 'boundaries', title: 'Регионы', order: 30, space: 'screen', exportDraw: context => this.exportTo(context) });
+      this.state.on('change', ({ before, after }) => { if (!equal(before.meta.regions, after.meta.regions)) this.rebuild(); }, { signal: ctx.signal });
+      ctx.ui.on('map:ready', () => this.rebuild(), { signal: ctx.signal });
+      this.viewport.on('camera:change', () => this.draw(), { signal: ctx.signal });
+      this.state.overlays.on('change', () => this.draw(), { signal: ctx.signal });
+      ctx.scope.defer(() => { this.raster.width = this.raster.height = 1; this.geometry = null; this.regions = []; }); this.rebuild();
+    }
+    rebuild() {
+      const index = this.state.regionIndex;
+      if (!Object.keys(this.model.data.assignments || {}).length) { this.regions = []; this.raster.width = this.raster.height = 1; this.geometry = null; this.index = null; this.draw(); return; }
+      if (this.index !== index) {
+        this.raster.width = index.width; this.raster.height = index.height;
+        const context = this.raster.getContext('2d', { willReadFrequently: true }); context.drawImage(this.viewport.originalImage, 0, 0);
+        this.geometry = new RegionGeometry(index, context.getImageData(0, 0, index.width, index.height).data); this.index = index;
+      }
+      this.regions = this.geometry.build(this.model.data); this.rasterKey = null; this.draw();
+    }
+    #rasterFor(scale) {
+      const radius = Math.max(0, Math.ceil(1 / scale) - 1), halo = Math.max(1, Math.ceil(.75 / scale)), key = radius + ':' + halo;
+      if (key === this.rasterKey) return;
+      const context = this.raster.getContext('2d'); context.clearRect(0, 0, this.raster.width, this.raster.height);
+      for (const [padding, color] of [[radius + halo, '#182932'], [radius, '#f0d58e']]) {
+        context.fillStyle = color;
+        for (const region of this.regions) for (let i = 0; i < region.runs.length; i += 2) {
+          const start = region.runs[i], length = region.runs[i + 1];
+          context.fillRect(start % this.index.width - padding, Math.floor(start / this.index.width) - padding, length + padding * 2, padding * 2 + 1);
+        }
+      }
+      this.rasterKey = key;
+    }
+    #names(context, scale, tx, ty, width, height) {
+      const type = getComputedStyle(this.viewport.element), step = parseFloat(type.lineHeight), size = parseFloat(type.fontSize);
+      context.save(); context.font = size + 'px ' + type.fontFamily; context.textAlign = 'center'; context.textBaseline = 'middle'; context.lineJoin = 'round';
+      context.strokeStyle = '#13242e'; context.fillStyle = '#fff0ba'; context.lineWidth = 3;
+      for (const region of this.regions) {
+        const x = Math.round(tx + region.anchor[0] * scale), y = Math.round(ty + region.anchor[1] * scale);
+        const lines = wrapRegionName(region.name, text => context.measureText(text).width, Math.max(40, Math.min(180, width - 16)));
+        if (x < -180 || x > width + 180 || y + lines.length * step < 0 || y - lines.length * step > height) continue;
+        for (const [i, text] of lines.entries()) { const yy = y + (i - (lines.length - 1) / 2) * step; context.strokeText(text, x, yy); context.fillText(text, x, yy); }
+      }
+      context.restore();
+    }
+    draw() {
+      const { canvas, context } = this.overlay, dpr = Math.min(2, window.devicePixelRatio || 1), width = this.viewport.element.clientWidth, height = this.viewport.element.clientHeight;
+      if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) { canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr); canvas.style.width = width + 'px'; canvas.style.height = height + 'px'; }
+      context.setTransform(dpr, 0, 0, dpr, 0, 0); context.clearRect(0, 0, width, height);
+      if (!this.viewport.ready || !this.overlay.visible || !this.regions.length) return;
+      this.#rasterFor(this.viewport.scale); context.imageSmoothingEnabled = false;
+      context.drawImage(this.raster, this.viewport.tx, this.viewport.ty, this.raster.width * this.viewport.scale, this.raster.height * this.viewport.scale);
+      this.#names(context, this.viewport.scale, this.viewport.tx, this.viewport.ty, width, height);
+    }
+    exportTo(context) {
+      if (!this.regions.length) return; this.#rasterFor(1); context.imageSmoothingEnabled = false; context.drawImage(this.raster, 0, 0);
+      this.#names(context, 1, 0, 0, this.index.width, this.index.height);
+    }
+  }
+  Object.assign(root.AtlasExtensions ||= {}, { RegionOverlay });
+})(globalThis);
+
+;
 (function (root) {
   'use strict';
   const { el, button, field } = root.AtlasUI.dom, { createDataRow } = root.AtlasUI.dataView;
   const definition = {
-    id: 'regions', name: 'Регионы', description: 'Именованные регионы, состав провинций и выделение на карте.',
+    id: 'regions', name: 'Регионы', description: 'Именованные регионы, состав провинций, границы и подписи на карте.',
     start(ctx) {
       const { state, ui, signal } = ctx, model = new root.AtlasExtensions.RegionsModel(state); model.registerActions(signal);
+      new root.AtlasExtensions.RegionOverlay(ctx, model);
       let activeRegion = Object.keys(model.data.items)[0] || null;
       const protect = fn => (...args) => { try { return fn(...args); } catch (error) { ui.notify(error.message); } };
       const select = id => { activeRegion = id; ui.emit('regions:active', { id }); };

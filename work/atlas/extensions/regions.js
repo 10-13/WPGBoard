@@ -2,9 +2,10 @@
   'use strict';
   const { el, button, field } = root.AtlasUI.dom, { createDataRow } = root.AtlasUI.dataView;
   const definition = {
-    id: 'regions', name: 'Регионы', description: 'Именованные регионы, состав провинций и выделение на карте.',
+    id: 'regions', name: 'Регионы', description: 'Именованные регионы, состав провинций, границы и подписи на карте.',
     start(ctx) {
       const { state, ui, signal } = ctx, model = new root.AtlasExtensions.RegionsModel(state); model.registerActions(signal);
+      new root.AtlasExtensions.RegionOverlay(ctx, model);
       let activeRegion = Object.keys(model.data.items)[0] || null;
       const protect = fn => (...args) => { try { return fn(...args); } catch (error) { ui.notify(error.message); } };
       const select = id => { activeRegion = id; ui.emit('regions:active', { id }); };
