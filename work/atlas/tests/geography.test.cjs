@@ -18,6 +18,37 @@ const {
   drawGeography,
 } = require('../extensions/geography-model.js');
 const { geography } = require('../extensions/geography.js');
+
+test('numeric projections and legends share one valued scale in every mode, after clipping, without changing history', (t) => {
+  const { state, index, model, seed } = fixture(t);
+  model.seed(seed);
+  model.update([1], { 'terrain.elevation': 0 });
+  model.update([2], { 'terrain.elevation': 100 });
+  model.update([3], { 'terrain.elevation': 900 });
+  const before = state.history.toJSON();
+  const results = new Map();
+  for (const mode of ['linear', 'threshold', 'spline']) {
+    const data = projectGeography(state.meta, index, 'elevation', { scaleMode: mode });
+    assert.equal(data.scale.mode, mode);
+    for (const [id, value] of data.values)
+      assert.equal(data.colors.get(id), data.scale.color(value));
+    results.set(mode, data.colors.get(2));
+    const clipped = projectGeography(state.meta, index, 'elevation', {
+      scaleMode: mode,
+      provinceIds: [2, 3],
+    });
+    assert.equal(clipped.scale.points[0].value, 100);
+    assert.equal(clipped.scale.points.at(-1).value, 900);
+    assert.equal(clipped.colors.has(1), false);
+  }
+  assert.notEqual(results.get('linear'), results.get('threshold'));
+  assert.notEqual(results.get('linear'), results.get('spline'));
+  assert.equal(
+    projectGeography(state.meta, index, 'elevation', { scaleMode: 'old-setting' }).scale.mode,
+    'linear',
+  );
+  assert.deepEqual(state.history.toJSON(), before);
+});
 function stats(lat = 50, lon = 10) {
   return {
     'geo.lat': lat,

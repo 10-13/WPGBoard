@@ -9,7 +9,7 @@
     GEOGRAPHY_MONTHS: months,
     projectGeography,
     drawGeography,
-    geographyColor,
+    geographyScale,
     metricValue,
     reliefHatchPeriod,
   } = root.AtlasExtensions;
@@ -402,34 +402,33 @@
       const { createDataRow, createDataGroup } = root.AtlasUI.dataView;
       const spec = themes[this.theme];
       if (!spec.category) {
-        const scale = el('div', 'resource-legend-scale');
-        scale.setAttribute('aria-label', 'Шкала: ' + spec.title);
-        const count = data.min === data.max ? 1 : 5;
-        for (let i = 0; i < count; i++) {
-          const value = data.min + (data.max - data.min) * (count === 1 ? 0 : i / 4);
-          const step = el('div', 'resource-legend-step');
-          const patch = el('span', 'resource-legend-patch');
-          const color = geographyColor(this.theme, value, data.min, data.max);
-          if (spec.hatching) {
-            const period = reliefHatchPeriod(value, data.min, data.max);
-            patch.style.backgroundImage = period
-              ? 'repeating-linear-gradient(135deg, ' +
-                color +
-                ' 0 1px, transparent 1px ' +
-                period +
-                'px)'
-              : 'none';
-          } else patch.style.backgroundColor = color;
-          patch.setAttribute('aria-hidden', 'true');
-          step.append(patch, el('span', '', format(value)));
-          scale.append(step);
-        }
+        const model =
+          data.scale || geographyScale(this.theme, data.min, data.max, this.options.scaleMode);
         pane.append(
           createDataRow(
             'Минимум — максимум в области',
             format(data.min) + ' — ' + format(data.max) + ' ' + spec.unit,
           ),
-          scale,
+          root.AtlasUI.controls.createColorScale(model, {
+            label: 'Шкала: ' + spec.title,
+            onModeChange: (scaleMode) => this.setOptions({ scaleMode }),
+            formatValue: (value) => format(value),
+            sampleStyle: spec.hatching
+              ? (value, color) => {
+                  const period = reliefHatchPeriod(value, data.min, data.max);
+                  return {
+                    backgroundColor: 'transparent',
+                    backgroundImage: period
+                      ? 'repeating-linear-gradient(135deg, ' +
+                        color +
+                        ' 0 1px, transparent 1px ' +
+                        period +
+                        'px)'
+                      : 'none',
+                  };
+                }
+              : undefined,
+          }),
         );
         return;
       }

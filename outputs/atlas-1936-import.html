@@ -212,6 +212,17 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 .atlas-data-group>summary>.data-group-name { flex:0 1 auto; min-width:0; max-width:calc(100% - 18px); white-space:pre-wrap; overflow-wrap:anywhere }
 .atlas-data-group[open]>summary { color:#c5ba9d }
 .atlas-data-group>.data-children { margin:0 0 0 3px; padding:0 0 0 17px; border-left:1px solid #354b56 }
+
+/* Labels wrap in full rows and inherit the application typography. */
+.atlas-color-scale { min-width:0; line-height:var(--atlas-step) }
+.atlas-color-scale-bar { position:relative; height:var(--atlas-step); box-shadow:inset 0 0 0 1px #d3dcdf33 }
+.atlas-color-scale-tick { position:absolute; bottom:0; width:1px; height:4px; background:#101c22 }
+.atlas-color-scale-end { position:absolute; right:0; top:0; width:1px; height:100% }
+.atlas-color-scale-grades { display:grid; gap:0 1px }
+.atlas-color-scale-grade { min-width:0; overflow-wrap:anywhere }
+.atlas-color-scale-grade>span { display:block; min-height:var(--atlas-step) }
+.atlas-color-scale-patch { height:var(--atlas-step); box-shadow:inset 0 0 0 1px #d3dcdf33 }
+.resource-legend-item[data-enabled=false] .atlas-color-scale { opacity:.35 }
 </style>
 </head>
 <body>
@@ -2596,6 +2607,304 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   }
   Object.assign((root.AtlasUI ||= {}), { controls: Object.freeze({ button, createSwitch }) });
   if (typeof module !== 'undefined' && module.exports) module.exports = { button, createSwitch };
+})(globalThis);
+
+;
+/* Headless value/color points, shared by legends and map projections. */
+(function (root) {
+  'use strict';
+  const modes = Object.freeze(['linear', 'threshold', 'spline']);
+  const finite = (value) => typeof value === 'number' && Number.isFinite(value);
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+  function checkMode(mode) {
+    if (!modes.includes(mode)) throw new Error('Неизвестный режим цветовой шкалы: ' + mode);
+    return mode;
+  }
+  function rgb(color) {
+    if (typeof color !== 'string' || !/^#[\da-f]{6}$/i.test(color))
+      throw new Error('Цвет точки шкалы должен иметь вид #RRGGBB.');
+    return [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16));
+  }
+  function hex(channels) {
+    return (
+      '#' +
+      channels
+        .map((n) =>
+          Math.round(clamp(n, 0, 255))
+            .toString(16)
+            .padStart(2, '0'),
+        )
+        .join('')
+    );
+  }
+  // Natural cubic spline, independently for R/G/B, on nonuniform value intervals.
+  // Work in a normalized domain to keep large and small physical units stable.
+  function secondDerivatives(xs, ys) {
+    const n = xs.length,
+      diagonal = new Array(n).fill(0),
+      rhs = new Array(n).fill(0);
+    const result = new Array(n).fill(0);
+    diagonal[0] = diagonal[n - 1] = 1;
+    for (let i = 1; i < n - 1; i++) {
+      const left = xs[i] - xs[i - 1],
+        right = xs[i + 1] - xs[i];
+      const factor = left / diagonal[i - 1];
+      diagonal[i] = 2 * (left + right) - factor * (i === 1 ? 0 : left);
+      rhs[i] = 6 * ((ys[i + 1] - ys[i]) / right - (ys[i] - ys[i - 1]) / left) - factor * rhs[i - 1];
+    }
+    for (let i = n - 2; i > 0; i--)
+      result[i] = (rhs[i] - (xs[i + 1] - xs[i]) * result[i + 1]) / diagonal[i];
+    return result;
+  }
+  class ColorScale {
+    #points;
+    #channels;
+    #xs;
+    #seconds;
+    constructor(points = [], { mode = 'linear' } = {}) {
+      if (!Array.isArray(points)) throw new Error('Точки шкалы должны быть массивом.');
+      this.mode = checkMode(mode);
+      this.#points = Object.freeze(
+        points
+          .map((point) => {
+            if (!point || !finite(point.value))
+              throw new Error('Значение точки должно быть конечным числом.');
+            rgb(point.color);
+            return Object.freeze({ value: point.value, color: point.color.toLowerCase() });
+          })
+          .sort((a, b) => a.value - b.value),
+      );
+      for (let i = 1; i < this.#points.length; i++)
+        if (this.#points[i].value === this.#points[i - 1].value)
+          throw new Error('Значения точек шкалы не должны повторяться.');
+      const min = this.#points[0]?.value,
+        max = this.#points.at(-1)?.value;
+      if (this.#points.length > 1 && !finite(max - min))
+        throw new Error('Диапазон цветовой шкалы слишком велик.');
+      this.#channels = this.#points.map((point) => rgb(point.color));
+      this.#xs = this.#points.map((point) => (min === max ? 0 : (point.value - min) / (max - min)));
+      if (this.#xs.some((x, i) => i && x <= this.#xs[i - 1]))
+        throw new Error('Точки шкалы слишком близки для расчёта.');
+      this.#seconds =
+        this.#points.length > 1
+          ? [0, 1, 2].map((channel) =>
+              secondDerivatives(
+                this.#xs,
+                this.#channels.map((c) => c[channel]),
+              ),
+            )
+          : [];
+      if (this.#seconds.some((channel) => channel.some((value) => !finite(value))))
+        throw new Error('Точки шкалы слишком близки для расчёта сплайна.');
+      Object.freeze(this);
+    }
+    get points() {
+      return this.#points;
+    }
+    color(value, mode = this.mode) {
+      checkMode(mode);
+      const points = this.#points,
+        n = points.length;
+      if (!finite(value) || !n) return null;
+      if (value <= points[0].value) return points[0].color;
+      if (value >= points[n - 1].value) return points[n - 1].color;
+      let low = 0,
+        high = n - 1;
+      while (high - low > 1) {
+        const mid = (low + high) >> 1;
+        if (value < points[mid].value) high = mid;
+        else low = mid;
+      }
+      if (mode === 'threshold' || value === points[low].value) return points[low].color;
+      const width = this.#xs[high] - this.#xs[low];
+      const b = (value - points[low].value) / (points[high].value - points[low].value),
+        a = 1 - b;
+      return hex(
+        this.#channels[low].map((channel, i) => {
+          const linear = a * channel + b * this.#channels[high][i];
+          if (mode === 'linear') return linear;
+          return (
+            linear +
+            (((a ** 3 - a) * this.#seconds[i][low] + (b ** 3 - b) * this.#seconds[i][high]) *
+              width ** 2) /
+              6
+          );
+        }),
+      );
+    }
+    grades(count = 5) {
+      if (!Number.isInteger(count) || count < 2 || count > 100)
+        throw new Error('Число делений шкалы должно быть от 2 до 100.');
+      if (this.mode === 'threshold' || this.#points.length < 2) return this.points;
+      const min = this.#points[0].value,
+        max = this.#points.at(-1).value;
+      return Object.freeze(
+        Array.from({ length: count }, (_, i) => {
+          const value = i === count - 1 ? max : min + ((max - min) * i) / (count - 1);
+          return Object.freeze({ value, color: this.color(value) });
+        }),
+      );
+    }
+  }
+  const api = { ColorScale, COLOR_SCALE_MODES: modes };
+  Object.assign((root.AtlasUI ||= {}), api);
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(globalThis);
+
+;
+/* A color scale view. Its model is also the source of colors for map renderers. */
+(function (root) {
+  'use strict';
+  function createColorScale(
+    model,
+    {
+      label = 'Цветовая шкала',
+      formatValue = (value) => value.toLocaleString('ru-RU', { maximumFractionDigits: 1 }),
+      steps = 5,
+      sampleStyle,
+      onModeChange,
+    } = {},
+  ) {
+    const element = document.createElement('div');
+    element.className = 'atlas-color-scale';
+    element.setAttribute('role', 'group');
+    element.setAttribute('aria-label', label);
+    const update = (nextModel) => {
+      const points = nextModel.points;
+      element.replaceChildren();
+      if (onModeChange) {
+        const field = document.createElement('label');
+        field.className = 'field';
+        const caption = document.createElement('span');
+        caption.className = 'field-label';
+        caption.textContent = 'Режим';
+        const select = document.createElement('select');
+        select.setAttribute('aria-label', 'Режим: ' + label);
+        for (const [value, title] of [
+          ['linear', 'Линейный'],
+          ['threshold', 'Пороги'],
+          ['spline', 'Кубический сплайн'],
+        ]) {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = title;
+          select.append(option);
+        }
+        select.value = nextModel.mode;
+        select.onchange = () => onModeChange(select.value);
+        field.append(caption, select);
+        element.append(field);
+      }
+      if (!points.length) {
+        const empty = document.createElement('span');
+        empty.className = 'muted';
+        empty.textContent = 'Нет данных для шкалы';
+        element.append(empty);
+        return;
+      }
+      const min = points[0].value,
+        max = points.at(-1).value;
+      const bar = document.createElement('div');
+      bar.className = 'atlas-color-scale-bar';
+      bar.setAttribute('aria-hidden', 'true');
+      if (min === max) bar.style.backgroundColor = points[0].color;
+      else if (nextModel.mode === 'threshold') {
+        bar.style.backgroundImage =
+          'linear-gradient(to right, ' +
+          points
+            .slice(0, -1)
+            .map((point, i) => {
+              const start = (100 * (point.value - min)) / (max - min);
+              const end = (100 * (points[i + 1].value - min)) / (max - min);
+              return point.color + ' ' + start + '%, ' + point.color + ' ' + end + '%';
+            })
+            .join(', ') +
+          ')';
+      } else {
+        const samples =
+          nextModel.mode === 'linear'
+            ? points
+            : [
+                ...new Map(
+                  [...nextModel.grades(100), ...points].map((point) => [point.value, point]),
+                ).values(),
+              ].sort((a, b) => a.value - b.value);
+        bar.style.backgroundImage =
+          'linear-gradient(to right, ' +
+          samples
+            .map((point) => point.color + ' ' + (100 * (point.value - min)) / (max - min) + '%')
+            .join(', ') +
+          ')';
+      }
+      if (nextModel.mode === 'threshold' && points.length > 1) {
+        const end = document.createElement('span');
+        end.className = 'atlas-color-scale-end';
+        end.style.backgroundColor = points.at(-1).color;
+        bar.append(end);
+      }
+      const grades = document.createElement('div');
+      grades.className = 'atlas-color-scale-grades';
+      const samples = nextModel.grades(steps);
+      grades.style.gridTemplateColumns =
+        'repeat(' + Math.min(samples.length, steps) + ', minmax(0, 1fr))';
+      const positions = samples.map((point) =>
+        max === min ? 0 : (point.value - min) / (max - min),
+      );
+      const bounds = [0, ...positions.slice(1).map((x, i) => (x + positions[i]) / 2), 1];
+      const widths = samples.map((_, i) => bounds[i + 1] - bounds[i]);
+      const axis =
+        !sampleStyle &&
+        samples.length > 1 &&
+        samples.length <= steps &&
+        widths.every((w) => w >= 0.06);
+      if (axis) grades.style.gridTemplateColumns = widths.map((w) => w + 'fr').join(' ');
+      for (const [i, point] of samples.entries()) {
+        const cell = document.createElement('div');
+        cell.className = 'atlas-color-scale-grade';
+        if (sampleStyle) {
+          const patch = document.createElement('span');
+          patch.className = 'atlas-color-scale-patch';
+          patch.style.backgroundColor = point.color;
+          Object.assign(patch.style, sampleStyle(point.value, point.color));
+          patch.setAttribute('aria-hidden', 'true');
+          cell.append(patch);
+        } else {
+          const tick = document.createElement('span');
+          tick.className = 'atlas-color-scale-tick';
+          tick.style.left =
+            point.value === max
+              ? 'calc(100% - 1px)'
+              : (min === max ? 0 : (100 * (point.value - min)) / (max - min)) + '%';
+          bar.append(tick);
+        }
+        const value = document.createElement('span');
+        value.textContent = formatValue(point.value);
+        if (axis) {
+          if (i === 0) value.style.textAlign = 'left';
+          else if (i === samples.length - 1) value.style.textAlign = 'right';
+          else {
+            const left = positions[i] - bounds[i],
+              right = bounds[i + 1] - positions[i];
+            const width = 2 * Math.min(left, right);
+            value.style.width = (100 * width) / widths[i] + '%';
+            value.style.marginLeft = (100 * (left - width / 2)) / widths[i] + '%';
+            value.style.textAlign = 'center';
+          }
+        }
+        cell.title = formatValue(point.value) + ' · ' + point.color;
+        cell.append(value);
+        grades.append(cell);
+      }
+      if (!sampleStyle) element.append(bar);
+      element.append(grades);
+    };
+    Object.defineProperty(element, 'update', { value: update });
+    update(model);
+    return element;
+  }
+  Object.assign((root.AtlasUI ||= {}), { createColorScale });
+  root.AtlasUI.controls = Object.freeze({ ...root.AtlasUI.controls, createColorScale });
+  if (typeof module !== 'undefined' && module.exports) module.exports = { createColorScale };
 })(globalThis);
 
 ;
@@ -9591,6 +9900,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 (function (root) {
   'use strict';
   const { normalizeOverlayScope } = root.AtlasCore || require('../packages/core/index.js');
+  const { ColorScale } =
+    typeof module !== 'undefined' && module.exports
+      ? require('../packages/ui/color-scale-model.js')
+      : root.AtlasUI;
   const { resourceKey } =
     typeof module !== 'undefined' && module.exports
       ? require('./resources-model.js')
@@ -9630,14 +9943,17 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         item.producingCount++;
       }
     const legend = candidates.filter((item) => item.producingCount > 0);
-    for (const item of legend)
-      item.scale =
+    for (const item of legend) {
+      item.colorScale = new ColorScale(
         item.min === item.max
-          ? [{ amount: item.min, color: item.color }]
-          : [0, 0.25, 0.5, 0.75, 1].map((t) => ({
-              amount: item.min + (item.max - item.min) * t,
-              color: resourceShade(item.color, t),
-            }));
+          ? [{ value: item.min, color: item.color }]
+          : [
+              { value: item.min, color: resourceShade(item.color, 0) },
+              { value: item.max, color: resourceShade(item.color, 1) },
+            ],
+      );
+      item.scale = item.colorScale.grades().map(({ value, color }) => ({ amount: value, color }));
+    }
     for (const [id, amounts] of provinces) {
       let winner = null;
       for (const [key, amount] of amounts) {
@@ -9654,7 +9970,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             key,
             amount,
             index: item.index,
-            color: item.max === item.min ? item.color : resourceShade(item.color, intensity),
+            color: item.colorScale.color(amount),
             resource: item.resource,
             unit: item.unit,
             intensity,
@@ -10196,19 +10512,12 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                   format(item.min) + ' — ' + format(item.max) + ' ' + item.unit,
                 ),
               );
-              const scale = el('div', 'resource-legend-scale');
-              scale.setAttribute('aria-label', 'Градации ресурса: ' + label);
-              for (const step of item.scale) {
-                const cell = el('div', 'resource-legend-step'),
-                  patch = el('span', 'resource-legend-patch'),
-                  amount = el('span', '', shortFormat(step.amount));
-                patch.style.backgroundColor = step.color;
-                patch.setAttribute('aria-hidden', 'true');
-                cell.title = format(step.amount) + ' ' + item.unit;
-                cell.append(patch, amount);
-                scale.append(cell);
-              }
-              card.append(scale);
+              card.append(
+                root.AtlasUI.controls.createColorScale(item.colorScale, {
+                  label: 'Градации ресурса: ' + label,
+                  formatValue: shortFormat,
+                }),
+              );
               group.body.append(card);
             }
             pane.append(group.element);
@@ -11376,6 +11685,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 (function (root) {
   'use strict';
   const { clone, normalizeOverlayScope } = root.AtlasCore || require('../packages/core/index.js');
+  const { ColorScale, COLOR_SCALE_MODES } =
+    typeof module !== 'undefined' && module.exports
+      ? require('../packages/ui/color-scale-model.js')
+      : root.AtlasUI;
   const {
     GEOGRAPHY_KEYS: keys,
     GEOGRAPHY_TYPES: types,
@@ -11565,16 +11878,30 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         .join('')
     );
   }
+  function geographyScale(theme, min, max, mode = 'linear') {
+    const palette = themes[theme]?.palette;
+    if (!palette) return null;
+    if (min === max) {
+      const middle = (palette.length - 1) / 2,
+        i = Math.min(palette.length - 2, Math.floor(middle));
+      return new ColorScale(
+        [{ value: min, color: colorMix(palette[i], palette[i + 1], middle - i) }],
+        { mode: COLOR_SCALE_MODES.includes(mode) ? mode : 'linear' },
+      );
+    }
+    return new ColorScale(
+      palette.map((color, i) => ({
+        value: i === palette.length - 1 ? max : min + ((max - min) * i) / (palette.length - 1),
+        color,
+      })),
+      { mode: COLOR_SCALE_MODES.includes(mode) ? mode : 'linear' },
+    );
+  }
   function geographyColor(theme, value, min, max) {
     const spec = themes[theme];
     if (spec.category) return types[spec.category][value]?.color || null;
     if (spec.timezone) return 'hsl(' + (((((value / 60) * 37) % 360) + 360) % 360) + ',48%,57%)';
-    const palette = spec.palette,
-      t =
-        Math.max(0, Math.min(1, max === min ? 0.5 : (value - min) / (max - min))) *
-        (palette.length - 1),
-      i = Math.min(palette.length - 2, Math.floor(t));
-    return colorMix(palette[i], palette[i + 1], t - i);
+    return geographyScale(theme, min, max).color(value);
   }
   function daylightColor(elevation) {
     const t = Math.max(0, Math.min(1, (elevation + 12) / 30));
@@ -11615,13 +11942,27 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       }
     }
     if (!Number.isFinite(min)) min = max = 0;
+    const scale = geographyScale(theme, min, max, options.scaleMode);
     const colors = new Map(
       [...values].map(([id, v]) => [
         id,
-        theme === 'daylight' ? daylightColor(v) : geographyColor(theme, v, min, max),
+        theme === 'daylight'
+          ? daylightColor(v)
+          : scale
+            ? scale.color(v)
+            : geographyColor(theme, v, min, max),
       ]),
     );
-    return { values, colors, counts, min, max, provinceIds, scopeSize: scope?.size ?? index.size };
+    return {
+      values,
+      colors,
+      counts,
+      min,
+      max,
+      scale,
+      provinceIds,
+      scopeSize: scope?.size ?? index.size,
+    };
   }
   function reliefHatchPeriod(value, min, max) {
     if (!finite(value) || value <= 0) return null;
@@ -11821,6 +12162,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     localTime,
     solarElevation,
     geographyColor,
+    geographyScale,
     daylightColor,
     projectGeography,
     drawGeography,
@@ -11842,7 +12184,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     GEOGRAPHY_MONTHS: months,
     projectGeography,
     drawGeography,
-    geographyColor,
+    geographyScale,
     metricValue,
     reliefHatchPeriod,
   } = root.AtlasExtensions;
@@ -12235,34 +12577,33 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       const { createDataRow, createDataGroup } = root.AtlasUI.dataView;
       const spec = themes[this.theme];
       if (!spec.category) {
-        const scale = el('div', 'resource-legend-scale');
-        scale.setAttribute('aria-label', 'Шкала: ' + spec.title);
-        const count = data.min === data.max ? 1 : 5;
-        for (let i = 0; i < count; i++) {
-          const value = data.min + (data.max - data.min) * (count === 1 ? 0 : i / 4);
-          const step = el('div', 'resource-legend-step');
-          const patch = el('span', 'resource-legend-patch');
-          const color = geographyColor(this.theme, value, data.min, data.max);
-          if (spec.hatching) {
-            const period = reliefHatchPeriod(value, data.min, data.max);
-            patch.style.backgroundImage = period
-              ? 'repeating-linear-gradient(135deg, ' +
-                color +
-                ' 0 1px, transparent 1px ' +
-                period +
-                'px)'
-              : 'none';
-          } else patch.style.backgroundColor = color;
-          patch.setAttribute('aria-hidden', 'true');
-          step.append(patch, el('span', '', format(value)));
-          scale.append(step);
-        }
+        const model =
+          data.scale || geographyScale(this.theme, data.min, data.max, this.options.scaleMode);
         pane.append(
           createDataRow(
             'Минимум — максимум в области',
             format(data.min) + ' — ' + format(data.max) + ' ' + spec.unit,
           ),
-          scale,
+          root.AtlasUI.controls.createColorScale(model, {
+            label: 'Шкала: ' + spec.title,
+            onModeChange: (scaleMode) => this.setOptions({ scaleMode }),
+            formatValue: (value) => format(value),
+            sampleStyle: spec.hatching
+              ? (value, color) => {
+                  const period = reliefHatchPeriod(value, data.min, data.max);
+                  return {
+                    backgroundColor: 'transparent',
+                    backgroundImage: period
+                      ? 'repeating-linear-gradient(135deg, ' +
+                        color +
+                        ' 0 1px, transparent 1px ' +
+                        period +
+                        'px)'
+                      : 'none',
+                  };
+                }
+              : undefined,
+          }),
         );
         return;
       }

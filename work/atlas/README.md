@@ -1273,3 +1273,44 @@ update-distributions.py, сохраняя встроенные партии и �
 `AtlasUI.overlayScope.createScopeControl({state,selection,areas:ui.overlayAreas,
 readIds,onChange,signal})` сохраняет выбранные ID в локальных options слоя;
 `AtlasCore.normalizeOverlayScope` проверяет такой список без DOM.
+
+## Цветовые шкалы
+
+Модель `AtlasUI.ColorScale` не зависит от DOM. Точки имеют явные численные
+значения; интервалы между ними могут быть разными. Они копируются, сортируются
+и доступны в `scale.points` как неизменяемый массив исходных опорных точек.
+
+```js
+const scale = new AtlasUI.ColorScale([
+  { value: -20, color: '#304bb0' },
+  { value: 0, color: '#e2dc9a' },
+  { value: 35, color: '#b52f40' },
+], { mode: 'linear' });
+
+scale.color(12);              // режим конструктора
+scale.color(12, 'threshold'); // цвет последнего достигнутого порога
+scale.color(12, 'spline');    // натуральный кубический сплайн по RGB
+scale.points;                // исходные точки
+scale.grades(5);             // пять образцов того же преобразования
+
+const view = AtlasUI.controls.createColorScale(scale, {
+  label: 'Температура',
+  formatValue: value => value.toLocaleString('ru-RU') + ' °C',
+  onModeChange: mode => view.update(new AtlasUI.ColorScale(scale.points, { mode })),
+});
+pane.append(view);
+view.update(anotherScale);
+```
+
+Вне диапазона возвращается крайний цвет; отсутствующее значение или пустая
+шкала дают `null`. Одна точка задаёт постоянный цвет. Порог включает своё
+значение; `grades()` пороговой шкалы сохраняет все пороги. Сплайн проходит
+через исходные точки с реальными интервалами; выход RGB ограничен 0–255.
+Подписки и перерисовку окна выполняет вызывающий модуль. Для образцов штриховки
+доступен `sampleStyle(value,color)`, возвращающий CSS-свойства образца.
+
+География использует один экземпляр шкалы для карты и легенды. Select выбора
+режима меняет локальный `options.scaleMode`, без экшенов игры. Ресурсные
+легенды используют тот же элемент, сохраняя прежние линейные границы и фильтры.
+`python3 tools/build-color-scale-preview.py` собирает автономный редактор-пример
+`outputs/color-scales-preview.html` с выбором режима и просмотром сырых точек.

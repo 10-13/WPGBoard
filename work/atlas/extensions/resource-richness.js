@@ -2,6 +2,10 @@
 (function (root) {
   'use strict';
   const { normalizeOverlayScope } = root.AtlasCore || require('../packages/core/index.js');
+  const { ColorScale } =
+    typeof module !== 'undefined' && module.exports
+      ? require('../packages/ui/color-scale-model.js')
+      : root.AtlasUI;
   const { resourceKey } =
     typeof module !== 'undefined' && module.exports
       ? require('./resources-model.js')
@@ -41,14 +45,17 @@
         item.producingCount++;
       }
     const legend = candidates.filter((item) => item.producingCount > 0);
-    for (const item of legend)
-      item.scale =
+    for (const item of legend) {
+      item.colorScale = new ColorScale(
         item.min === item.max
-          ? [{ amount: item.min, color: item.color }]
-          : [0, 0.25, 0.5, 0.75, 1].map((t) => ({
-              amount: item.min + (item.max - item.min) * t,
-              color: resourceShade(item.color, t),
-            }));
+          ? [{ value: item.min, color: item.color }]
+          : [
+              { value: item.min, color: resourceShade(item.color, 0) },
+              { value: item.max, color: resourceShade(item.color, 1) },
+            ],
+      );
+      item.scale = item.colorScale.grades().map(({ value, color }) => ({ amount: value, color }));
+    }
     for (const [id, amounts] of provinces) {
       let winner = null;
       for (const [key, amount] of amounts) {
@@ -65,7 +72,7 @@
             key,
             amount,
             index: item.index,
-            color: item.max === item.min ? item.color : resourceShade(item.color, intensity),
+            color: item.colorScale.color(amount),
             resource: item.resource,
             unit: item.unit,
             intensity,

@@ -1,0 +1,10 @@
+/* Labels wrap in full rows and inherit the application typography. */
+.atlas-color-scale { min-width:0; line-height:var(--atlas-step) }
+.atlas-color-scale-bar { position:relative; height:var(--atlas-step); box-shadow:inset 0 0 0 1px #d3dcdf33 }
+.atlas-color-scale-tick { position:absolute; bottom:0; width:1px; height:4px; background:#101c22 }
+.atlas-color-scale-end { position:absolute; right:0; top:0; width:1px; height:100% }
+.atlas-color-scale-grades { display:grid; gap:0 1px }
+.atlas-color-scale-grade { min-width:0; overflow-wrap:anywhere }
+.atlas-color-scale-grade>span { display:block; min-height:var(--atlas-step) }
+.atlas-color-scale-patch { height:var(--atlas-step); box-shadow:inset 0 0 0 1px #d3dcdf33 }
+.resource-legend-item[data-enabled=false] .atlas-color-scale { opacity:.35 }

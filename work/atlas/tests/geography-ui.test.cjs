@@ -154,6 +154,7 @@ test('numeric windows use the shared area control, local bounds, and the separat
   }
   const buttons = [];
   const controls = [];
+  const scales = [];
   const button = (label, handler) => {
     const node = new Node(label);
     node.click = handler;
@@ -162,7 +163,14 @@ test('numeric windows use the shared area control, local bounds, and the separat
   };
   global.AtlasUI = {
     dom: { el: (_, __, text) => new Node(text), field: (_, node) => node },
-    controls: { button, createSwitch: button },
+    controls: {
+      button,
+      createSwitch: button,
+      createColorScale: (model, options) => {
+        scales.push(options);
+        return new Node('Шкала: ' + model.points.map((p) => p.value).join(', '));
+      },
+    },
     dataView: {
       createDataRow: (label, value) => new Node(label + ': ' + value),
       createDataGroup: (label) => {
@@ -213,6 +221,9 @@ test('numeric windows use the shared area control, local bounds, and the separat
   assert.equal(layer.ensure().max, 100);
   assert.match(pane.textContent, /Минимум — максимум в области: 100 — 100 м/);
   assert.match(pane.textContent, /Без данных в области: 0/);
+  scales.at(-1).onModeChange('spline');
+  assert.equal(layer.ensure().scale.mode, 'spline');
+  assert.equal(state.overlays.getOptions('').scaleMode, 'spline');
   let launched = 0;
   ctx.ui.on('geography:relief:open', () => launched++);
   state.meta.tiles[1].entries['geography.environment'].stats['terrain.relief'] = 200;

@@ -296,19 +296,12 @@
                   format(item.min) + ' — ' + format(item.max) + ' ' + item.unit,
                 ),
               );
-              const scale = el('div', 'resource-legend-scale');
-              scale.setAttribute('aria-label', 'Градации ресурса: ' + label);
-              for (const step of item.scale) {
-                const cell = el('div', 'resource-legend-step'),
-                  patch = el('span', 'resource-legend-patch'),
-                  amount = el('span', '', shortFormat(step.amount));
-                patch.style.backgroundColor = step.color;
-                patch.setAttribute('aria-hidden', 'true');
-                cell.title = format(step.amount) + ' ' + item.unit;
-                cell.append(patch, amount);
-                scale.append(cell);
-              }
-              card.append(scale);
+              card.append(
+                root.AtlasUI.controls.createColorScale(item.colorScale, {
+                  label: 'Градации ресурса: ' + label,
+                  formatValue: shortFormat,
+                }),
+              );
               group.body.append(card);
             }
             pane.append(group.element);

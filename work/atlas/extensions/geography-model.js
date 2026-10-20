@@ -2,6 +2,10 @@
 (function (root) {
   'use strict';
   const { clone, normalizeOverlayScope } = root.AtlasCore || require('../packages/core/index.js');
+  const { ColorScale, COLOR_SCALE_MODES } =
+    typeof module !== 'undefined' && module.exports
+      ? require('../packages/ui/color-scale-model.js')
+      : root.AtlasUI;
   const {
     GEOGRAPHY_KEYS: keys,
     GEOGRAPHY_TYPES: types,
@@ -191,16 +195,30 @@
         .join('')
     );
   }
+  function geographyScale(theme, min, max, mode = 'linear') {
+    const palette = themes[theme]?.palette;
+    if (!palette) return null;
+    if (min === max) {
+      const middle = (palette.length - 1) / 2,
+        i = Math.min(palette.length - 2, Math.floor(middle));
+      return new ColorScale(
+        [{ value: min, color: colorMix(palette[i], palette[i + 1], middle - i) }],
+        { mode: COLOR_SCALE_MODES.includes(mode) ? mode : 'linear' },
+      );
+    }
+    return new ColorScale(
+      palette.map((color, i) => ({
+        value: i === palette.length - 1 ? max : min + ((max - min) * i) / (palette.length - 1),
+        color,
+      })),
+      { mode: COLOR_SCALE_MODES.includes(mode) ? mode : 'linear' },
+    );
+  }
   function geographyColor(theme, value, min, max) {
     const spec = themes[theme];
     if (spec.category) return types[spec.category][value]?.color || null;
     if (spec.timezone) return 'hsl(' + (((((value / 60) * 37) % 360) + 360) % 360) + ',48%,57%)';
-    const palette = spec.palette,
-      t =
-        Math.max(0, Math.min(1, max === min ? 0.5 : (value - min) / (max - min))) *
-        (palette.length - 1),
-      i = Math.min(palette.length - 2, Math.floor(t));
-    return colorMix(palette[i], palette[i + 1], t - i);
+    return geographyScale(theme, min, max).color(value);
   }
   function daylightColor(elevation) {
     const t = Math.max(0, Math.min(1, (elevation + 12) / 30));
@@ -241,13 +259,27 @@
       }
     }
     if (!Number.isFinite(min)) min = max = 0;
+    const scale = geographyScale(theme, min, max, options.scaleMode);
     const colors = new Map(
       [...values].map(([id, v]) => [
         id,
-        theme === 'daylight' ? daylightColor(v) : geographyColor(theme, v, min, max),
+        theme === 'daylight'
+          ? daylightColor(v)
+          : scale
+            ? scale.color(v)
+            : geographyColor(theme, v, min, max),
       ]),
     );
-    return { values, colors, counts, min, max, provinceIds, scopeSize: scope?.size ?? index.size };
+    return {
+      values,
+      colors,
+      counts,
+      min,
+      max,
+      scale,
+      provinceIds,
+      scopeSize: scope?.size ?? index.size,
+    };
   }
   function reliefHatchPeriod(value, min, max) {
     if (!finite(value) || value <= 0) return null;
@@ -447,6 +479,7 @@
     localTime,
     solarElevation,
     geographyColor,
+    geographyScale,
     daylightColor,
     projectGeography,
     drawGeography,
