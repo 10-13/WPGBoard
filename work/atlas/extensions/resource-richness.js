@@ -2,19 +2,14 @@
 (function (root) {
   'use strict';
   const { resourceKey } = typeof module !== 'undefined' && module.exports ? require('./resources-model.js') : root.AtlasExtensions;
-  function resourceColor(index) {
-    // Colors belong to encounter slots, not to resource IDs or names.
-    if (!Number.isInteger(index) || index < 0) throw new Error('Нужен номер ресурса.');
-    const hue = (24 + index * 137.508) % 360, saturation = [62, 68, 58][index % 3], lightness = [58, 62, 54][index % 3];
-    return 'hsl(' + hue.toFixed(3) + ' ' + saturation + '% ' + lightness + '%)';
-  }
-  function resourceRichness(block) {
-    const legend = [], resources = new Map(), provinces = new Map();
+  const { resourceColor, createResourceColorResolver } = typeof module !== 'undefined' && module.exports ? require('./resource-colors.js') : root.AtlasExtensions;
+  function resourceRichness(block, catalog) {
+    const legend = [], resources = new Map(), provinces = new Map(), colorFor = createResourceColorResolver(catalog);
     for (const group of block.details) {
       const key = resourceKey(group.resource, group.unit);
       if (!group.regions.some(row => row.after1 > 0)) continue;
       if (!resources.has(key)) {
-        const item = { key, resource: group.resource, unit: group.unit, color: resourceColor(legend.length), index: legend.length, count: 0 };
+        const item = { key, resource: group.resource, unit: group.unit, color: colorFor(group.resource), index: legend.length, count: 0 };
         resources.set(key, item); legend.push(item);
       }
       for (const row of group.regions) {

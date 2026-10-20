@@ -15,7 +15,7 @@
       super(); this.ctx = ctx; this.dirty = true; this.data = { legend: [], winners: new Map() }; this.message = '';
       this.overlay = ctx.overlay({ id: 'richness', title: 'Богатство ресурсов', order: 15, visible: false });
       const refresh = () => { if (ctx.signal.aborted) return; this.dirty = true; this.painted = null; this.draw(); this.emit('change', {}); };
-      ctx.state.on('change', ({ before, after }) => { if (!equal(before.meta.tiles, after.meta.tiles)) refresh(); }, { signal: ctx.signal });
+      ctx.state.on('change', ({ before, after }) => { if (!equal(before.meta.tiles, after.meta.tiles) || !equal(before.meta.resources?.catalog, after.meta.resources?.catalog)) refresh(); }, { signal: ctx.signal });
       ctx.ui.on('map:ready', refresh, { signal: ctx.signal });
       ctx.state.statistics.on('change', refresh, { signal: ctx.signal });
       ctx.state.overlays.on('change', () => { if (!ctx.signal.aborted) { this.draw(); this.emit('change', {}); } }, { signal: ctx.signal });
@@ -33,7 +33,7 @@
       try {
         const report = this.ctx.state.statistics.calculate([...this.ctx.state.regions.keys()]), block = report.get('resources');
         if (!block) throw new Error(report.errors.find(e => e.id === 'resources')?.message || 'Сборщик ресурсов недоступен.');
-        this.data = resourceRichness(block);
+        this.data = resourceRichness(block, this.ctx.state.meta.resources?.catalog);
         if (block.invalid.length) this.message = 'Пропущено некорректных ресурсных записей: ' + block.invalid.length + '.';
       } catch (error) { this.data = { legend: [], winners: new Map() }; this.message = 'Не удалось рассчитать ресурсы: ' + error.message; }
       return this.data;
@@ -53,7 +53,8 @@
           const data = this.ensure(); pane.replaceChildren();
           pane.append(createSwitch('Оверлей ресурсов', checked => this.overlay.setVisible(checked), { checked: this.overlay.visible, className: 'wide', title: 'Включить или выключить оверлей «Богатство ресурсов»' }));
           pane.append(el('p', 'muted', 'Цвет — ресурс с наибольшим местным максимальным выпуском, с бонусами и до расходов сырья.'));
-          pane.append(el('p', 'muted', 'Цвета назначаются по порядку появления ресурсов. При равном выпуске выбирается первый.'));
+          pane.append(el('p', 'muted', 'Цвет каждого ресурса постоянный. При равном выпуске выбирается первый ресурс.'));
+          pane.append(el('p', 'muted', 'Верхний пиксельный блок — производства, нижний — улучшения. Один пиксель на объект; общий бонус — белый. Между блоками зазор 1 пиксель.'));
           pane.append(createDataRow('Окрашено провинций', data.winners.size.toLocaleString('ru-RU')), createDataRow('Без выпуска', (ctx.state.regions.size - data.winners.size).toLocaleString('ru-RU')));
           if (this.message) pane.append(el('p', 'form-error', this.message));
           if (!data.legend.length) { pane.append(el('p', 'muted', 'Нет производств с положительным выпуском. Ресурсные точки без производства не дают выпуск.')); return; }

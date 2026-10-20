@@ -3,25 +3,9 @@
   'use strict';
   const { el, button, field } = root.AtlasUI.dom, { uid } = root.AtlasCore;
   const { ResourceModel, readResourceEntry, RESOURCE_ACTIVITIES: activities, RESOURCE_BONUSES: bonuses } = root.AtlasExtensions;
+  const { drawResourceMarkers } = root.AtlasExtensions;
   const { createDataRow, createDataGroup } = root.AtlasUI.dataView;
   const format = n => n.toLocaleString('ru-RU', { maximumFractionDigits: 4 });
-  function drawResourceMarkers(context, regions, tiles) {
-    for (const [key, tile] of Object.entries(tiles || {})) {
-      const region = regions.get(Number(key)); if (!region) continue;
-      // Provincial baseline is background output, not a discrete factory.
-      const entries = Object.values(tile.entries || {}).filter(e => e.source === 'resources'), hasProduction = entries.some(e => e.kind === 'production' && e.stats['resource.role'] !== 'baseline'), hasPoint = entries.some(e => e.kind === 'resource-point');
-      const [cx, cy] = region.anchor;
-      if (hasProduction) {
-        const x = cx - (hasPoint ? 9 : 0), y = cy; context.fillStyle = '#101c22'; context.fillRect(x - 7, y - 4, 15, 11); context.fillRect(x - 6, y - 9, 5, 6);
-        context.fillStyle = '#e4c46f'; context.fillRect(x - 5, y - 2, 11, 7); context.fillRect(x - 4, y - 7, 2, 5); context.fillStyle = '#182a32'; context.fillRect(x - 3, y, 2, 2); context.fillRect(x + 2, y, 2, 2);
-      }
-      if (hasPoint) {
-        const x = cx + (hasProduction ? 9 : 0), y = cy; context.fillStyle = '#101c22';
-        for (let d = -7; d <= 7; d++) { const w = 7 - Math.abs(d); context.fillRect(x - w, y + d, w * 2 + 1, 1); }
-        context.fillStyle = '#71d0c4'; for (let d = -5; d <= 5; d++) { const w = 5 - Math.abs(d); context.fillRect(x - w, y + d, w * 2 + 1, 1); }
-      }
-    }
-  }
   const definition = {
     id: 'resources', name: 'Ресурсы и производства', description: 'Рецепты, снабжение по приоритету, чистый выпуск и баффы.',
     start(ctx) {
@@ -30,7 +14,7 @@
       const protect = fn => (...args) => { try { return fn(...args); } catch (e) { ui.notify(e.message); } };
       const openData = (event, payload) => { if (!ui.extensions.isEnabled('metadata')) { ui.notify('Включите модуль «Метаданные и статистика».'); return; } ui.emit(event, payload); };
       const markers = ctx.overlay({ id: 'markers', title: 'Ресурсы и производства', order: 20 });
-      const drawMarkers = () => { markers.context.clearRect(0, 0, markers.canvas.width, markers.canvas.height); drawResourceMarkers(markers.context, state.regions, state.meta.tiles); };
+      const drawMarkers = () => { markers.context.clearRect(0, 0, markers.canvas.width, markers.canvas.height); drawResourceMarkers(markers.context, state.regionIndex, state.meta.tiles, catalog.data); };
       state.on('change', drawMarkers, { signal }); ui.on('map:ready', drawMarkers, { signal }); drawMarkers();
       function edit(regionId, kind = 'production', original = null) {
         let initial; try { initial = original && readResourceEntry(original); } catch (e) { ui.notify('Исправьте некорректные статы в метаданных тайла. ' + e.message); return; }
@@ -101,7 +85,7 @@
               actions.append(button('Изменить', () => edit(id, entry.kind, entry), { className: 'small' }), button('Метаданные', () => openData('metadata:open', { regionId: id }), { className: 'small' }), button('Удалить', protect(() => model.remove(id, entry.id)), { className: 'small' })); card.append(actions); pane.append(group.element);
             }
             if (!model.list(id).length) pane.append(el('p', 'muted', 'Объектов пока нет. Ресурсная точка усиливает подходящие производства, своего выпуска у неё нет.'));
-            pane.append(el('p', 'muted small', 'На карте: золотой завод — предприятие, бирюзовый ромб — ресурсная точка. Фоновый выпуск — без значка.'));
+            pane.append(el('p', 'muted small', 'На карте: верхний блок — производства, нижний — ресурсные точки. Один пиксель на объект; общий бонус — белый. Если оба блока целиком не помещаются в провинцию, они скрыты.'));
           };
           const update = e => { selected = e.id; draw(); }; tab.onRegionClick(update);
           ui.input.on('selection:change', e => { if (!e.fromClick) update(e); }, { signal: scope.signal }); state.on('change', draw, { signal: scope.signal }); state.on('map:loaded', draw, { signal: scope.signal }); draw();

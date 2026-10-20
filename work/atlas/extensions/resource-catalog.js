@@ -3,6 +3,7 @@
   'use strict';
   const { clone, freeze, uid } = typeof module !== 'undefined' && module.exports ? require('../packages/core/index.js') : root.AtlasCore;
   const { DEFAULT_RESOURCE_CATALOG } = typeof module !== 'undefined' && module.exports ? require('./resource-catalog-data.js') : root.AtlasExtensions;
+  const { resourceColor } = typeof module !== 'undefined' && module.exports ? require('./resource-colors.js') : root.AtlasExtensions;
   const own = (o, k) => Object.hasOwn(o, k), safe = id => typeof id === 'string' && /^[\w-]{1,100}$/.test(id) && !['__proto__', 'prototype', 'constructor'].includes(id);
   const text = (value, length) => typeof value === 'string' && value.trim().length > 0 && value.length <= length;
   function validateCatalog(data) {
@@ -56,6 +57,7 @@
   class ResourceCatalog {
     constructor(state) { this.state = state; }
     get data() { return this.state.meta.resources?.catalog || DEFAULT_RESOURCE_CATALOG; }
+    color(resource) { return resourceColor(resource, this.data); }
     recipesFor(id) { return Object.values(this.data.recipes).filter(r => r.outputs.some(o => o.resourceId === id)); }
     registerActions(signal) {
       const catalog = draft => { draft.meta.resources ||= {}; return draft.meta.resources.catalog ||= clone(DEFAULT_RESOURCE_CATALOG); };

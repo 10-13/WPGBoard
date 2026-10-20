@@ -2646,11 +2646,52 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 })(globalThis);
 
 ;
+/* Static visual identity, shared by catalog, map fills and object markers. */
+(function (root) {
+  'use strict';
+  const { DEFAULT_RESOURCE_CATALOG } = typeof module !== 'undefined' && module.exports ? require('./resource-catalog-data.js') : root.AtlasExtensions;
+  const RESOURCE_COLORS = Object.freeze({
+    coal: '#444b5a', 'iron-ore': '#bd7453', oil: '#71607c', rubber: '#58bfa6', bauxite: '#d9986d',
+    'alloy-ore': '#a391cf', 'tungsten-ore': '#8fa8bd', helium: '#bce6e8', cotton: '#e7b8d5',
+    timber: '#63a674', grain: '#e4c65a', water: '#4fa3e3', iron: '#a2aebc', steel: '#738fa8',
+    'alloy-steel': '#9f94c7', aluminium: '#c4d3e2', tungsten: '#b3b9ad', fuel: '#ef9252',
+    avgas: '#f3b75b', hydrogen: '#8cd4ee', energy: '#f1de65', fabric: '#bd8eb8', lumber: '#bb9867',
+    food: '#b6c96d', parts: '#63bdc6', tools: '#d68c7e', ammunition: '#d0aa4e', airframe: '#92afd7',
+    armor: '#829878', airship: '#a8bfd1'
+  });
+  const GENERAL_RESOURCE_COLOR = '#ffffff';
+  const normalized = text => String(text).trim().toLowerCase();
+  function customColor(key) {
+    let hash = 2166136261; for (const char of key) hash = Math.imul(hash ^ char.codePointAt(0), 16777619);
+    const hue = (hash >>> 0) % 360 / 60, saturation = .58, lightness = .62;
+    const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation, x = chroma * (1 - Math.abs(hue % 2 - 1)), m = lightness - chroma / 2;
+    const rgb = hue < 1 ? [chroma, x, 0] : hue < 2 ? [x, chroma, 0] : hue < 3 ? [0, chroma, x] : hue < 4 ? [0, x, chroma] : hue < 5 ? [x, 0, chroma] : [chroma, 0, x];
+    return '#' + rgb.map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
+  }
+  function createResourceColorResolver(catalog = DEFAULT_RESOURCE_CATALOG) {
+    const byName = new Map(), byId = new Map();
+    for (const data of [DEFAULT_RESOURCE_CATALOG, catalog]) for (const resource of Object.values(data.resources)) {
+      byName.set(normalized(resource.name), resource.id); byId.set(resource.id, resource);
+    }
+    return resource => {
+      const value = typeof resource === 'object' && resource ? resource.id : String(resource), name = normalized(value);
+      if (name === '*') return GENERAL_RESOURCE_COLOR;
+      const id = byId.has(value) ? value : byName.get(name);
+      return id && Object.hasOwn(RESOURCE_COLORS, id) ? RESOURCE_COLORS[id] : customColor(id ? 'id:' + id : 'name:' + name);
+    };
+  }
+  const resourceColor = (resource, catalog) => createResourceColorResolver(catalog)(resource);
+  const api = { RESOURCE_COLORS, GENERAL_RESOURCE_COLOR, createResourceColorResolver, resourceColor };
+  Object.assign(root.AtlasExtensions ||= {}, api); if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(globalThis);
+
+;
 /* Headless blueprint catalog and resource costs. Capacity belongs to enterprises. */
 (function (root) {
   'use strict';
   const { clone, freeze, uid } = typeof module !== 'undefined' && module.exports ? require('../packages/core/index.js') : root.AtlasCore;
   const { DEFAULT_RESOURCE_CATALOG } = typeof module !== 'undefined' && module.exports ? require('./resource-catalog-data.js') : root.AtlasExtensions;
+  const { resourceColor } = typeof module !== 'undefined' && module.exports ? require('./resource-colors.js') : root.AtlasExtensions;
   const own = (o, k) => Object.hasOwn(o, k), safe = id => typeof id === 'string' && /^[\w-]{1,100}$/.test(id) && !['__proto__', 'prototype', 'constructor'].includes(id);
   const text = (value, length) => typeof value === 'string' && value.trim().length > 0 && value.length <= length;
   function validateCatalog(data) {
@@ -2704,6 +2745,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   class ResourceCatalog {
     constructor(state) { this.state = state; }
     get data() { return this.state.meta.resources?.catalog || DEFAULT_RESOURCE_CATALOG; }
+    color(resource) { return resourceColor(resource, this.data); }
     recipesFor(id) { return Object.values(this.data.recipes).filter(r => r.outputs.some(o => o.resourceId === id)); }
     registerActions(signal) {
       const catalog = draft => { draft.meta.resources ||= {}; return draft.meta.resources.catalog ||= clone(DEFAULT_RESOURCE_CATALOG); };
@@ -2806,7 +2848,9 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             const group = this.group(category, 'goods:' + category, expanded);
             for (const resource of resources) {
               const item = this.group(resource.name, 'good:' + resource.id, expanded, false);
+              const swatch = el('span', 'resource-legend-swatch'); swatch.style.backgroundColor = this.catalog.color(resource.id); swatch.setAttribute('aria-hidden', 'true'); item.element.querySelector('.data-group-name').prepend(swatch);
               item.body.append(createDataRow('Тип', resource.kind === 'raw' ? 'Природный ресурс' : 'Продукт переработки'), createDataRow('Единица', resource.unit), createDataRow('Чертежей', String(this.catalog.recipesFor(resource.id).length)));
+              item.body.append(createDataRow('Цвет', this.catalog.color(resource.id)));
               if (resource.description) item.body.append(el('p', 'metadata-description', resource.description));
               const actions = el('div', 'tool-row'); actions.append(button('Дерево', () => this.openTree(resource.id)), button('Изменить', () => this.editResource(resource.id)), this.removeButton('Удалить', () => this.catalog.removeResource(resource.id))); item.body.append(actions); group.body.append(item.element);
             }
@@ -2917,19 +2961,14 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 (function (root) {
   'use strict';
   const { resourceKey } = typeof module !== 'undefined' && module.exports ? require('./resources-model.js') : root.AtlasExtensions;
-  function resourceColor(index) {
-    // Colors belong to encounter slots, not to resource IDs or names.
-    if (!Number.isInteger(index) || index < 0) throw new Error('Нужен номер ресурса.');
-    const hue = (24 + index * 137.508) % 360, saturation = [62, 68, 58][index % 3], lightness = [58, 62, 54][index % 3];
-    return 'hsl(' + hue.toFixed(3) + ' ' + saturation + '% ' + lightness + '%)';
-  }
-  function resourceRichness(block) {
-    const legend = [], resources = new Map(), provinces = new Map();
+  const { resourceColor, createResourceColorResolver } = typeof module !== 'undefined' && module.exports ? require('./resource-colors.js') : root.AtlasExtensions;
+  function resourceRichness(block, catalog) {
+    const legend = [], resources = new Map(), provinces = new Map(), colorFor = createResourceColorResolver(catalog);
     for (const group of block.details) {
       const key = resourceKey(group.resource, group.unit);
       if (!group.regions.some(row => row.after1 > 0)) continue;
       if (!resources.has(key)) {
-        const item = { key, resource: group.resource, unit: group.unit, color: resourceColor(legend.length), index: legend.length, count: 0 };
+        const item = { key, resource: group.resource, unit: group.unit, color: colorFor(group.resource), index: legend.length, count: 0 };
         resources.set(key, item); legend.push(item);
       }
       for (const row of group.regions) {
@@ -2956,6 +2995,90 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 })(globalThis);
 
 ;
+/* Two pixel blocks: one pixel per enterprise/bonus, fully contained by its province. */
+(function (root) {
+  'use strict';
+  const { createResourceColorResolver } = typeof module !== 'undefined' && module.exports ? require('./resource-colors.js') : root.AtlasExtensions;
+  const placements = new WeakMap();
+  function groupByColor(entries, colorFor) {
+    const groups = new Map();
+    for (const entry of entries) {
+      const color = colorFor(entry.stats['resource.name']);
+      if (!groups.has(color)) groups.set(color, []);
+      groups.get(color).push({ id: entry.id, kind: entry.kind, resource: entry.stats['resource.name'], color });
+    }
+    return [...groups.values()].flat();
+  }
+  function rectangles(count) {
+    if (!count) return [{ width: 0, height: 0 }];
+    const result = [];
+    // Exact factors keep every cell meaningful: no padding pixels or lost objects.
+    for (let width = 1; width <= count; width++) if (count % width === 0) result.push({ width, height: count / width });
+    return result;
+  }
+  function nearestPlacement(index, region, width, height) {
+    let cache = placements.get(index); if (!cache) placements.set(index, cache = new Map());
+    const key = region.id + ':' + width + ':' + height;
+    if (cache.has(key)) return cache.get(key);
+    const [bx, by, bw, bh] = region.bbox;
+    const cx = region.anchor[0] + .5 - width / 2, cy = region.anchor[1] + .5 - height / 2;
+    const x = Math.max(bx, Math.min(bx + bw - width, Math.round(cx))), y = Math.max(by, Math.min(by + bh - height, Math.round(cy)));
+    let fits = true;
+    for (let yy = y; fits && yy < y + height; yy++) for (let xx = x; xx < x + width; xx++) if (index.idAt(xx, yy) !== region.id) { fits = false; break; }
+    if (fits) { const result = [x, y]; cache.set(key, result); return result; }
+    // Scan the actual mask, including holes and disconnected parts. Column heights
+    // find full rectangles in O(bbox area), without allocating a bbox-sized bitmap.
+    const heights = new Uint32Array(bw); let best = null, distance = Infinity;
+    for (let yy = by; yy < by + bh; yy++) {
+      let run = 0;
+      for (let xx = 0; xx < bw; xx++) {
+        heights[xx] = index.idAt(bx + xx, yy) === region.id ? heights[xx] + 1 : 0;
+        run = heights[xx] >= height ? run + 1 : 0;
+        if (run < width) continue;
+        const left = bx + xx - width + 1, top = yy - height + 1, d = (left - cx) ** 2 + (top - cy) ** 2;
+        if (d < distance) { best = [left, top]; distance = d; }
+      }
+    }
+    cache.set(key, best); return best;
+  }
+  function layoutResourceMarkers(index, region, entries, colorFor = createResourceColorResolver()) {
+    const objects = entries.filter(e => e.source === 'resources' && ['production', 'resource-point'].includes(e.kind) && typeof e.stats?.['resource.name'] === 'string' && e.stats['resource.name'].trim());
+    const production = groupByColor(objects.filter(e => e.kind === 'production'), colorFor), bonuses = groupByColor(objects.filter(e => e.kind === 'resource-point'), colorFor);
+    const empty = { bounds: null, blocks: [], pixels: [], count: objects.length };
+    if (!objects.length) return empty;
+    const [, , bw, bh] = region.bbox, gap = production.length && bonuses.length ? 1 : 0, candidates = [];
+    for (const p of rectangles(production.length)) for (const b of rectangles(bonuses.length)) {
+      const width = Math.max(p.width, b.width), height = p.height + gap + b.height;
+      if (width <= bw && height <= bh) candidates.push({ p, b, width, height, score: Math.abs(Math.log(width / height / (bw / bh))) });
+    }
+    candidates.sort((a, b) => a.score - b.score || a.width * a.height - b.width * b.height || a.width - b.width);
+    for (const candidate of candidates) {
+      const position = nearestPlacement(index, region, candidate.width, candidate.height); if (!position) continue;
+      const [x, y] = position, blocks = [], pixels = [];
+      for (const [kind, values, shape, top] of [['production', production, candidate.p, y], ['resource-point', bonuses, candidate.b, y + candidate.p.height + gap]]) {
+        if (!values.length) continue;
+        const left = x + Math.floor((candidate.width - shape.width) / 2), bounds = [left, top, shape.width, shape.height];
+        const cells = values.map((value, i) => ({ ...value, x: left + i % shape.width, y: top + Math.floor(i / shape.width) }));
+        blocks.push({ kind, bounds, pixels: cells }); pixels.push(...cells);
+      }
+      return { bounds: [x, y, candidate.width, candidate.height], blocks, pixels, count: objects.length };
+    }
+    // Both blocks are hidden together when their complete footprint cannot fit.
+    return empty;
+  }
+  function drawResourceMarkers(context, index, tiles, catalog) {
+    const colorFor = createResourceColorResolver(catalog); context.imageSmoothingEnabled = false;
+    for (const [key, tile] of Object.entries(tiles || {})) {
+      const region = index.get(Number(key)); if (!region) continue;
+      const layout = layoutResourceMarkers(index, region, Object.values(tile.entries || {}), colorFor);
+      for (const pixel of layout.pixels) { context.fillStyle = pixel.color; context.fillRect(pixel.x, pixel.y, 1, 1); }
+    }
+  }
+  const api = { layoutResourceMarkers, drawResourceMarkers };
+  Object.assign(root.AtlasExtensions ||= {}, api); if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(globalThis);
+
+;
 /* Ordinary resource overlay and its compact legend; visibility lives in the registry. */
 (function (root) {
   'use strict';
@@ -2973,7 +3096,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       super(); this.ctx = ctx; this.dirty = true; this.data = { legend: [], winners: new Map() }; this.message = '';
       this.overlay = ctx.overlay({ id: 'richness', title: 'Богатство ресурсов', order: 15, visible: false });
       const refresh = () => { if (ctx.signal.aborted) return; this.dirty = true; this.painted = null; this.draw(); this.emit('change', {}); };
-      ctx.state.on('change', ({ before, after }) => { if (!equal(before.meta.tiles, after.meta.tiles)) refresh(); }, { signal: ctx.signal });
+      ctx.state.on('change', ({ before, after }) => { if (!equal(before.meta.tiles, after.meta.tiles) || !equal(before.meta.resources?.catalog, after.meta.resources?.catalog)) refresh(); }, { signal: ctx.signal });
       ctx.ui.on('map:ready', refresh, { signal: ctx.signal });
       ctx.state.statistics.on('change', refresh, { signal: ctx.signal });
       ctx.state.overlays.on('change', () => { if (!ctx.signal.aborted) { this.draw(); this.emit('change', {}); } }, { signal: ctx.signal });
@@ -2991,7 +3114,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       try {
         const report = this.ctx.state.statistics.calculate([...this.ctx.state.regions.keys()]), block = report.get('resources');
         if (!block) throw new Error(report.errors.find(e => e.id === 'resources')?.message || 'Сборщик ресурсов недоступен.');
-        this.data = resourceRichness(block);
+        this.data = resourceRichness(block, this.ctx.state.meta.resources?.catalog);
         if (block.invalid.length) this.message = 'Пропущено некорректных ресурсных записей: ' + block.invalid.length + '.';
       } catch (error) { this.data = { legend: [], winners: new Map() }; this.message = 'Не удалось рассчитать ресурсы: ' + error.message; }
       return this.data;
@@ -3011,7 +3134,8 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           const data = this.ensure(); pane.replaceChildren();
           pane.append(createSwitch('Оверлей ресурсов', checked => this.overlay.setVisible(checked), { checked: this.overlay.visible, className: 'wide', title: 'Включить или выключить оверлей «Богатство ресурсов»' }));
           pane.append(el('p', 'muted', 'Цвет — ресурс с наибольшим местным максимальным выпуском, с бонусами и до расходов сырья.'));
-          pane.append(el('p', 'muted', 'Цвета назначаются по порядку появления ресурсов. При равном выпуске выбирается первый.'));
+          pane.append(el('p', 'muted', 'Цвет каждого ресурса постоянный. При равном выпуске выбирается первый ресурс.'));
+          pane.append(el('p', 'muted', 'Верхний пиксельный блок — производства, нижний — улучшения. Один пиксель на объект; общий бонус — белый. Между блоками зазор 1 пиксель.'));
           pane.append(createDataRow('Окрашено провинций', data.winners.size.toLocaleString('ru-RU')), createDataRow('Без выпуска', (ctx.state.regions.size - data.winners.size).toLocaleString('ru-RU')));
           if (this.message) pane.append(el('p', 'form-error', this.message));
           if (!data.legend.length) { pane.append(el('p', 'muted', 'Нет производств с положительным выпуском. Ресурсные точки без производства не дают выпуск.')); return; }
@@ -3038,25 +3162,9 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   'use strict';
   const { el, button, field } = root.AtlasUI.dom, { uid } = root.AtlasCore;
   const { ResourceModel, readResourceEntry, RESOURCE_ACTIVITIES: activities, RESOURCE_BONUSES: bonuses } = root.AtlasExtensions;
+  const { drawResourceMarkers } = root.AtlasExtensions;
   const { createDataRow, createDataGroup } = root.AtlasUI.dataView;
   const format = n => n.toLocaleString('ru-RU', { maximumFractionDigits: 4 });
-  function drawResourceMarkers(context, regions, tiles) {
-    for (const [key, tile] of Object.entries(tiles || {})) {
-      const region = regions.get(Number(key)); if (!region) continue;
-      // Provincial baseline is background output, not a discrete factory.
-      const entries = Object.values(tile.entries || {}).filter(e => e.source === 'resources'), hasProduction = entries.some(e => e.kind === 'production' && e.stats['resource.role'] !== 'baseline'), hasPoint = entries.some(e => e.kind === 'resource-point');
-      const [cx, cy] = region.anchor;
-      if (hasProduction) {
-        const x = cx - (hasPoint ? 9 : 0), y = cy; context.fillStyle = '#101c22'; context.fillRect(x - 7, y - 4, 15, 11); context.fillRect(x - 6, y - 9, 5, 6);
-        context.fillStyle = '#e4c46f'; context.fillRect(x - 5, y - 2, 11, 7); context.fillRect(x - 4, y - 7, 2, 5); context.fillStyle = '#182a32'; context.fillRect(x - 3, y, 2, 2); context.fillRect(x + 2, y, 2, 2);
-      }
-      if (hasPoint) {
-        const x = cx + (hasProduction ? 9 : 0), y = cy; context.fillStyle = '#101c22';
-        for (let d = -7; d <= 7; d++) { const w = 7 - Math.abs(d); context.fillRect(x - w, y + d, w * 2 + 1, 1); }
-        context.fillStyle = '#71d0c4'; for (let d = -5; d <= 5; d++) { const w = 5 - Math.abs(d); context.fillRect(x - w, y + d, w * 2 + 1, 1); }
-      }
-    }
-  }
   const definition = {
     id: 'resources', name: 'Ресурсы и производства', description: 'Рецепты, снабжение по приоритету, чистый выпуск и баффы.',
     start(ctx) {
@@ -3065,7 +3173,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       const protect = fn => (...args) => { try { return fn(...args); } catch (e) { ui.notify(e.message); } };
       const openData = (event, payload) => { if (!ui.extensions.isEnabled('metadata')) { ui.notify('Включите модуль «Метаданные и статистика».'); return; } ui.emit(event, payload); };
       const markers = ctx.overlay({ id: 'markers', title: 'Ресурсы и производства', order: 20 });
-      const drawMarkers = () => { markers.context.clearRect(0, 0, markers.canvas.width, markers.canvas.height); drawResourceMarkers(markers.context, state.regions, state.meta.tiles); };
+      const drawMarkers = () => { markers.context.clearRect(0, 0, markers.canvas.width, markers.canvas.height); drawResourceMarkers(markers.context, state.regionIndex, state.meta.tiles, catalog.data); };
       state.on('change', drawMarkers, { signal }); ui.on('map:ready', drawMarkers, { signal }); drawMarkers();
       function edit(regionId, kind = 'production', original = null) {
         let initial; try { initial = original && readResourceEntry(original); } catch (e) { ui.notify('Исправьте некорректные статы в метаданных тайла. ' + e.message); return; }
@@ -3136,7 +3244,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
               actions.append(button('Изменить', () => edit(id, entry.kind, entry), { className: 'small' }), button('Метаданные', () => openData('metadata:open', { regionId: id }), { className: 'small' }), button('Удалить', protect(() => model.remove(id, entry.id)), { className: 'small' })); card.append(actions); pane.append(group.element);
             }
             if (!model.list(id).length) pane.append(el('p', 'muted', 'Объектов пока нет. Ресурсная точка усиливает подходящие производства, своего выпуска у неё нет.'));
-            pane.append(el('p', 'muted small', 'На карте: золотой завод — предприятие, бирюзовый ромб — ресурсная точка. Фоновый выпуск — без значка.'));
+            pane.append(el('p', 'muted small', 'На карте: верхний блок — производства, нижний — ресурсные точки. Один пиксель на объект; общий бонус — белый. Если оба блока целиком не помещаются в провинцию, они скрыты.'));
           };
           const update = e => { selected = e.id; draw(); }; tab.onRegionClick(update);
           ui.input.on('selection:change', e => { if (!e.fromClick) update(e); }, { signal: scope.signal }); state.on('change', draw, { signal: scope.signal }); state.on('map:loaded', draw, { signal: scope.signal }); draw();

@@ -25,15 +25,15 @@ test('provincial wealth uses calculator potential, sums activity groups and hono
   assert.deepEqual(state.history.toJSON(), before);
   state.history.undo(); assert.equal(collect(state).winners.has(3), false); state.history.redo(); assert.equal(collect(state).winners.get(3).amount, 40);
 });
-test('encounter order owns colors and tie breaks; units and normalized resource names stay consistent', () => {
+test('static resource colors survive encounter order and units; ties still choose the first', () => {
   const group = (resource, unit, rows) => ({ resource, unit, regions: rows.map(([regionId, after1]) => ({ regionId, after1 })) });
   const result = resourceRichness({ details: [group('Зерно', 'т', [[1, 10], [2, 8]]), group('Уголь', 'т', [[1, 10]]), group(' зерно ', 'Т', [[2, 3]]), group('Уголь', 'кг', [[2, 12]])] });
   assert.deepEqual(result.legend.map(row => row.resource), ['Зерно', 'Уголь', 'Уголь']);
   assert.equal(result.winners.get(1).resource, 'Зерно'); assert.equal(result.winners.get(2).unit, 'кг');
   assert.deepEqual(result.legend.map(row => row.count), [1, 0, 1]);
   const swapped = resourceRichness({ details: [group('Уголь', 'т', [[1, 10]]), group('Зерно', 'т', [[1, 10]])] });
-  assert.equal(swapped.winners.get(1).resource, 'Уголь'); assert.equal(swapped.legend[0].color, result.legend[0].color);
-  assert.equal(new Set(Array.from({ length: 200 }, (_, i) => resourceColor(i))).size, 200);
+  assert.equal(swapped.winners.get(1).resource, 'Уголь'); assert.equal(swapped.legend[0].color, result.legend[1].color);
+  assert.equal(result.legend[1].color, result.legend[2].color); assert.equal(resourceColor('grain'), resourceColor(' ЗЕРНО '));
 });
 test('zero output and bonus-only provinces stay transparent', t => {
   const { state, model } = fixture(t); model.save(1, production('Вода', 0));

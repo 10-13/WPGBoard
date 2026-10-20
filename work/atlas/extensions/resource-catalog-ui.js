@@ -73,7 +73,9 @@
             const group = this.group(category, 'goods:' + category, expanded);
             for (const resource of resources) {
               const item = this.group(resource.name, 'good:' + resource.id, expanded, false);
+              const swatch = el('span', 'resource-legend-swatch'); swatch.style.backgroundColor = this.catalog.color(resource.id); swatch.setAttribute('aria-hidden', 'true'); item.element.querySelector('.data-group-name').prepend(swatch);
               item.body.append(createDataRow('Тип', resource.kind === 'raw' ? 'Природный ресурс' : 'Продукт переработки'), createDataRow('Единица', resource.unit), createDataRow('Чертежей', String(this.catalog.recipesFor(resource.id).length)));
+              item.body.append(createDataRow('Цвет', this.catalog.color(resource.id)));
               if (resource.description) item.body.append(el('p', 'metadata-description', resource.description));
               const actions = el('div', 'tool-row'); actions.append(button('Дерево', () => this.openTree(resource.id)), button('Изменить', () => this.editResource(resource.id)), this.removeButton('Удалить', () => this.catalog.removeResource(resource.id))); item.body.append(actions); group.body.append(item.element);
             }
