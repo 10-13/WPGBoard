@@ -3,15 +3,16 @@
   'use strict';
   const { EventBus, equal, normalizeOverlayScope } = root.AtlasCore;
   const { resourceRichness, projectResourceRichness } = root.AtlasExtensions;
+  const { drawProvincePaints } =
+    typeof module !== 'undefined' && module.exports
+      ? require('../packages/ui/simple-overlay.js')
+      : root.AtlasUI;
   function drawResourceRichness(context, index, data) {
-    context.clearRect(0, 0, index.width, index.height);
-    context.imageSmoothingEnabled = false;
-    for (const [id, winner] of data.winners) {
-      context.fillStyle = winner.color;
-      index.forEachRun(id, (start, length) =>
-        context.fillRect(start % index.width, Math.floor(start / index.width), length, 1),
-      );
-    }
+    drawProvincePaints(
+      context,
+      index,
+      new Map([...data.winners].map(([id, winner]) => [id, winner.color])),
+    );
   }
   const format = (n) => n.toLocaleString('ru-RU', { maximumFractionDigits: 4 }),
     shortFormat = (n) => n.toLocaleString('ru-RU', { maximumSignificantDigits: 3 });

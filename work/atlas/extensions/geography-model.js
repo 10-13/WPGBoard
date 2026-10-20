@@ -6,6 +6,10 @@
     typeof module !== 'undefined' && module.exports
       ? require('../packages/ui/color-scale-model.js')
       : root.AtlasUI;
+  const { buildSimpleOverlay, drawProvincePaints } =
+    typeof module !== 'undefined' && module.exports
+      ? require('../packages/ui/simple-overlay.js')
+      : root.AtlasUI;
   const {
     GEOGRAPHY_KEYS: keys,
     GEOGRAPHY_TYPES: types,
@@ -67,7 +71,10 @@
     };
   }
   function readGeography(meta, id) {
-    const entry = meta.tiles?.[id]?.entries?.[ENTRY];
+    return readTileGeography(meta.tiles?.[id]);
+  }
+  function readTileGeography(tile) {
+    const entry = tile?.entries?.[ENTRY];
     if (!entry || entry.kind !== 'geography' || entry.source !== 'geography') return null;
     try {
       return validateGeography(entry.stats);
@@ -225,61 +232,75 @@
     const rgb = [24, 49, 135].map((n, i) => Math.round(n + ([255, 218, 77][i] - n) * t));
     return 'rgba(' + rgb.join(',') + ',' + (0.43 - 0.23 * t).toFixed(3) + ')';
   }
-  function projectGeography(meta, index, theme, options = {}) {
+  function geographyOverlay(theme) {
     if (!themes[theme]) throw new Error('Неизвестный оверлей географии.');
+    return {
+      createState({ options, provinceIds, scopeSize }) {
+        let utc = options.utc || '1936-01-01T12:00:00Z';
+        if (theme === 'daylight') {
+          try {
+            utcTime(utc);
+          } catch (_) {
+            utc = '1936-01-01T12:00:00Z';
+          }
+        }
+        return {
+          values: new Map(),
+          colors: new Map(),
+          counts: new Map(),
+          min: 0,
+          max: 0,
+          scale: null,
+          numericCount: 0,
+          utc,
+          provinceIds,
+          scopeSize,
+        };
+      },
+      aggregate(tile, data, { provinceId, options }) {
+        const stats = readTileGeography(tile);
+        let value;
+        if (theme === 'daylight') {
+          if (!stats || !finite(stats['geo.lat']) || !finite(stats['geo.lon'])) return;
+          value = solarElevation(data.utc, stats['geo.lat'], stats['geo.lon']);
+        } else value = metricValue(stats, theme, options);
+        if (value === null || value === undefined) return;
+        data.values.set(provinceId, value);
+        data.counts.set(value, (data.counts.get(value) || 0) + 1);
+        if (finite(value)) {
+          if (!data.numericCount++) data.min = data.max = value;
+          else {
+            data.min = Math.min(data.min, value);
+            data.max = Math.max(data.max, value);
+          }
+        }
+      },
+      paint(_tile, data, { provinceId, options }) {
+        if (!data.scale) data.scale = geographyScale(theme, data.min, data.max, options.scaleMode);
+        if (!data.values.has(provinceId)) return null;
+        const value = data.values.get(provinceId);
+        const color =
+          theme === 'daylight'
+            ? daylightColor(value)
+            : data.scale
+              ? data.scale.color(value)
+              : geographyColor(theme, value, data.min, data.max);
+        data.colors.set(provinceId, color);
+        if (!themes[theme].hatching) return color;
+        const spacing = reliefHatchPeriod(value, data.min, data.max);
+        return spacing ? { color, fill: 'hatch', spacing, opacity: 0.7 } : null;
+      },
+    };
+  }
+  function projectGeography(meta, index, theme, options = {}) {
     let provinceIds;
     try {
       provinceIds = normalizeOverlayScope(options.provinceIds, index);
     } catch (_) {
       provinceIds = null;
     }
-    const scope = provinceIds === null ? null : new Set(provinceIds);
-    const values = new Map(),
-      counts = new Map();
-    let min = Infinity,
-      max = -Infinity;
-    for (const region of index.regions.values()) {
-      if (scope && !scope.has(region.id)) continue;
-      const stats = readGeography(meta, region.id);
-      let value;
-      if (theme === 'daylight') {
-        if (!stats || !finite(stats['geo.lat']) || !finite(stats['geo.lon'])) continue;
-        value = solarElevation(
-          options.utc || '1936-01-01T12:00:00Z',
-          stats['geo.lat'],
-          stats['geo.lon'],
-        );
-      } else value = metricValue(stats, theme, options);
-      if (value === null || value === undefined) continue;
-      values.set(region.id, value);
-      counts.set(value, (counts.get(value) || 0) + 1);
-      if (finite(value)) {
-        min = Math.min(min, value);
-        max = Math.max(max, value);
-      }
-    }
-    if (!Number.isFinite(min)) min = max = 0;
-    const scale = geographyScale(theme, min, max, options.scaleMode);
-    const colors = new Map(
-      [...values].map(([id, v]) => [
-        id,
-        theme === 'daylight'
-          ? daylightColor(v)
-          : scale
-            ? scale.color(v)
-            : geographyColor(theme, v, min, max),
-      ]),
-    );
-    return {
-      values,
-      colors,
-      counts,
-      min,
-      max,
-      scale,
-      provinceIds,
-      scopeSize: scope?.size ?? index.size,
-    };
+    return buildSimpleOverlay(meta, index, { ...geographyOverlay(theme), provinceIds, options })
+      .state;
   }
   function reliefHatchPeriod(value, min, max) {
     if (!finite(value) || value <= 0) return null;
@@ -293,30 +314,18 @@
     colors,
     { hatching = false, values = new Map(), min = 0, max = 0 } = {},
   ) {
-    context.clearRect(0, 0, index.width, index.height);
-    context.imageSmoothingEnabled = false;
+    const paints = new Map();
     for (const [id, color] of colors) {
       if (!color || !index.get(id)) continue;
-      context.fillStyle = color;
       if (hatching) {
         const period = reliefHatchPeriod(values.get(id), min, max);
         if (!period) continue;
-        const anchor = index.get(id).anchor,
-          phase = (anchor[0] + anchor[1]) % period;
-        context.globalAlpha = 0.7;
-        index.forEachRun(id, (start, length) => {
-          const x = start % index.width,
-            y = Math.floor(start / index.width);
-          const first = x + ((((phase - x - y) % period) + period) % period);
-          for (let xx = first; xx < x + length; xx += period) context.fillRect(xx, y, 1, 1);
-        });
-        context.globalAlpha = 1;
+        paints.set(id, { color, fill: 'hatch', spacing: period, opacity: 0.7 });
         continue;
       }
-      index.forEachRun(id, (start, length) =>
-        context.fillRect(start % index.width, Math.floor(start / index.width), length, 1),
-      );
+      paints.set(id, color);
     }
+    drawProvincePaints(context, index, paints);
   }
   const requireIds = (ids, index) => {
     if (
@@ -480,6 +489,7 @@
     solarElevation,
     geographyColor,
     geographyScale,
+    geographyOverlay,
     daylightColor,
     projectGeography,
     drawGeography,

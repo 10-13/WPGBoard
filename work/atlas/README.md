@@ -1314,3 +1314,54 @@ view.update(anotherScale);
 легенды используют тот же элемент, сохраняя прежние линейные границы и фильтры.
 `python3 tools/build-color-scale-preview.py` собирает автономный редактор-пример
 `outputs/color-scales-preview.html` с выбором режима и просмотром сырых точек.
+
+## Простые оверлеи в два прохода
+
+Расширение задаёт функции обработки меты одной провинции. Первый проход
+необязателен; второй начинается после завершения первого для всего набора.
+Аккумулятор локальный, при пересчёте создаётся заново. Например, высоты выше
+средней в выбранном наборе можно заштриховать так:
+
+```js
+const height = tile => tile.entries['geography.environment']?.stats['terrain.elevation'];
+const layer = ctx.simpleOverlay({
+  id: 'above-average',
+  title: 'Высота выше средней',
+  provinceIds: ctx.ui.regionSelection.ids,
+  createState: () => ({ sum: 0, count: 0 }),
+  aggregate(tile, acc) {
+    const value = height(tile);
+    if (Number.isFinite(value)) { acc.sum += value; acc.count++; }
+  },
+  paint(tile, acc) {
+    const value = height(tile);
+    return Number.isFinite(value) && acc.count && value > acc.sum / acc.count
+      ? { color: '#ffffff', fill: 'hatch', spacing: 3, opacity: 0.7 }
+      : null;
+  },
+});
+layer.setVisible(true);
+layer.setProvinceIds([1517, 1518]);
+layer.setProvinceIds(null); // весь мир
+layer.setProvinceIds([]);   // пустой набор, слой прозрачен
+layer.ensure().state;      // собранные данные для легенды
+```
+
+Для постоянной или условной раскраски достаточно `paint`: например,
+`paint: tile => Object.keys(tile.entries).length ? '#ffffff' : null`.
+`createState` тоже можно опустить. Третий аргумент функций содержит ID,
+геометрию, options и неизменяемый снимок меты/параметров игры. Метаданные
+одной провинции — `meta.tiles[id]`, включая словарь entries, а не один стат.
+
+Результат — CSS-цвет, null или `{color,opacity,fill}`; заливка solid по умолчанию.
+У hatch есть spacing (период в пикселях), width (толщина), direction:
+diagonal/reverse/horizontal/vertical. Штрихи привязаны к anchor и остаются
+внутри точной маски. Аккумулятор, функции, видимость и область не входят в
+игровую историю/JSON. Готовый слой доступен в обычном окне оверлеев и PNG.
+
+`layer.setOptions(patch)` обновляет локальные параметры, `invalidate()` нужен
+при изменении внешних данных расширения; `dispose()` снимает слой и подписки.
+Скрытые слои не рисуются, при показе восстанавливаются из кэша. Для автономного
+расчёта без контроллера есть `AtlasUI.buildSimpleOverlay(meta,index,definition)`;
+результат содержит state, paints, provinceIds, scopeSize. В готовой географии
+так работают высоты, перепады, типы местности, климат и время.

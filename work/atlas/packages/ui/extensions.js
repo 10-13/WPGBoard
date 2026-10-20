@@ -172,7 +172,7 @@
       const active = () => {
         if (scope.disposed) throw new Error('Расширение отключено: ' + id);
       };
-      return Object.freeze({
+      const context = {
         id,
         state: ui.state,
         ui,
@@ -218,6 +218,14 @@
             source: id,
             signal: scope.signal,
           }),
+        simpleOverlay: (options) => {
+          active();
+          const { SimpleOverlay } =
+            typeof module !== 'undefined' && module.exports
+              ? require('./simple-overlay.js')
+              : root.AtlasUI;
+          return new SimpleOverlay(context, options);
+        },
         layer: (options) =>
           ui.viewport.addOverlay({
             ...options,
@@ -227,7 +235,8 @@
           }),
         onRegionClick: (handler, options = {}) =>
           ui.regionClicks.subscribe(handler, { ...options, mode: 'passive', signal: scope.signal }),
-      });
+      };
+      return Object.freeze(context);
     }
     #start(record) {
       const existing = this.#running.get(record.id);

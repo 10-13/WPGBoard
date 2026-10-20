@@ -1,14 +1,17 @@
 /* Shared, optional geography maps and tab-owned inspectors. Display choices stay local. */
 (function (root) {
   'use strict';
-  const { EventBus, equal } = root.AtlasCore;
+  const { equal } = root.AtlasCore;
+  const { SimpleOverlay } =
+    typeof module !== 'undefined' && module.exports
+      ? require('../packages/ui/simple-overlay.js')
+      : root.AtlasUI;
   const {
     GEOGRAPHY_THEMES: themes,
     GEOGRAPHY_TYPES: types,
     GEOGRAPHY_KEYS: keys,
     GEOGRAPHY_MONTHS: months,
-    projectGeography,
-    drawGeography,
+    geographyOverlay,
     geographyScale,
     metricValue,
     reliefHatchPeriod,
@@ -103,108 +106,37 @@
   }
 
   // The same controller is used by the time extension. Unknown local options are preserved.
-  class GeographyLayer extends EventBus {
+  class GeographyLayer extends SimpleOverlay {
     constructor(ctx, model, theme) {
-      super();
       if (!themes[theme]) throw new Error('Неизвестный оверлей географии: ' + theme);
-      this.ctx = ctx;
-      this.model = model;
-      this.theme = theme;
-      this.dirty = true;
-      this.painted = null;
-      this.data = { values: new Map(), colors: new Map(), counts: new Map(), min: 0, max: 0 };
-      this.overlay = ctx.overlay({
+      super(ctx, {
+        ...geographyOverlay(theme),
         id: theme,
         title: themes[theme].title,
         order: 25 + Object.keys(themes).indexOf(theme),
         visible: false,
         lazy: true,
+        watch: (before, after) =>
+          !equal(before.meta.tiles, after.meta.tiles) ||
+          !equal(before.meta.geography, after.meta.geography),
       });
-      this.options = ctx.state.overlays.getOptions(this.overlay.id);
-      const refresh = () => {
-        if (ctx.signal.aborted) return;
-        this.dirty = true;
-        this.painted = null;
-        this.draw();
-        this.emit('change', {});
-      };
-      ctx.state.on(
-        'change',
-        ({ before, after }) => {
-          if (
-            !equal(before.meta.tiles, after.meta.tiles) ||
-            !equal(before.meta.geography, after.meta.geography)
-          )
-            refresh();
-          else if (!equal(before.meta.regions, after.meta.regions)) this.emit('change', {});
-        },
-        { signal: ctx.signal },
-      );
-      ctx.ui.on('map:ready', refresh, { signal: ctx.signal });
+      this.model = model;
+      this.theme = theme;
       ctx.ui.overlayAreas?.on('change', () => this.emit('change', {}), { signal: ctx.signal });
-      ctx.state.overlays.on(
-        'change',
-        () => {
-          // A hidden lazy canvas releases its backing store. Repaint when it returns.
-          if (!this.overlay.visible) this.painted = null;
-          this.draw();
-          this.emit('change', {});
-        },
-        { signal: ctx.signal },
-      );
-      ctx.state.overlays.on(
-        'settings:change',
-        () => {
-          const options = ctx.state.overlays.getOptions(this.overlay.id);
-          if (equal(options, this.options)) return;
-          this.options = options;
-          refresh();
-        },
-        { signal: ctx.signal },
-      );
-      ctx.scope.defer(() => {
-        this.painted = null;
-        this.data = { values: new Map(), colors: new Map(), counts: new Map(), min: 0, max: 0 };
-      });
-      this.draw();
-    }
-    setOptions(patch) {
-      this.ctx.state.overlays.setOptions(this.overlay.id, {
-        ...this.ctx.state.overlays.getOptions(this.overlay.id),
-        ...patch,
-      });
     }
     ensure() {
-      if (this.dirty) {
-        let options = this.options;
-        if (this.theme === 'daylight') {
-          try {
-            root.AtlasExtensions.utcTime(options.utc || '1936-01-01T12:00:00Z');
-          } catch (_) {
-            options = { ...options, utc: '1936-01-01T12:00:00Z' };
-          }
-        }
-        this.data = projectGeography(
-          this.ctx.state.meta,
-          this.ctx.state.regionIndex,
-          this.theme,
-          options,
-        );
-        this.dirty = false;
-      }
-      return this.data;
+      return super.ensure().state;
     }
-    draw() {
-      if (!this.ctx.ui.viewport.ready || !this.overlay.visible) return;
-      const data = this.ensure();
-      if (this.painted === data) return;
-      drawGeography(this.overlay.context, this.ctx.state.regionIndex, data.colors, {
-        hatching: themes[this.theme].hatching === true,
-        values: data.values,
-        min: data.min,
-        max: data.max,
-      });
-      this.painted = data;
+    get data() {
+      return (
+        this.result?.state || {
+          values: new Map(),
+          colors: new Map(),
+          counts: new Map(),
+          min: 0,
+          max: 0,
+        }
+      );
     }
   }
 
