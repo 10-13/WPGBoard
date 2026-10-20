@@ -31,14 +31,14 @@
       try { const result = record.handler(event); result?.catch?.(error => this.onError(error)); }
       catch (error) { this.onError(error); }
     }
-    dispatch(event) {
+    dispatch(event, { active: allowActive = true } = {}) {
       // Freeze the candidate before observers run; an observer cannot enable an editor for this same click.
       const generation = this.#generation, active = this.#listeners.get(this.#activeId), passive = [...this.#listeners.values()].filter(record => record.mode === 'passive');
       for (const record of passive) {
         if (this.#listeners.get(record.id) !== record) continue;
         try { if (record.enabled()) this.#invoke(record, event); } catch (error) { this.onError(error); }
       }
-      if (!active || event.id == null || generation !== this.#generation || this.#listeners.get(active.id) !== active) return;
+      if (!allowActive || !active || event.id == null || generation !== this.#generation || this.#listeners.get(active.id) !== active) return;
       try { if (active.enabled()) this.#invoke(active, event); else this.clearActive(); } catch (error) { this.clearActive(); this.onError(error); }
     }
   }

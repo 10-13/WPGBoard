@@ -110,9 +110,9 @@
       ctx.menu(ui.mainMenu, { id: 'production', path: ['Ресурсы'], label: 'Добавить производство', enabled: () => !!selected, handler: () => edit(selected) });
       ctx.menu(ui.mainMenu, { id: 'point', path: ['Ресурсы'], label: 'Добавить ресурсную точку', enabled: () => !!selected, handler: () => edit(selected, 'resource-point') });
       ctx.menu(ui.mainMenu, { id: 'statistics', path: ['Ресурсы'], label: 'Статистика всей карты', handler: () => openData('statistics:open', { regionIds: [...state.regions.keys()], title: 'Вся карта' }) });
-      ctx.menu(ui.tileMenu, { id: 'open', path: ['Ресурсы'], label: 'Объекты провинции', when: e => !!e.id, handler: e => open(e.id) });
-      ctx.menu(ui.tileMenu, { id: 'production', path: ['Ресурсы'], label: 'Добавить производство', when: e => !!e.id, handler: e => edit(e.id) });
-      ctx.menu(ui.tileMenu, { id: 'point', path: ['Ресурсы'], label: 'Добавить ресурсную точку', when: e => !!e.id, handler: e => edit(e.id, 'resource-point') });
+      ctx.menu(ui.tileMenu, { id: 'open', path: ['Ресурсы'], label: 'Объекты провинции', handler: id => open(id) });
+      ctx.menu(ui.tileMenu, { id: 'production', path: ['Ресурсы'], label: 'Добавить производство', handler: id => edit(id) });
+      ctx.menu(ui.tileMenu, { id: 'point', path: ['Ресурсы'], label: 'Добавить ресурсную точку', handler: id => edit(id, 'resource-point') });
       ui.registerTooltip('resources', e => { const entries = model.list(e.id); return entries.length ? 'Производств: ' + entries.filter(e => e.kind === 'production').length + ' · Точек: ' + entries.filter(e => e.kind === 'resource-point').length : ''; }, { signal });
     }
   };

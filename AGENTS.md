@@ -18,3 +18,10 @@ Region input uses `ui.regionClicks`: many passive observers and at most one
 active handler. Bind window listeners through `tab.onRegionClick` so closing
 the tab releases them. Do not restore application keyboard shortcuts, the
 click-mode selector, or the removed header; the top contains only the menu.
+
+Common province selection belongs to `ui.regionSelection`: click selects one,
+Shift-click toggles a province without invoking the active editor. This mouse
+modifier is explicitly approved. Province menu entries declare `batch: true`
+for array handlers; ordinary entries only appear for a single province. The
+statistics set remains separate, edited through batch context-menu commands.
+Use `AtlasUI.controls.button` / `createSwitch` for reusable controls.

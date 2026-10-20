@@ -157,11 +157,11 @@
       ctx.menu(ui.mainMenu, { id: 'inspect', path: ['Мир'], label: 'Свойства провинции', handler: openInspector });
       ctx.menu(ui.mainMenu, { id: 'new-nation', path: ['Мир', 'Создать'], label: 'Нация', handler: () => editNation() });
       ctx.menu(ui.mainMenu, { id: 'new-group', path: ['Мир', 'Создать'], label: 'Группа провинций', handler: () => editGroup() });
-      ctx.menu(ui.tileMenu, { id: 'assign', path: ['Владелец'], label: 'Назначить выбранной нации', when: e => !!e.id, enabled: () => !!model.data.items[activeNation], handler: e => model.assign([e.id], activeNation) });
-      ctx.menu(ui.tileMenu, { id: 'release', path: ['Владелец'], label: 'Освободить провинцию', when: e => !!e.id, handler: e => model.assign([e.id], null) });
-      ctx.menu(ui.tileMenu, { id: 'inspect', label: 'Свойства провинции', when: e => !!e.id, handler: e => { ui.viewport.select(e.id); openInspector(); } });
-      ctx.menu(ui.tileMenu, { id: 'nation-info', label: 'Информация о нации', when: e => !!model.data.items[model.data.owners[e.id]], handler: e => openNationInfo(model.data.owners[e.id]) });
-      ctx.menu(ui.tileMenu, { id: 'nation-set', path: ['Данные'], label: 'Добавить все провинции этой нации в набор', when: e => !!model.data.items[model.data.owners[e.id]], handler: e => addNationToSet(model.data.owners[e.id]) });
+      ctx.menu(ui.tileMenu, { id: 'assign', path: ['Владелец'], label: 'Назначить выбранной нации', batch: true, enabled: () => !!model.data.items[activeNation], handler: ids => model.assign(ids, activeNation) });
+      ctx.menu(ui.tileMenu, { id: 'release', path: ['Владелец'], label: 'Освободить провинции', batch: true, handler: ids => model.assign(ids, null) });
+      ctx.menu(ui.tileMenu, { id: 'inspect', label: 'Свойства провинции', handler: id => { ui.viewport.select(id); openInspector(); } });
+      ctx.menu(ui.tileMenu, { id: 'nation-info', label: 'Информация о нации', when: e => !!model.data.items[model.data.owners[e.id]], handler: id => openNationInfo(model.data.owners[id]) });
+      ctx.menu(ui.tileMenu, { id: 'nation-set', path: ['Данные'], label: 'Добавить все провинции этой нации в набор', when: e => !!model.data.items[model.data.owners[e.id]], handler: id => addNationToSet(model.data.owners[id]) });
       ui.registerTooltip('nations', e => { const d = model.data, owner = d.items[d.owners[e.id]]; return (d.names[e.id] ? d.names[e.id] + ' · ' : '') + (owner?.name || 'Свободная территория'); }, { signal });
       ui.registerStatus('nations', () => Object.keys(model.data.owners).length + ' назначено' + (mode() === 'paint' ? ' · ' + (model.data.items[activeNation]?.name || 'выберите нацию') : ''), { signal });
       openNations(); openInspector();

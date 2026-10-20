@@ -15,6 +15,13 @@ test('all passive observers run, but only the explicitly selected editor runs',(
   clicks.clearActive(); clicks.dispatch({id:4});
   assert.deepEqual(calls,['inspect:1','resources:1','inspect:2','resources:2','paint:2','inspect:3','resources:3','set:3','inspect:4','resources:4']);
 });
+test('selection gestures notify observers without painting and do not deactivate the editor',()=>{
+  const clicks=new RegionClicks(),seen=[];let painted=0;
+  clicks.subscribe(e=>seen.push(e.id));const paint=clicks.subscribe(()=>painted++,{mode:'active'});paint.activate();
+  clicks.dispatch({id:1,originalEvent:{shiftKey:true}},{active:false});
+  assert.deepEqual(seen,[1]);assert.equal(painted,0);assert.equal(paint.selected,true);
+  clicks.dispatch({id:2});assert.deepEqual(seen,[1,2]);assert.equal(painted,1);
+});
 test('closing an owner removes its observers and editor without reviving a previous editor',()=>{
   const clicks=new RegionClicks(), nation=new AbortController(), stats=new AbortController();let painted=0,collected=0,observed=0;
   const paint=clicks.subscribe(()=>painted++,{id:'paint',mode:'active',signal:nation.signal});

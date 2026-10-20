@@ -1,8 +1,8 @@
 (function (root) {
   'use strict';
   const { EventBus, Scope } = root.AtlasCore;
+  const { button, createSwitch } = root.AtlasUI.controls;
   const el = (tag, className = '', text = '') => { const node = document.createElement(tag); node.className = className; if (text) node.textContent = text; return node; };
-  function button(label, callback, { signal, className = '', title = label } = {}) { const b = el('button', className, label); b.type = 'button'; b.title = title; b.addEventListener('click', callback, signal ? { signal } : undefined); return b; }
   function field(label, input) { const node = el('label', 'field'); node.append(el('span', 'field-label', label), input); return node; }
   class ExtensionHost extends EventBus {
     #definitions = new Map(); #running = new Map();
@@ -32,7 +32,7 @@
     #statuses = new Map(); #tooltipProviders = new Map(); #toastTimer;
     constructor(key) {
       super(); if (key !== singletonKey) throw new Error('Используйте AtlasUI.getUI().');
-      this.input = new EventBus(); this.regionClicks = new root.AtlasUI.RegionClicks({ onError: e => this.notify(e.message) }); this.saveStatus = 'Локальная партия'; this.mainMenu = new root.AtlasUI.TreeMenu({ id: 'main', onError: e => this.notify(e.message) }); this.tileMenu = new root.AtlasUI.TreeMenu({ id: 'tile', onError: e => this.notify(e.message) }); this.extensions = new ExtensionHost(this);
+      this.input = new EventBus(); this.regionClicks = new root.AtlasUI.RegionClicks({ onError: e => this.notify(e.message) }); this.saveStatus = 'Локальная партия'; this.mainMenu = new root.AtlasUI.TreeMenu({ id: 'main', onError: e => this.notify(e.message) }); this.tileMenu = new root.AtlasUI.TreeMenu({ id: 'tile', regionContext: true, onError: e => this.notify(e.message) }); this.extensions = new ExtensionHost(this);
     }
     async mount({ host, state = root.AtlasCore.getGameState() }) {
       if (this.host) return this; this.host = host; this.state = state; host.className = 'atlas-shell';
@@ -45,16 +45,33 @@
       this.toast = el('div', 'toast'); this.toast.hidden = true; this.busyOverlay = el('div', 'busy-overlay'); this.busyOverlay.hidden = true;
       const menuRow = el('div', 'shell-menu-row'); menuRow.append(menubar); host.replaceChildren(menuRow, this.workspace, this.footer, this.toast, this.busyOverlay);
       this.viewport = new root.AtlasUI.MapViewport(this.mapHost, state, this.input); this.windows = new root.AtlasUI.WindowManager(this.windowHost, { regionClicks: this.regionClicks });
+      this.regionSelection = new root.AtlasUI.RegionSelection({ valid: id => state.regions.has(id) });
+      const selectionLayer = this.viewport.addLayer({ id: 'ui:selection', order: 95, exportable: false });
+      this.viewport.selectedCanvas.hidden = true;
+      const drawSelection = () => root.AtlasUI.drawRegionSet(selectionLayer.context, state.regionIndex, this.regionSelection.ids);
+      this.regionSelection.on('change', event => { drawSelection(); this.refresh(); this.input.emit('regions:selection', event); });
+      this.viewport.on('ready', drawSelection);
+      state.on('map:loaded', () => this.regionSelection.clear());
+      this.regionClicks.subscribe(event => {
+        if (event.originalEvent?.shiftKey) this.regionSelection.toggle(event.id);
+        else this.regionSelection.replace(event.id == null ? [] : [event.id]);
+      }, { id: 'ui:selection', mode: 'passive' });
       this.mainMenu.mountBar(menubar, () => ({ state, ui: this }));
       const refreshClicks = () => { this.viewport.element.style.setProperty('--region-click-cursor', this.regionClicks.active?.cursor || 'crosshair'); this.refresh(); };
       this.regionClicks.on('change', refreshClicks); refreshClicks();
-      this.input.on('province:click', event => this.regionClicks.dispatch(event));
+      this.input.on('province:click', event => this.regionClicks.dispatch(event, { active: !event.originalEvent?.shiftKey }));
+      this.mainMenu.register({ id: 'ui.clear-selection', path: ['Мир'], label: 'Снять выделение провинций', enabled: () => this.regionSelection.size > 0, handler: () => this.regionSelection.clear() });
+      this.tileMenu.register({ id: 'ui.clear-selection', label: 'Снять выделение', batch: true, order: 100, handler: () => this.regionSelection.clear() });
       this.mainMenu.register({ id: 'ui.fit', path: ['Вид'], label: 'Вся карта', handler: () => this.viewport.fit() });
       this.mainMenu.register({ id: 'ui.ids', path: ['Вид'], label: 'Показать / скрыть ID', handler: () => { this.viewport.showIds = !this.viewport.showIds; this.viewport.drawNumbers(); } });
       this.mainMenu.register({ id: 'ui.base', path: ['Вид'], label: 'Сменить светлую / исходную основу', handler: () => this.viewport.setBaseStyle(this.viewport.baseStyle === 'original' ? 'light' : 'original') });
       this.mainMenu.register({ id: 'ui.modules', path: ['Вид'], label: 'Расширения', handler: () => this.showExtensions() });
       this.mainMenu.register({ id: 'ui.windows-help', path: ['Вид'], label: 'Управление окнами', handler: () => this.showWindowHelp() });
-      this.input.on('province:context', e => this.tileMenu.open({ x: e.clientX, y: e.clientY, context: { ...e, state, ui: this } }));
+      this.input.on('province:context', e => {
+        const regionIds = this.regionSelection.forContext(e.id), id = regionIds.length === 1 ? regionIds[0] : null, region = id ? state.regions.get(id) : null;
+        if (id) this.viewport.select(id);
+        this.tileMenu.open({ x: e.clientX, y: e.clientY, context: { ...e, id, region, province: region, clickedId: e.id, regionIds, state, ui: this } });
+      });
       this.input.on('province:hover', event => this.#showTooltip(event));
       this.input.on('pointer:move', event => { this.coords.textContent = 'X ' + Math.floor(event.x) + '  Y ' + Math.floor(event.y); if (!this.tooltip.hidden) { const r = this.workspace.getBoundingClientRect(); this.tooltip.style.left = Math.max(5, Math.min(event.clientX - r.left + 16, r.width - this.tooltip.offsetWidth - 5)) + 'px'; this.tooltip.style.top = Math.max(5, Math.min(event.clientY - r.top + 16, r.height - this.tooltip.offsetHeight - 5)) + 'px'; } });
       this.viewport.on('camera:change', e => { this.zoomLabel.textContent = Math.round(e.scale * 100) + '%'; });
@@ -65,7 +82,7 @@
     async renderMap() { if (this.state.loaded) await this.viewport.load(); }
     refresh() {
       if (!this.host) return;
-      this.status.textContent = [this.state.regions.size.toLocaleString('ru-RU') + ' областей', this.regionClicks.active?.label || 'Просмотр', ...[...this.#statuses.values()].map(p => p(this.state)).filter(Boolean), this.saveStatus].filter(Boolean).join('  ·  ');
+      this.status.textContent = [this.state.regions.size.toLocaleString('ru-RU') + ' областей', this.regionClicks.active?.label || 'Просмотр', this.regionSelection?.size ? 'Выделено: ' + this.regionSelection.size : '', ...[...this.#statuses.values()].map(p => p(this.state)).filter(Boolean), this.saveStatus].filter(Boolean).join('  ·  ');
     }
     setSaveStatus(message) { this.saveStatus = message; this.refresh(); }
     registerStatus(id, provider, { signal } = {}) { return this.#register(this.#statuses, id, provider, signal); }
@@ -83,5 +100,5 @@
     showWindowHelp() { this.windows.open({ id: 'ui:window-help', title: 'Окна и вкладки', x: 330, y: 60, width: 300, height: 230, render: pane => { pane.append(el('p', '', 'Тяните заголовок или значок ⠿, чтобы переместить окно. Отпустите его над другим окном — вкладки объединятся.'), el('p', '', 'Вкладку можно перетащить в другое окно или вынести на карту, чтобы отделить. Потяните за нижний правый угол для изменения размера.'), el('p', '', 'Крестик вкладки закрывает её. Последняя закрытая вкладка автоматически закрывает окно. Правый клик по провинции открывает её меню.')); } }); }
   }
   const getUI = () => singleton || (singleton = new Interface(singletonKey));
-  Object.assign(root.AtlasUI, { Interface, ExtensionHost, getUI, dom: { el, button, field } });
+  Object.assign(root.AtlasUI, { Interface, ExtensionHost, getUI, dom: { el, button, createSwitch, field } });
 })(globalThis);

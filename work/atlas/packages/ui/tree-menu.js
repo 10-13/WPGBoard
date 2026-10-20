@@ -9,31 +9,40 @@
       this.#off = () => signal?.removeEventListener('abort', abort); if (signal?.aborted) this.disable();
     }
     get active() { return this.#active; }
-    invoke(context) { if (this.#active) return this.#fn(context); }
+    invoke(...args) { if (this.#active) return this.#fn(...args); }
     disable() { if (!this.#active) return; this.#active = false; this.#fn = null; this.#off?.(); this.emit('inactive', {}); }
     dispose() { this.disable(); }
   }
   class TreeMenu extends EventBus {
     #items = new Map(); #bar = null; #contextProvider; #popup = null; #popupCleanup;
-    constructor({ id = uid('menu'), onError = error => console.error(error) } = {}) { super(); this.id = id; this.onError = onError; }
+    constructor({ id = uid('menu'), regionContext = false, onError = error => console.error(error) } = {}) { super(); this.id = id; this.regionContext = regionContext; this.onError = onError; }
     get size() { return this.#items.size; }
-    register({ id = uid('action'), path = [], label, handler, signal, when = () => true, enabled = () => true, order = 0 }) {
+    register({ id = uid('action'), path = [], label, handler, signal, batch = false, when = () => true, enabled = () => true, order = 0 }) {
       if (this.#items.has(id)) throw new Error('Пункт меню уже зарегистрирован: ' + id);
       if (!Array.isArray(path) || path.some(x => typeof x !== 'string') || typeof label !== 'string' || !label) throw new Error('Нужны путь и подпись пункта меню.');
+      if (typeof batch !== 'boolean') throw new TypeError('batch должен быть логическим значением.');
       const owned = !(handler instanceof ActionHandler), action = owned ? new ActionHandler(handler, { signal }) : handler;
       let disposed = false, offInactive = () => {};
       const dispose = () => { if (disposed) return; disposed = true; this.#items.delete(id); offInactive(); signal?.removeEventListener('abort', dispose); if (owned) action.dispose(); this.#changed(); };
       const registration = Object.freeze({ id, handler: action, dispose });
       if (!action.active || signal?.aborted) return registration;
-      this.#items.set(id, { id, path: [...path], label, handler: action, when, enabled, order, dispose });
+      this.#items.set(id, { id, path: [...path], label, handler: action, batch, when, enabled, order, dispose });
       offInactive = action.on('inactive', dispose); signal?.addEventListener('abort', dispose, { once: true }); this.#changed(); return registration;
     }
     unregister(id) { this.#items.get(id)?.dispose(); }
     has(id) { return this.#items.has(id); }
+    #context(context) {
+      if (!this.regionContext) return context;
+      const regionIds = Object.freeze([...new Set(context.regionIds ?? (context.id == null ? [] : [context.id]))].filter(id => Number.isInteger(id) && id > 0));
+      const id = regionIds.length === 1 ? regionIds[0] : null;
+      return Object.freeze({ ...context, regionIds, id, region: id ? context.region : null, province: id ? context.province : null });
+    }
+    #available(item, context) { return item.handler.active && (!this.regionContext || context.regionIds.length > 0 && (item.batch || context.regionIds.length === 1)) && item.when(context); }
     getTree(context = {}, prefix = []) {
+      context = this.#context(context);
       const rootNode = { children: [] };
       for (const item of this.#items.values()) {
-        if (!item.handler.active || !item.when(context) || prefix.some((p, i) => item.path[i] !== p)) continue;
+        if (!this.#available(item, context) || prefix.some((p, i) => item.path[i] !== p)) continue;
         let node = rootNode;
         for (const group of item.path.slice(prefix.length)) {
           let child = node.children.find(c => c.group && c.label === group);
@@ -51,16 +60,17 @@
       if (!this.#bar) return; this.#bar.replaceChildren();
       for (const node of this.getTree(this.#contextProvider())) {
         const button = document.createElement('button'); button.className = 'menubar-item'; button.textContent = node.label;
-        button.onclick = event => { event.stopPropagation(); if (node.group) { const r = button.getBoundingClientRect(); this.open({ x: r.left, y: r.bottom + 2, path: [node.label], context: this.#contextProvider() }); } else this.#invoke(node, this.#contextProvider()); };
+        button.onclick = event => { event.stopPropagation(); if (node.group) { const r = button.getBoundingClientRect(); this.open({ x: r.left, y: r.bottom + 2, path: [node.label], context: this.#contextProvider() }); } else this.invoke(node.id, this.#contextProvider()); };
         this.#bar.append(button);
       }
     }
-    #invoke(item, context) {
-      if (!item.handler.active || !item.enabled) return;
-      this.close(); try { const result = item.handler.invoke(context); if (result?.catch) result.catch(this.onError); } catch (error) { this.onError(error); }
+    invoke(id, context = {}) {
+      context = this.#context(context); const item = this.#items.get(id);
+      if (!item || !this.#available(item, context) || !(typeof item.enabled === 'function' ? item.enabled(context) : item.enabled)) return;
+      this.close(); try { const result = this.regionContext ? item.handler.invoke(item.batch ? context.regionIds : context.id, context) : item.handler.invoke(context); if (result?.catch) result.catch(this.onError); return result; } catch (error) { this.onError(error); }
     }
     open({ x = 10, y = 40, context = {}, path = [] } = {}) {
-      this.close(); const nodes = this.getTree(context, path); if (!nodes.length) return;
+      this.close(); context = this.#context(context); const nodes = this.getTree(context, path); if (!nodes.length) return;
       const container = document.createElement('div'); container.className = 'tree-menu-root'; container.dataset.menu = this.id; document.body.append(container); this.#popup = container;
       const draw = (items, px, py, level) => {
         for (const panel of [...container.children]) if (Number(panel.dataset.level) >= level) panel.remove();
@@ -70,7 +80,7 @@
           const label = document.createElement('span'); label.textContent = item.label; button.append(label);
           if (item.group) { const hint = document.createElement('small'); hint.textContent = '›'; button.append(hint); }
           if (item.group) { button.setAttribute('aria-haspopup', 'menu'); button.onclick = event => { event.stopPropagation(); const r = button.getBoundingClientRect(); draw(item.children, r.right + 2, r.top, level + 1); }; }
-          else { button.disabled = !item.enabled; button.onclick = event => { event.stopPropagation(); this.#invoke(item, context); }; }
+          else { button.disabled = !item.enabled; button.onclick = event => { event.stopPropagation(); this.invoke(item.id, context); }; }
           panel.append(button);
         }
         container.append(panel); const rect = panel.getBoundingClientRect();

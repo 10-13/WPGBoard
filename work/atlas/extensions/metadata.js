@@ -1,15 +1,11 @@
 /* Generic entry editor and statistic viewer. Other modules communicate by events. */
 (function (root) {
   'use strict';
-  const { el, button, field } = root.AtlasUI.dom;
+  const { el, button, createSwitch, field } = root.AtlasUI.dom;
   const { createDataRow, createDataGroup, renderDataTree } = root.AtlasUI.dataView;
   const format = value => typeof value === 'number' ? value.toLocaleString('ru-RU', { maximumFractionDigits: 4 }) : typeof value === 'string' ? value : JSON.stringify(value);
   function drawRegionSet(context, index, ids) {
-    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-    context.fillStyle = 'rgba(67,211,228,.23)';
-    for (const id of ids) index.forEachRun(id, (start, length) => context.fillRect(start % index.width, Math.floor(start / index.width), length, 1));
-    context.fillStyle = '#76e4ef';
-    for (const id of ids) index.forEachRun(id, (start, length) => { const x = start % index.width, y = Math.floor(start / index.width); context.fillRect(x, y, 1, 1); if (length > 1) context.fillRect(x + length - 1, y, 1, 1); });
+    root.AtlasUI.drawRegionSet(context, index, ids, { fill: 'rgba(67,211,228,.23)', edge: '#76e4ef' });
   }
   function renderBlocks(pane, report, expanded = new Map()) {
     pane.classList.add('atlas-data-scope');
@@ -24,10 +20,8 @@
       const highlight = ctx.layer({ id: 'chosen', order: 80, exportable: false });
       const drawChosen = () => drawRegionSet(highlight.context, state.regionIndex, showChosen ? chosen : []);
       const refreshSet = () => { drawChosen(); ui.emit('metadata:refresh', {}); ui.refresh(); };
-      let collectListener = null;
-      const collectRegions = () => { mode = 'set'; showChosen = true; openStatistics(); collectListener.activate(); refreshSet(); };
-      const addRegions = ids => { for (const id of ids) if (state.regions.has(id)) chosen.add(id); mode = 'set'; setTitle = ''; collectRegions(); };
-      ui.regionClicks.on('change', refreshSet, { signal });
+      const addRegions = ids => { for (const id of ids) if (state.regions.has(id)) chosen.add(id); mode = 'set'; setTitle = ''; openStatistics(); };
+      const removeRegions = ids => { for (const id of ids) chosen.delete(id); mode = 'set'; setTitle = ''; openStatistics(); };
       ui.on('map:ready', drawChosen, { signal });
       const protect = fn => (...args) => { try { return fn(...args); } catch (e) { ui.notify(e.message); } };
       const watch = (fn, scope) => { state.on('change', fn, { signal: scope.signal }); state.on('map:loaded', fn, { signal: scope.signal }); ui.on('metadata:refresh', fn, { signal: scope.signal }); };
@@ -73,7 +67,7 @@
           const draw = () => {
             pane.replaceChildren(); if (!state.regions.has(selected)) { pane.append(el('p', 'muted', 'Выберите провинцию на карте.')); return; }
             const id = selected; tab.setTitle('Метаданные #' + id); pane.append(el('div', 'inspector-id', 'ТАЙЛ #' + id));
-            const tools = el('div', 'tool-row'); tools.append(button('+ Запись', () => edit(id)), button('В набор', () => addRegions([id]), { title: 'Добавить тайл в набор статистики' }), button('Статистика', () => openStatistics())); pane.append(tools);
+            const tools = el('div', 'tool-row'); tools.append(button('+ Запись', () => edit(id)), button('Статистика', () => openStatistics())); pane.append(tools);
             const entries = state.tileMetadata.list(id);
             for (const entry of entries) {
               const key = id + ':' + entry.id, group = createDataGroup(entry.title, { id: entry.id, open: expanded.has(key) ? expanded.get(key) : true, onToggle: open => expanded.set(key, open) });
@@ -90,22 +84,14 @@
       function openStatistics(ids = null, title = '') {
         if (ids) { chosen.clear(); for (const id of ids) if (state.regions.has(id)) chosen.add(id); mode = 'set'; setTitle = title; }
         const handle = ctx.window({ id: 'statistics', title: 'Статистика регионов', x: 650, y: 35, width: 350, height: 420, render(pane, scope, tab) {
-          const collector = tab.onRegionClick(event => {
-            if (!state.regions.has(event.id)) return;
-            if (chosen.has(event.id)) chosen.delete(event.id); else chosen.add(event.id);
-            mode = 'set'; setTitle = ''; refreshSet();
-          }, { id: 'metadata:collect', mode: 'active', label: 'Набор регионов', cursor: 'copy' });
-          collectListener = collector; scope.defer(() => { if (collectListener === collector) collectListener = null; });
           pane.classList.add('atlas-data-scope'); const expanded = new Map();
           const draw = () => {
             pane.replaceChildren(); const choose = document.createElement('select'); choose.setAttribute('aria-label', 'Область статистики');
             for (const [id, label] of [['current', 'Текущий тайл'], ['set', setTitle || 'Выбранный набор'], ['all', 'Вся карта']]) choose.append(new Option(label, id)); choose.value = mode; choose.onchange = () => { mode = choose.value; draw(); }; pane.append(field('Область', choose));
-            const collecting = collector.selected, collect = button('Набор на карте', () => { if (collector.selected) collector.deactivate(); else collectRegions(); }, { className: collecting ? 'set-active' : '', title: 'Включить или выключить выбор набора кликами по карте' }); collect.setAttribute('aria-pressed', String(collecting));
-            const tools = el('div', 'tool-row set-tools'), add = button('Добавить тайл', () => addRegions([selected])), clear = button('Очистить набор', () => { chosen.clear(); setTitle = ''; mode = 'set'; refreshSet(); }); add.disabled = !state.regions.has(selected); tools.append(collect, add, clear); pane.append(tools);
-            const visible = document.createElement('input'); visible.type = 'checkbox'; visible.checked = showChosen; visible.setAttribute('aria-label', 'Подсветка набора'); visible.onchange = () => { showChosen = visible.checked; drawChosen(); }; pane.append(field('Подсветка набора', visible), el('p', 'set-count', 'В наборе: ' + chosen.size + ' провинций'));
-            if (collecting) pane.append(el('p', 'set-tool-help', 'Клик — добавить или убрать провинцию. Кнопка «Набор на карте» выключает выбор. Закрытие окна тоже отключает его. Территории целой нации добавляются кнопкой ⊞ в списке наций.'));
+            const tools = el('div', 'tool-row set-tools');
+            tools.append(createSwitch('Подсветка набора', checked => { showChosen = checked; drawChosen(); }, { checked: showChosen, title: 'Показать или скрыть бирюзовую подсветку набора статистики' }), button('Очистить набор', () => { chosen.clear(); setTitle = ''; mode = 'set'; refreshSet(); }, { disabled: !chosen.size })); pane.append(tools, el('p', 'set-count', 'Провинций в наборе: ' + chosen.size));
+            pane.append(el('p', 'muted', 'Клик выбирает провинцию; Shift + клик добавляет или убирает. Правый клик → Данные → добавить в набор или исключить.'));
             const ids = mode === 'all' ? [...state.regions.keys()] : mode === 'current' ? state.regions.has(selected) ? [selected] : [] : [...chosen].filter(id => state.regions.has(id));
-            if (mode === 'set') { const chips = el('div', 'region-chips'); for (const id of ids.slice(0, 50)) { const chip = button('#' + id + ' ×', () => { chosen.delete(id); refreshSet(); }, { title: 'Убрать #' + id + ' из набора', className: 'small' }); chips.append(chip); } if (ids.length > 50) chips.append(el('span', 'muted small', 'и ещё ' + (ids.length - 50) + '; в расчёте участвует весь набор')); pane.append(chips); }
             if (!ids.length) pane.append(el('p', 'muted', 'Выберите тайл или добавьте регионы в набор.'));
             try { renderBlocks(pane, state.statistics.collect(ids), expanded); } catch (e) { pane.append(el('p', 'form-error', e.message)); }
           };
@@ -117,14 +103,15 @@
       state.on('map:loaded', () => { if (state.map.id !== mapId) { mapId = state.map.id; selected = null; chosen.clear(); setTitle = ''; mode = 'set'; refreshSet(); } }, { signal });
       ui.on('metadata:open', e => openMetadata(e.regionId), { signal }); ui.on('statistics:open', e => openStatistics(e.regionIds, e.title), { signal });
       ui.on('statistics:add-regions', e => addRegions(e.regionIds), { signal });
+      ui.on('statistics:remove-regions', e => removeRegions(e.regionIds), { signal });
       ctx.menu(ui.mainMenu, { id: 'entries', path: ['Данные'], label: 'Метаданные тайла', handler: () => openMetadata() });
       ctx.menu(ui.mainMenu, { id: 'statistics', path: ['Данные'], label: 'Статистика регионов', handler: () => openStatistics() });
-      ctx.menu(ui.mainMenu, { id: 'collect', path: ['Данные'], label: 'Набор регионов на карте', handler: collectRegions });
-      ctx.menu(ui.tileMenu, { id: 'entries', path: ['Данные'], label: 'Метаданные тайла', when: e => !!e.id, handler: e => openMetadata(e.id) });
-      ctx.menu(ui.tileMenu, { id: 'add', path: ['Данные'], label: 'Добавить запись', when: e => !!e.id, handler: e => edit(e.id) });
-      ctx.menu(ui.tileMenu, { id: 'statistics', path: ['Данные'], label: 'Статистика тайла', when: e => !!e.id, handler: e => { selected = e.id; mode = 'current'; openStatistics(); } });
-      ctx.menu(ui.tileMenu, { id: 'set', path: ['Данные'], label: 'В набор статистики', when: e => !!e.id, handler: e => addRegions([e.id]) });
-      ui.registerStatus('metadata:set', () => chosen.size || ui.regionClicks.activeId === 'metadata:collect' ? 'В наборе: ' + chosen.size : '', { signal });
+      ctx.menu(ui.tileMenu, { id: 'entries', path: ['Данные'], label: 'Метаданные тайла', handler: id => openMetadata(id) });
+      ctx.menu(ui.tileMenu, { id: 'add', path: ['Данные'], label: 'Добавить запись', handler: id => edit(id) });
+      ctx.menu(ui.tileMenu, { id: 'statistics', path: ['Данные'], label: 'Статистика тайла', handler: id => { selected = id; mode = 'current'; openStatistics(); } });
+      ctx.menu(ui.tileMenu, { id: 'set', path: ['Данные'], label: 'Добавить в набор статистики', batch: true, handler: ids => addRegions(ids) });
+      ctx.menu(ui.tileMenu, { id: 'unset', path: ['Данные'], label: 'Исключить из набора статистики', batch: true, enabled: e => e.regionIds.some(id => chosen.has(id)), handler: ids => removeRegions(ids) });
+      ui.registerStatus('metadata:set', () => chosen.size ? 'В наборе: ' + chosen.size : '', { signal });
       ui.registerTooltip('metadata', e => { const entries = state.tileMetadata.list(e.id); return entries.length ? 'Записей: ' + entries.length + ' · ' + entries.slice(0, 2).map(e => e.title).join(', ') : ''; }, { signal });
     }
   };
