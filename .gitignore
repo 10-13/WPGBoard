@@ -1,6 +1,11 @@
-_qa.html
-dist/_qa.html
-map-preview.png
-upload-fixture.png
+.DS_Store
 __pycache__/
-*.tar.gz
+*.py[cod]
+
+# Only application sources are versioned under the scratch directory.
+/work/*
+!/work/atlas/
+
+# Rebuildable distribution archives; HTML, JSON and previews remain versioned.
+/outputs/*.zip
+/outputs/*.tar.gz

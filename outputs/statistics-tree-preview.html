@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>АТЛАС — компактное дерево статистики</title>
+<style>
+:root{--ui-font-size:10px;color-scheme:dark;font:400 var(--ui-font-size)/14px Menlo,Consolas,"Liberation Mono",monospace;color:#c5d0d5;background:#18242c;font-synthesis:none}*{box-sizing:border-box;font-family:inherit;font-size:inherit;font-style:normal}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 48% 35%,#344c59 0,#243640 44%,#18242c 100%)}button,select{font:inherit;color:inherit}button{cursor:pointer;border:1px solid #4b5b64;background:#283840;padding:3px 6px;font-size:inherit;border-radius:1px}button:hover{background:#364e5b}header.app{height:34px;display:flex;align-items:center;padding:0 18px;gap:10px;border-bottom:1px solid #485a64;background:linear-gradient(#29363e,#1b252c)}.brand{font-size:inherit;letter-spacing:3px;color:#dce5e7}.mark{color:#bfae87;font:inherit}.context{padding-left:12px;border-left:1px solid #4b5961;color:#829ba8;font-size:inherit}.draft{margin-left:auto;font-size:inherit;color:#9bafb9}.canvas{display:flex;justify-content:center;padding:26px 16px 30px}.window{width:370px;max-width:100%;background:#1b272ff7;border:1px solid #82939d;box-shadow:0 12px 48px #07151d70}.chrome{height:25px;display:flex;align-items:stretch;background:linear-gradient(#36434b,#253139);border-bottom:1px solid #0f1d25;color:#d5e1e6;font-size:inherit}.grip{width:15px;display:grid;place-items:center;color:#8196a3}.tab{display:flex;align-items:center;gap:14px;padding:0 7px;border-inline:1px solid #52636c;background:#1e2a32}.tab span:last-child{font-size:inherit;color:#8fa5b0}.close{margin-left:auto;width:23px;border:0;border-left:1px solid #455962;background:none;color:#8fa5b0;font-size:inherit}.pane{padding:9px 11px 11px}.scope{display:flex;align-items:center;gap:8px;margin-bottom:7px;color:#8fa6b2;font-size:inherit}.scope select{font-size:inherit;flex:1;min-width:0;border:1px solid #465e6b;background:#14232c;padding:3px 5px}.scope span:last-child{font:inherit;color:#9daea3}.actions{display:flex;gap:4px;margin-bottom:12px}.actions button{flex:1;font-size:inherit}.actions button:first-child{flex:1.35}.actions .active{background:#254b57;border-color:#5a9aa8;color:#d1edf2}.tree{font-size:inherit;line-height:1.3}.folder{padding:0;margin:0}.folder>summary{display:flex;align-items:center;gap:5px;min-height:16px;margin:0;padding:1px 0;line-height:14px;list-style:none;cursor:pointer;font-size:inherit;color:#a7bdc8;user-select:none}.folder>summary::-webkit-details-marker{display:none}.folder>summary::before{content:none}.folder>summary::after{content:'';height:3px;border-top:1px solid currentColor;border-bottom:1px solid currentColor;flex:1;min-width:14px;margin-left:3px;opacity:.5}.folder>summary>span{min-width:0;max-width:calc(100% - 30px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.folder[open]>summary{color:#c5ba9d}.folder.root>summary{font-size:inherit;margin-top:0}.folder.root:first-child>summary{margin-top:0}.children{margin-left:3px;padding-left:17px;border-left:1px solid #354b56}.folder.root>.children{margin-left:3px;padding-left:17px}.row{display:flex;align-items:baseline;gap:6px;min-height:16px;padding:1px 0;border:0;font-size:inherit;line-height:14px}.name{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#c2d0d7}.leader{flex:1;min-width:10px;border-bottom:1px solid #435964;align-self:center;transform:translateY(1px);opacity:.75}.value{flex:0 0 auto;font:inherit;font-weight:400;white-space:nowrap;color:#d7e3e8;text-align:right}.net>.value{color:#92d0c9}
+@media(max-width:500px){.canvas{padding-top:16px}.context{display:none}.draft{font-size:inherit}}
+</style>
+<header class="app"><span class="mark">✧</span><strong class="brand">АТЛАС</strong><span class="context">СТАТИСТИКА</span><span class="draft">Макет · пример данных</span></header>
+<main class="canvas"><section class="window" aria-label="Статистика регионов">
+<div class="chrome"><span class="grip">⠿</span><div class="tab">Статистика регионов <span>×</span></div><button class="close" aria-label="Закрыть окно">×</button></div>
+<div class="pane"><div class="scope"><span>Область</span><select aria-label="Область статистики"><option>Выбранный набор</option></select><span>24 региона</span></div><div class="actions"><button class="active">Набор на карте · S</button><button>+ Тайл</button><button>Очистить</button></div><div class="tree" id="tree"></div></div>
+</section></main>
+<script>
+const leaf=(title,value,unit='',net=false)=>({title,value,unit,net}), folder=(title,children,open=true)=>({title,children,open});
+const nodes=[
+ folder('Размер регионов',[leaf('Регионов','24'),leaf('Площадь','12 480','px²')],false),
+ folder('Ресурсы · чистый выпуск',[
+  leaf('Нефть','150','т/ход',true),leaf('Продовольствие','300','т/ход',true),leaf('Сталь','100','т/ход',true),
+  folder('Грязное производство',[leaf('Железо','100','т/ход'),leaf('Уголь','100','т/ход'),leaf('Сталь','100','т/ход'),folder('Загрузка предприятий',[],false)]),
+  folder('Потенциал',[
+   folder('Железо',[leaf('Макс. выпуск','100','т/ход'),leaf('Макс. расход','200','т/ход')]),
+   folder('Сталь',[leaf('Макс. выпуск','200','т/ход'),leaf('Макс. расход','0','т/ход')]),
+   folder('Остальные ресурсы',[],false)
+  ]),
+  folder('Бонусы',[
+   folder('Базовое производство',[leaf('Железо','100','т/ход'),leaf('Уголь','100','т/ход'),leaf('Сталь','100','т/ход')],false),
+   folder('Модификаторы',[
+    folder('Сталь',[leaf('К выпуску провинции','+100','%'),leaf('Расход железа · весь набор','−50','%')])
+   ])
+  ])
+ ]),
+ folder('Метаданные',[leaf('Записей','12')],false)
+];
+function render(node,parent,depth=0){
+ if(node.children){const d=document.createElement('details');d.className='folder'+(!depth?' root':'');d.open=node.open;const s=document.createElement('summary'),name=document.createElement('span');name.textContent=node.title;name.title=node.title;s.append(name);d.append(s);const c=document.createElement('div');c.className='children';node.children.forEach(n=>render(n,c,depth+1));d.append(c);parent.append(d);}
+ else{const row=document.createElement('div');row.className='row'+(node.net?' net':'');const name=document.createElement('span'),line=document.createElement('span'),value=document.createElement('span');name.className='name';name.textContent=node.title;name.title=node.title;line.className='leader';line.setAttribute('aria-hidden','true');value.className='value';value.textContent=node.value+(node.unit?' '+node.unit:'');row.append(name,line,value);parent.append(row);}
+}
+nodes.forEach(node=>render(node,document.getElementById('tree')));
+</script>
+</html>

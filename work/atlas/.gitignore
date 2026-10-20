@@ -1,0 +1,7 @@
+_qa*.html
+dist/_qa*.html
+.openai/
+map-preview.png
+upload-fixture.png
+__pycache__/
+*.tar.gz
