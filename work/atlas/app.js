@@ -29,8 +29,8 @@
     let saved; try { saved = await storage.get(saveKey); } catch (e) {}
     if (saved) { try { await loadProject(saved, false); } catch (error) { console.warn('Saved party rejected:', error.message); await loadProject(embedded, false); ui.notify('Автосохранение повреждено; открыта встроенная партия.'); } }
     else await loadProject(embedded, false);
-    ui.extensions.register(AtlasExtensions.createFilesExtension(services)); ui.extensions.register(AtlasExtensions.nations); ui.extensions.register(AtlasExtensions.history); ui.extensions.register(AtlasExtensions.metadata); ui.extensions.register(AtlasExtensions.resources);
-    await ui.extensions.enable('files'); await ui.extensions.enable('nations'); await ui.extensions.enable('history'); await ui.extensions.enable('metadata'); await ui.extensions.enable('resources');
+    ui.extensions.register(AtlasExtensions.createFilesExtension(services)); ui.extensions.register(AtlasExtensions.nations); ui.extensions.register(AtlasExtensions.regions); ui.extensions.register(AtlasExtensions.history); ui.extensions.register(AtlasExtensions.metadata); ui.extensions.register(AtlasExtensions.resources);
+    await ui.extensions.enable('files'); await ui.extensions.enable('nations'); await ui.extensions.enable('regions'); await ui.extensions.enable('history'); await ui.extensions.enable('metadata'); await ui.extensions.enable('resources');
     state.on('history:change', () => { clearTimeout(saveTimer); saveTimer = setTimeout(persist, 400); });
     await persist(); window.addEventListener('pagehide', persist);
   } catch (error) {

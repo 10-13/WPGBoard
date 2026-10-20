@@ -63,7 +63,7 @@
       }
       function openNationInfo(id = activeNation) {
         const initial = model.data.items[id]; if (!initial) return;
-        return ctx.window({ id: 'nation-info:' + id, title: initial.name, x: 295, y: 30, width: 315, height: 365, render(pane, scope, tab) {
+        return ctx.window({ id: 'nation-info:' + id, windowId: 'information', title: initial.name, x: 295, y: 30, width: 315, height: 365, render(pane, scope, tab) {
           let candidate = '';
           const draw = () => {
             const nation = model.data.items[id]; if (!nation) { tab.close(); return; }
@@ -97,15 +97,6 @@
           onState(draw, scope); draw();
         } });
       }
-      function editGroup(id = null) {
-        const original = model.data.groups[id];
-        return ctx.window({ id: 'group-editor:' + (id || 'new'), title: original ? 'Редактор группы' : 'Новая группа', x: 300, y: 305, width: 285, height: 180, render(pane, scope, tab) {
-          const name = document.createElement('input'); name.value = original?.name || ''; name.maxLength = 80; name.setAttribute('aria-label', 'Название группы'); pane.append(field('Название группы', name));
-          const row = el('div', 'form-actions'); row.append(button('Сохранить', protect(() => { const groupId = model.setGroup({ id: id || undefined, name: name.value }); if (!id && selected) model.setRegion(selected, { groupId }); tab.close(); }), { className: 'accent' }));
-          if (id) { let armed = false; const remove = button('Удалить', () => { if (!armed) { armed = true; remove.textContent = 'Подтвердить удаление'; return; } model.removeGroup(id); tab.close(); }); row.append(remove); }
-          pane.append(row); name.focus();
-        } });
-      }
       function openNations() {
         return ctx.window({ id: 'list', title: 'Нации', x: 14, y: 18, width: 260, height: 355, render(pane, scope, tab) {
           const paint = tab.onRegionClick(protect(event => model.assign([event.id], activeNation)), { id: 'nations:paint', mode: 'active', label: 'Кисть нации', enabled: () => !!model.data.items[activeNation] });
@@ -125,11 +116,7 @@
               row.append(chooseButton, add, info, button('✎', () => editNation(nation.id), { title: 'Редактировать ' + nation.name, className: 'icon-button' })); pane.append(row);
             }
             pane.append(button('+ Нация', () => editNation(), { className: 'wide' }));
-            const heading = el('div', 'section-line'); heading.append(el('span', '', 'ГРУППЫ ТЕРРИТОРИЙ'), button('+', () => editGroup(), { title: 'Создать группу', className: 'icon-button' })); pane.append(heading);
-            for (const group of Object.values(model.data.groups)) {
-              const row = el('div', 'group-row'), name = button('', () => editGroup(group.id), { className: 'group-name', title: String(group.name) }); name.append(createDataRow(String(group.name), String(model.groupMembers(group.id).length))); row.append(name, button('▣', protect(() => model.assignGroup(group.id, activeNation)), { title: 'Закрасить группу ' + group.name, className: 'icon-button' })); pane.append(row);
-            }
-            if (!Object.keys(model.data.groups).length) pane.append(el('p', 'muted small', 'Группа объединяет несколько провинций.'));
+
           };
           onState(draw, scope); ui.regionClicks.on('change', draw, { signal: scope.signal }); ui.on('nations:selection', draw, { signal: scope.signal }); draw();
         } });
@@ -138,12 +125,10 @@
         return ctx.window({ id: 'inspector', title: 'Провинция', x: 14, y: 387, width: 260, height: 260, render(pane, scope, tab) {
           const draw = () => {
             const region = state.regionIndex.get(selected); pane.replaceChildren(); if (!region) { pane.append(el('p', 'muted', 'Нажмите на провинцию на карте. Правый клик открывает её контекстное меню.')); return; }
-            pane.append(el('div', 'inspector-id', 'ПРОВИНЦИЯ #' + selected)); const name = document.createElement('input'); name.value = model.data.names[selected] || ''; name.placeholder = 'Без названия'; name.setAttribute('aria-label', 'Название провинции'); name.onchange = protect(() => model.setRegion(selected, { name: name.value }));
+            pane.append(el('div', 'inspector-id', 'ПРОВИНЦИЯ #' + selected)); const name = document.createElement('input'); name.value = model.data.names[selected] || ''; name.placeholder = 'Без названия'; name.setAttribute('aria-label', 'Название провинции'); name.onchange = protect(() => model.setProvince(selected, { name: name.value }));
             const owner = document.createElement('select'); owner.setAttribute('aria-label', 'Владелец провинции'); owner.append(new Option('Свободная территория', '')); for (const nation of Object.values(model.data.items)) owner.append(new Option(String(nation.name), nation.id)); owner.value = model.data.owners[selected] || ''; owner.onchange = protect(() => model.assign([selected], owner.value || null));
-            const group = document.createElement('select'); group.setAttribute('aria-label', 'Группа провинции'); group.append(new Option('Без группы', '')); for (const item of Object.values(model.data.groups)) group.append(new Option(String(item.name), item.id)); group.value = model.data.groupAssignments[selected] || ''; group.onchange = protect(() => model.setRegion(selected, { groupId: group.value || null }));
-            pane.append(field('Название', name), field('Владелец', owner), field('Группа', group));
+            pane.append(field('Название', name), field('Владелец', owner));
             if (owner.value) pane.append(button('Информация о нации', () => openNationInfo(owner.value), { className: 'wide small' }));
-            if (group.value) pane.append(button('Назначить всю группу выбранной нации', protect(() => model.assignGroup(group.value, activeNation)), { className: 'wide' }));
             pane.append(el('p', 'muted mono small', region.area.toLocaleString('ru-RU') + ' px · X ' + region.anchor[0] + ' Y ' + region.anchor[1]));
           };
           const update = e => { selected = e.id; draw(); }; tab.onRegionClick(update);
@@ -156,12 +141,15 @@
       ctx.menu(ui.mainMenu, { id: 'nation-set', path: ['Мир'], label: 'Добавить территории выбранной нации в набор', enabled: () => !!model.data.items[activeNation], handler: () => addNationToSet(activeNation) });
       ctx.menu(ui.mainMenu, { id: 'inspect', path: ['Мир'], label: 'Свойства провинции', handler: openInspector });
       ctx.menu(ui.mainMenu, { id: 'new-nation', path: ['Мир', 'Создать'], label: 'Нация', handler: () => editNation() });
-      ctx.menu(ui.mainMenu, { id: 'new-group', path: ['Мир', 'Создать'], label: 'Группа провинций', handler: () => editGroup() });
-      ctx.menu(ui.tileMenu, { id: 'assign', path: ['Владелец'], label: 'Назначить выбранной нации', batch: true, enabled: () => !!model.data.items[activeNation], handler: ids => model.assign(ids, activeNation) });
-      ctx.menu(ui.tileMenu, { id: 'release', path: ['Владелец'], label: 'Освободить провинции', batch: true, handler: ids => model.assign(ids, null) });
-      ctx.menu(ui.tileMenu, { id: 'inspect', label: 'Свойства провинции', handler: id => { ui.viewport.select(id); openInspector(); } });
-      ctx.menu(ui.tileMenu, { id: 'nation-info', label: 'Информация о нации', when: e => !!model.data.items[model.data.owners[e.id]], handler: id => openNationInfo(model.data.owners[id]) });
-      ctx.menu(ui.tileMenu, { id: 'nation-set', path: ['Данные'], label: 'Добавить все провинции этой нации в набор', when: e => !!model.data.items[model.data.owners[e.id]], handler: id => addNationToSet(model.data.owners[id]) });
+      ctx.menu(ui.tileMenu, { id: 'assign', path: ['Мир', 'Владения'], label: 'Назначить выбранной нации', batch: true, order: 0, enabled: () => !!model.data.items[activeNation], handler: ids => model.assign(ids, activeNation) });
+      ctx.menu(ui.tileMenu, { id: 'release', path: ['Мир', 'Владения'], label: 'Освободить', batch: true, order: 1, handler: ids => model.assign(ids, null) });
+      ctx.menu(ui.tileMenu, { id: 'goto', path: ['Мир', 'Владения'], label: 'К нации', order: 2, enabled: e => model.nationsFor([e.id]).length > 0, handler: id => { activeNation = model.data.owners[id]; openNations(); ui.emit('nations:selection', {}); } });
+      ctx.menu(ui.tileMenu, { id: 'select', path: ['Мир', 'Владения'], label: 'Выделить нацию', order: 3, enabled: e => model.nationsFor([e.id]).length > 0, handler: id => ui.regionSelection.replace(model.members(model.data.owners[id])) });
+      ctx.menu(ui.tileMenu, { id: 'nation-info', path: ['Мир', 'Владения'], label: 'Информация', batch: true, order: 4, enabled: e => model.nationsFor(e.regionIds).length > 0, handler: ids => {
+        let windowId = null;
+        for (const id of model.nationsFor(ids)) { const tab = openNationInfo(id); if (windowId) ui.windows.moveTab(tab.id, windowId); else windowId = tab.windowId; }
+      } });
+      ctx.menu(ui.tileMenu, { id: 'inspect', path: ['Провинция'], label: 'Свойства', order: 100, handler: id => { ui.viewport.select(id); openInspector(); } });
       ui.registerTooltip('nations', e => { const d = model.data, owner = d.items[d.owners[e.id]]; return (d.names[e.id] ? d.names[e.id] + ' · ' : '') + (owner?.name || 'Свободная территория'); }, { signal });
       ui.registerStatus('nations', () => Object.keys(model.data.owners).length + ' назначено' + (mode() === 'paint' ? ' · ' + (model.data.items[activeNation]?.name || 'выберите нацию') : ''), { signal });
       openNations(); openInspector();

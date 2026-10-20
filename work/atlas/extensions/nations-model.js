@@ -3,7 +3,7 @@
   'use strict';
   const { uid } = root.AtlasCore;
   const { warKey, isAtWar, enemyIds } = root.AtlasExtensions;
-  const EMPTY = { items: {}, owners: {}, groups: {}, groupAssignments: {}, names: {}, wars: {} };
+  const EMPTY = { items: {}, owners: {}, names: {}, wars: {} };
   const validColor = value => /^#[\da-f]{6}$/i.test(value);
   class NationsModel {
     constructor(state) { this.state = state; }
@@ -20,9 +20,7 @@
         if (atWar) d.wars[key] = [nationId, enemyId].sort(); else delete d.wars[key];
       });
       register('nations.assign', 'Назначение территории', (draft, p, { regionIndex }) => { const d = data(draft); if (!Array.isArray(p.ids) || p.ids.some(id => !regionIndex.get(id)) || (p.nationId !== null && !d.items[p.nationId])) throw new Error('Неизвестная провинция или нация.'); for (const id of p.ids) { if (p.nationId) d.owners[id] = p.nationId; else delete d.owners[id]; } });
-      register('nations.group.save', 'Изменение группы', (draft, p) => { if (!p.id || !String(p.name || '').trim()) throw new Error('Укажите название группы.'); data(draft).groups[p.id] = { id: p.id, name: String(p.name).trim().slice(0, 80) }; });
-      register('nations.group.remove', 'Удаление группы', (draft, p) => { const d = data(draft); delete d.groups[p.id]; for (const [id, group] of Object.entries(d.groupAssignments)) if (group === p.id) delete d.groupAssignments[id]; });
-      register('nations.region.set', 'Свойства провинции', (draft, p, { regionIndex }) => { const d = data(draft); if (!regionIndex.get(p.id) || (p.groupId && !d.groups[p.groupId])) throw new Error('Неизвестная провинция или группа.'); if ('name' in p) { const value = String(p.name).trim().slice(0, 80); if (value) d.names[p.id] = value; else delete d.names[p.id]; } if ('groupId' in p) { if (p.groupId) d.groupAssignments[p.id] = p.groupId; else delete d.groupAssignments[p.id]; } });
+      register('nations.province.set', 'Свойства провинции', (draft, p, { regionIndex }) => { const d = data(draft); if (!regionIndex.get(p.id)) throw new Error('Неизвестная провинция.'); const value = String(p.name || '').trim().slice(0, 80); if (value) d.names[p.id] = value; else delete d.names[p.id]; });
     }
     dispatch(type, payload, label) { return this.state.dispatch(type, payload, { label, source: 'nations' }); }
     setNation({ id = uid('nation'), name, color }) {
@@ -41,14 +39,9 @@
       if (ids.some(id => !this.state.regions.has(Number(id)))) throw new Error('Провинция не найдена.');
       this.dispatch('nations.assign', { ids: [...new Set(ids.map(Number))], nationId: nationId || null }, nationId ? 'Назначение территории' : 'Освобождение территории');
     }
-    setGroup({ id = uid('group'), name }) { name = String(name || '').trim().slice(0, 80); if (!name) throw new Error('Укажите название группы.'); this.dispatch('nations.group.save', { id, name }, 'Группа: ' + name); return id; }
-    removeGroup(id) { this.dispatch('nations.group.remove', { id }, 'Удаление группы'); }
-    groupMembers(id) { return Object.entries(this.data.groupAssignments).filter(([, group]) => group === id).map(([region]) => Number(region)); }
-    assignGroup(id, nationId) { this.assign(this.groupMembers(id), nationId); }
-    setRegion(id, { name, groupId } = {}) {
-      if (!this.state.regions.has(Number(id))) throw new Error('Провинция не найдена.'); if (groupId && !this.data.groups[groupId]) throw new Error('Группа не найдена.');
-      const payload = { id: Number(id) }; if (name !== undefined) payload.name = name; if (groupId !== undefined) payload.groupId = groupId; this.dispatch('nations.region.set', payload, 'Свойства провинции #' + id);
-    }
+    members(id) { return Object.entries(this.data.owners).filter(([, owner]) => owner === id).map(([province]) => Number(province)); }
+    nationsFor(provinceIds) { return [...new Set(provinceIds.map(id => this.data.owners[id]))].filter(id => Object.hasOwn(this.data.items, id)); }
+    setProvince(id, { name } = {}) { if (!this.state.regions.has(id)) throw new Error('Провинция не найдена.'); this.dispatch('nations.province.set', { id, name: name || '' }, 'Свойства провинции #' + id); }
   }
   Object.assign(root.AtlasExtensions, { NationsModel, EMPTY_NATIONS: EMPTY, validNationColor: validColor });
   if (typeof module !== 'undefined' && module.exports) module.exports = { NationsModel };

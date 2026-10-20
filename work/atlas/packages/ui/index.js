@@ -61,7 +61,6 @@
       this.regionClicks.on('change', refreshClicks); refreshClicks();
       this.input.on('province:click', event => this.regionClicks.dispatch(event, { active: !event.originalEvent?.shiftKey }));
       this.mainMenu.register({ id: 'ui.clear-selection', path: ['Мир'], label: 'Снять выделение провинций', enabled: () => this.regionSelection.size > 0, handler: () => this.regionSelection.clear() });
-      this.tileMenu.register({ id: 'ui.clear-selection', label: 'Снять выделение', batch: true, order: 100, handler: () => this.regionSelection.clear() });
       this.mainMenu.register({ id: 'ui.fit', path: ['Вид'], label: 'Вся карта', handler: () => this.viewport.fit() });
       this.mainMenu.register({ id: 'ui.ids', path: ['Вид'], label: 'Показать / скрыть ID', handler: () => { this.viewport.showIds = !this.viewport.showIds; this.viewport.drawNumbers(); } });
       this.mainMenu.register({ id: 'ui.base', path: ['Вид'], label: 'Сменить светлую / исходную основу', handler: () => this.viewport.setBaseStyle(this.viewport.baseStyle === 'original' ? 'light' : 'original') });

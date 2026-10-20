@@ -25,3 +25,8 @@ modifier is explicitly approved. Province menu entries declare `batch: true`
 for array handlers; ordinary entries only appear for a single province. The
 statistics set remains separate, edited through batch context-menu commands.
 Use `AtlasUI.controls.button` / `createSwitch` for reusable controls.
+
+Named regions are an independent extension (`regions-model.js`, `regions.js`),
+stored in `meta.regions`. Obsolete nation groups have no runtime API or UI and
+must not be migrated into regions. Keep the context tree rooted at Мир,
+Провинция, Прочее; domain extensions register their own subtrees.
