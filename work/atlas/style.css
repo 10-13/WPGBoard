@@ -51,21 +51,11 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 .icon-button { width:var(--atlas-step); min-width:var(--atlas-step); padding:0; flex-shrink:0 }
 
 /* Application chrome uses the same type and 16 px rhythm as the data views. */
-.atlas-shell { display:grid; grid-template-rows:auto auto minmax(0,1fr) auto; height:100dvh; overflow:hidden }
-.shell-header { display:flex; flex-wrap:wrap; align-items:center; gap:0 8px; min-height:calc(2 * var(--atlas-step)); background:linear-gradient(#27333b,#1b252c); box-shadow:inset 0 -1px #0e1b23; padding:8px 11px; z-index:100 }
-.shell-mark { color:#c2b28c }
-.shell-brand { letter-spacing:1px; color:#e3e8e7 }
-.shell-title { color:#aebdc2; border-left:1px solid #46565f; padding-left:8px; min-width:0; overflow-wrap:anywhere }
-.branch-label { color:#b5c4c7; box-shadow:inset 0 0 0 1px #52615f; padding:0 6px; max-width:24ch; overflow-wrap:anywhere }
-.save-status { margin-left:auto; color:#7f949f }
-.modules-button { padding:0 8px; flex-shrink:0 }
+.atlas-shell { display:grid; grid-template-rows:auto minmax(0,1fr) auto; height:100dvh; overflow:hidden }
 .shell-menu-row { display:flex; align-items:flex-start; min-width:0; background:#18242c; box-shadow:inset 0 -1px #4b5a60; z-index:100 }
 .shell-menubar { display:flex; flex-wrap:wrap; align-items:stretch; flex:1; min-width:0; padding:0 6px }
 .menubar-item { background:none; box-shadow:none; padding:0 8px; color:#bac9cf }
 .menubar-item:hover { background:#304550 }
-.map-tool-bar { display:flex; align-items:center; gap:6px; padding:0 7px 0 4px; flex-shrink:0 }
-.map-tool-caption { color:#829aa5 }
-.map-tool-bar>select { width:170px; border-color:#607680 }
 .shell-footer { display:flex; align-items:flex-start; min-height:var(--atlas-step); padding:0 11px; color:#8ea4b0; background:#15242d; box-shadow:inset 0 1px #4b5d67; z-index:100 }
 .status-text { flex:1; min-width:0; overflow-wrap:anywhere }
 .coordinates { margin-left:auto; white-space:nowrap; padding-left:8px; flex-shrink:0 }
@@ -73,8 +63,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 /* Pixel map and its controls. */
 .workspace { position:relative; min-height:0; min-width:0; overflow:hidden; isolation:isolate }
 .map-host,.map-viewport { position:absolute; inset:0 }
-.map-viewport { overflow:hidden; touch-action:none; outline:none; background:#304f5e; cursor:crosshair }
-.map-viewport[data-tool="metadata:collect"] { cursor:copy }
+.map-viewport { overflow:hidden; touch-action:none; outline:none; background:#304f5e; cursor:var(--region-click-cursor,crosshair) }
 .map-viewport.dragging { cursor:grabbing }
 .map-stage { position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform }
 .map-stage>canvas { position:absolute; top:0; left:0; image-rendering:crisp-edges; image-rendering:pixelated }
@@ -167,16 +156,9 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 .set-tools>button { flex:1 1 100px }
 .tool-row .set-active { --control-line:#71cfd7; background:#28505c; color:#d7f7fa }
 @media(max-width:720px) {
-  .map-tool-caption { display:none }
-  .map-tool-bar>select { width:135px }
-  .map-tool-bar { padding-right:3px }
   .shell-menu-row .menubar-item { padding-left:6px; padding-right:6px }
 }
 @media(max-width:600px) {
-  .shell-header { gap:0 6px; padding:8px }
-  .shell-title { flex:1; padding-left:6px }
-  .save-status { display:none }
-  .modules-button { margin-left:auto }
   .shell-menubar { padding-left:3px }
   .coordinates { display:none }
   .overlay-window { box-shadow:0 4px 14px #06151d66 }

@@ -59,21 +59,11 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 .icon-button { width:var(--atlas-step); min-width:var(--atlas-step); padding:0; flex-shrink:0 }
 
 /* Application chrome uses the same type and 16 px rhythm as the data views. */
-.atlas-shell { display:grid; grid-template-rows:auto auto minmax(0,1fr) auto; height:100dvh; overflow:hidden }
-.shell-header { display:flex; flex-wrap:wrap; align-items:center; gap:0 8px; min-height:calc(2 * var(--atlas-step)); background:linear-gradient(#27333b,#1b252c); box-shadow:inset 0 -1px #0e1b23; padding:8px 11px; z-index:100 }
-.shell-mark { color:#c2b28c }
-.shell-brand { letter-spacing:1px; color:#e3e8e7 }
-.shell-title { color:#aebdc2; border-left:1px solid #46565f; padding-left:8px; min-width:0; overflow-wrap:anywhere }
-.branch-label { color:#b5c4c7; box-shadow:inset 0 0 0 1px #52615f; padding:0 6px; max-width:24ch; overflow-wrap:anywhere }
-.save-status { margin-left:auto; color:#7f949f }
-.modules-button { padding:0 8px; flex-shrink:0 }
+.atlas-shell { display:grid; grid-template-rows:auto minmax(0,1fr) auto; height:100dvh; overflow:hidden }
 .shell-menu-row { display:flex; align-items:flex-start; min-width:0; background:#18242c; box-shadow:inset 0 -1px #4b5a60; z-index:100 }
 .shell-menubar { display:flex; flex-wrap:wrap; align-items:stretch; flex:1; min-width:0; padding:0 6px }
 .menubar-item { background:none; box-shadow:none; padding:0 8px; color:#bac9cf }
 .menubar-item:hover { background:#304550 }
-.map-tool-bar { display:flex; align-items:center; gap:6px; padding:0 7px 0 4px; flex-shrink:0 }
-.map-tool-caption { color:#829aa5 }
-.map-tool-bar>select { width:170px; border-color:#607680 }
 .shell-footer { display:flex; align-items:flex-start; min-height:var(--atlas-step); padding:0 11px; color:#8ea4b0; background:#15242d; box-shadow:inset 0 1px #4b5d67; z-index:100 }
 .status-text { flex:1; min-width:0; overflow-wrap:anywhere }
 .coordinates { margin-left:auto; white-space:nowrap; padding-left:8px; flex-shrink:0 }
@@ -81,8 +71,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 /* Pixel map and its controls. */
 .workspace { position:relative; min-height:0; min-width:0; overflow:hidden; isolation:isolate }
 .map-host,.map-viewport { position:absolute; inset:0 }
-.map-viewport { overflow:hidden; touch-action:none; outline:none; background:#304f5e; cursor:crosshair }
-.map-viewport[data-tool="metadata:collect"] { cursor:copy }
+.map-viewport { overflow:hidden; touch-action:none; outline:none; background:#304f5e; cursor:var(--region-click-cursor,crosshair) }
 .map-viewport.dragging { cursor:grabbing }
 .map-stage { position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform }
 .map-stage>canvas { position:absolute; top:0; left:0; image-rendering:crisp-edges; image-rendering:pixelated }
@@ -175,16 +164,9 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 .set-tools>button { flex:1 1 100px }
 .tool-row .set-active { --control-line:#71cfd7; background:#28505c; color:#d7f7fa }
 @media(max-width:720px) {
-  .map-tool-caption { display:none }
-  .map-tool-bar>select { width:135px }
-  .map-tool-bar { padding-right:3px }
   .shell-menu-row .menubar-item { padding-left:6px; padding-right:6px }
 }
 @media(max-width:600px) {
-  .shell-header { gap:0 6px; padding:8px }
-  .shell-title { flex:1; padding-left:6px }
-  .save-status { display:none }
-  .modules-button { margin-left:auto }
   .shell-menubar { padding-left:3px }
   .coordinates { display:none }
   .overlay-window { box-shadow:0 4px 14px #06151d66 }
@@ -738,7 +720,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     #items = new Map(); #bar = null; #contextProvider; #popup = null; #popupCleanup;
     constructor({ id = uid('menu'), onError = error => console.error(error) } = {}) { super(); this.id = id; this.onError = onError; }
     get size() { return this.#items.size; }
-    register({ id = uid('action'), path = [], label, handler, signal, when = () => true, enabled = () => true, order = 0, shortcut = '' }) {
+    register({ id = uid('action'), path = [], label, handler, signal, when = () => true, enabled = () => true, order = 0 }) {
       if (this.#items.has(id)) throw new Error('Пункт меню уже зарегистрирован: ' + id);
       if (!Array.isArray(path) || path.some(x => typeof x !== 'string') || typeof label !== 'string' || !label) throw new Error('Нужны путь и подпись пункта меню.');
       const owned = !(handler instanceof ActionHandler), action = owned ? new ActionHandler(handler, { signal }) : handler;
@@ -746,7 +728,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       const dispose = () => { if (disposed) return; disposed = true; this.#items.delete(id); offInactive(); signal?.removeEventListener('abort', dispose); if (owned) action.dispose(); this.#changed(); };
       const registration = Object.freeze({ id, handler: action, dispose });
       if (!action.active || signal?.aborted) return registration;
-      this.#items.set(id, { id, path: [...path], label, handler: action, when, enabled, order, shortcut, dispose });
+      this.#items.set(id, { id, path: [...path], label, handler: action, when, enabled, order, dispose });
       offInactive = action.on('inactive', dispose); signal?.addEventListener('abort', dispose, { once: true }); this.#changed(); return registration;
     }
     unregister(id) { this.#items.get(id)?.dispose(); }
@@ -789,7 +771,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         for (const item of items) {
           const button = document.createElement('button'); button.className = 'tree-menu-item'; button.setAttribute('role', 'menuitem');
           const label = document.createElement('span'); label.textContent = item.label; button.append(label);
-          const hint = document.createElement('small'); hint.textContent = item.group ? '›' : item.shortcut; button.append(hint);
+          if (item.group) { const hint = document.createElement('small'); hint.textContent = '›'; button.append(hint); }
           if (item.group) { button.setAttribute('aria-haspopup', 'menu'); button.onclick = event => { event.stopPropagation(); const r = button.getBoundingClientRect(); draw(item.children, r.right + 2, r.top, level + 1); }; }
           else { button.disabled = !item.enabled; button.onclick = event => { event.stopPropagation(); this.#invoke(item, context); }; }
           panel.append(button);
@@ -812,32 +794,52 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 })(globalThis);
 
 ;
-/* Exclusive map-click tools; UI state only, independent of game domains. */
+/* Region input: any number of observers, at most one selected editing handler. */
 (function (root) {
   'use strict';
-  const { EventBus } = root.AtlasCore;
-  class MapTools extends EventBus {
-    #tools = new Map(); #activeId = 'ui:select';
-    constructor() { super(); this.#tools.set('ui:select', { id: 'ui:select', label: 'Выбор тайла', shortcut: 'I', order: -100, enabled: () => true, click() {} }); }
+  const { EventBus, uid } = root.AtlasCore;
+  class RegionClicks extends EventBus {
+    #listeners = new Map(); #activeId = null; #generation = 0;
+    constructor({ onError = error => console.error(error) } = {}) { super(); this.onError = onError; }
     get activeId() { return this.#activeId; }
-    get active() { return this.list.find(tool => tool.id === this.#activeId); }
-    get list() { return [...this.#tools.values()].sort((a, b) => a.order - b.order).map(({ id, label, shortcut, order, enabled }) => Object.freeze({ id, label, shortcut, order, enabled: !!enabled() })); }
-    register({ id, label, click, shortcut = '', order = 0, enabled = () => true }, { signal } = {}) {
-      if (typeof id !== 'string' || !id || this.#tools.has(id) || typeof label !== 'string' || !label || typeof click !== 'function' || typeof enabled !== 'function' || !Number.isFinite(order)) throw new Error('Нужны уникальный ID, название и обработчик инструмента.');
+    get active() { return this.list.find(item => item.id === this.#activeId) || null; }
+    get list() { return [...this.#listeners.values()].map(({ id, label, mode, cursor }) => Object.freeze({ id, label, mode, cursor })); }
+    subscribe(handler, { id = uid('region-click'), label = '', mode = 'passive', cursor = 'crosshair', enabled = () => true, signal } = {}) {
+      if (typeof handler !== 'function' || typeof id !== 'string' || !id || this.#listeners.has(id) || !['passive', 'active'].includes(mode) || typeof label !== 'string' || typeof enabled !== 'function' || typeof cursor !== 'string') throw new Error('Нужны уникальный ID, режим и обработчик клика по региону.');
       let registered = !signal?.aborted;
-      const dispose = () => { if (!registered) return; registered = false; this.#tools.delete(id); signal?.removeEventListener('abort', dispose); if (this.#activeId === id) this.reset(); else this.emit('change', { activeId: this.#activeId }); };
-      if (registered) { this.#tools.set(id, { id, label, click, shortcut, order, enabled }); signal?.addEventListener('abort', dispose, { once: true }); this.emit('change', { activeId: this.#activeId }); }
-      return Object.freeze({ id, activate: () => this.activate(id), dispose });
+      const record = { id, label, mode, cursor, handler, enabled }, owner = this;
+      const dispose = () => {
+        if (!registered) return; registered = false; this.#listeners.delete(id); signal?.removeEventListener('abort', dispose);
+        if (this.#activeId === id) this.clearActive();
+      };
+      if (registered) { this.#listeners.set(id, record); signal?.addEventListener('abort', dispose, { once: true }); }
+      return Object.freeze({ id, mode, get selected() { return registered && owner.activeId === id; }, activate: () => this.activate(id), deactivate: () => { if (this.#activeId === id) this.clearActive(); }, dispose });
     }
     activate(id) {
-      const tool = this.#tools.get(id); if (!tool || !tool.enabled()) throw new Error('Инструмент недоступен.');
-      if (this.#activeId === id) return; const previousId = this.#activeId; this.#activeId = id; this.emit('change', { activeId: id, previousId });
+      const listener = this.#listeners.get(id);
+      if (!listener || listener.mode !== 'active' || !listener.enabled()) throw new Error('Активный обработчик недоступен.');
+      if (this.#activeId === id) return; const previousId = this.#activeId; this.#activeId = id; this.#generation++; this.emit('change', { activeId: id, previousId });
     }
-    reset() { this.activate('ui:select'); }
-    handleClick(event) { const tool = this.#tools.get(this.#activeId); if (!tool?.enabled()) { this.reset(); return; } return tool.click(event); }
+    clearActive() {
+      if (this.#activeId === null) return; const previousId = this.#activeId; this.#activeId = null; this.#generation++; this.emit('change', { activeId: null, previousId });
+    }
+    #invoke(record, event) {
+      try { const result = record.handler(event); result?.catch?.(error => this.onError(error)); }
+      catch (error) { this.onError(error); }
+    }
+    dispatch(event) {
+      // Freeze the candidate before observers run; an observer cannot enable an editor for this same click.
+      const generation = this.#generation, active = this.#listeners.get(this.#activeId), passive = [...this.#listeners.values()].filter(record => record.mode === 'passive');
+      for (const record of passive) {
+        if (this.#listeners.get(record.id) !== record) continue;
+        try { if (record.enabled()) this.#invoke(record, event); } catch (error) { this.onError(error); }
+      }
+      if (!active || event.id == null || generation !== this.#generation || this.#listeners.get(active.id) !== active) return;
+      try { if (active.enabled()) this.#invoke(active, event); else this.clearActive(); } catch (error) { this.clearActive(); this.onError(error); }
+    }
   }
-  Object.assign(root.AtlasUI ||= {}, { MapTools });
-  if (typeof module !== 'undefined' && module.exports) module.exports = { MapTools };
+  Object.assign(root.AtlasUI ||= {}, { RegionClicks });
+  if (typeof module !== 'undefined' && module.exports) module.exports = { RegionClicks };
 })(globalThis);
 
 ;
@@ -870,7 +872,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   }
   class WindowManager extends EventBus {
     #windows = new Map(); #tabs = new Map(); #z = 10; #gesture = null; #scope = new Scope();
-    constructor(host) { super(); this.host = host; window.addEventListener('resize', () => { for (const w of this.#windows.values()) this.#clamp(w); }, { signal: this.#scope.signal }); }
+    constructor(host, { regionClicks } = {}) { super(); this.host = host; this.regionClicks = regionClicks; window.addEventListener('resize', () => { for (const w of this.#windows.values()) this.#clamp(w); }, { signal: this.#scope.signal }); }
     get windows() { return [...this.#windows.values()].map(w => ({ id: w.id, tabIds: [...w.tabs], activeTab: w.active })); }
     get tabCount() { return this.#tabs.size; }
     open({ id = uid('tab'), title = 'Окно', windowId = id, x = 18, y = 18, width = 280, height = 340, render, content, signal } = {}) {
@@ -884,10 +886,12 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       const close = document.createElement('button'); close.className = 'tab-close'; close.textContent = '×'; close.title = 'Закрыть вкладку'; close.setAttribute('aria-label', 'Закрыть вкладку ' + title);
       close.onclick = event => { event.stopPropagation(); this.closeTab(id); }; button.append(label, close);
       const tab = { id, title, pane, button, scope, windowId: win.id, signal, abort: () => this.closeTab(id) };
-      tab.handle = Object.freeze({ id, element: pane, get windowId() { return tab.windowId; }, activate: () => this.activate(id), close: () => this.closeTab(id), dispose: () => this.closeTab(id), setTitle: value => { tab.title = String(value); label.textContent = value; } });
+      tab.handle = Object.freeze({ id, element: pane, signal: scope.signal, get windowId() { return tab.windowId; }, activate: () => this.activate(id), close: () => this.closeTab(id), dispose: () => this.closeTab(id), setTitle: value => { tab.title = String(value); label.textContent = value; },
+        onRegionClick: (handler, options = {}) => { if (!this.regionClicks) throw new Error('Ввод регионов не подключён.'); return this.regionClicks.subscribe(handler, { ...options, signal: scope.signal }); }
+      });
       button.addEventListener('pointerdown', event => { if (event.target.closest('button')) return; this.#startDrag(event, win, id); });
       button.addEventListener('click', event => { if (!event.target.closest('button')) this.activate(id); });
-      button.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); this.activate(id); } if (event.key === 'Delete') this.closeTab(id); });
+      button.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); this.activate(id); } });
       this.#tabs.set(id, tab); win.tabs.push(id); win.strip.append(button); win.body.append(pane); signal?.addEventListener('abort', tab.abort, { once: true });
       try { if (content) pane.append(content); const cleanup = render?.(pane, scope, tab.handle); if (typeof cleanup === 'function') scope.defer(cleanup); }
       catch (error) { this.closeTab(id); throw error; }
@@ -914,6 +918,8 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     #focus(win) { win.element.style.zIndex = ++this.#z; for (const w of this.#windows.values()) w.element.classList.toggle('focused', w === win); }
     #clamp(win) {
       const w = this.host.clientWidth, h = this.host.clientHeight;
+      // A hidden/reparented browser panel can briefly report a tiny viewport.
+      if (w < 160 || h < 90) return;
       win.width = Math.max(Math.min(220, w - 8), Math.min(win.width, w - 8)); win.height = Math.max(Math.min(100, h - 8), Math.min(win.height, h - 8));
       win.x = Math.max(0, Math.min(win.x, w - win.width)); win.y = Math.max(0, Math.min(win.y, h - win.height));
       Object.assign(win.element.style, { left: win.x + 'px', top: win.y + 'px', width: win.width + 'px', height: win.height + 'px' });
@@ -1048,11 +1054,11 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       if (!this.pointers.has(e.pointerId)) return; const gesture = this.gesture; this.pointers.delete(e.pointerId);
       if (this.element.hasPointerCapture(e.pointerId)) this.element.releasePointerCapture(e.pointerId);
       if (!this.pointers.size) { this.element.classList.remove('dragging'); this.pinch = null; }
-      if (!gesture.moved && !gesture.multi && !this.panOnly && e.button === 0) { const p = this.world(this.local(e)), region = this.state.regionIndex.at(p.x, p.y); this.select(region?.id || null); const event = { id: region?.id || null, region, province: region, x: p.x, y: p.y, clientX: e.clientX, clientY: e.clientY, originalEvent: e }; this.input.emit('province:click', event); window.dispatchEvent(new CustomEvent('province:click', { detail: event })); }
+      if (!gesture.moved && !gesture.multi && !this.panOnly && e.button === 0) { const p = this.world(this.local(e)), region = this.state.regionIndex.at(p.x, p.y); this.select(region?.id || null, { fromClick: true }); const event = { id: region?.id || null, region, province: region, x: p.x, y: p.y, clientX: e.clientX, clientY: e.clientY, originalEvent: e }; this.input.emit('province:click', event); window.dispatchEvent(new CustomEvent('province:click', { detail: event })); }
     }
     cancel() { this.pointers.clear(); this.gesture = null; this.pinch = null; this.element.classList.remove('dragging'); this.setHover(null); }
     setHover(id, position = {}) { if (this.hoverId === id) return; this.hoverId = id; this.#highlight(this.hoverCanvas, id, false); const event = { id, region: this.state.regionIndex?.get(id) || null, ...position }; this.input.emit('province:hover', event); }
-    select(id) { this.selectedId = id; this.#highlight(this.selectedCanvas, id, true); this.input.emit('selection:change', { id, region: this.state.regionIndex?.get(id) || null }); }
+    select(id, { fromClick = false } = {}) { this.selectedId = id; this.#highlight(this.selectedCanvas, id, true); this.input.emit('selection:change', { id, region: this.state.regionIndex?.get(id) || null, fromClick }); }
     focusRegion(id) { const r = this.state.regionIndex.get(id); if (!r) return; this.scale = Math.min(6, Math.max(this.scale, Math.min(this.element.clientWidth / (r.bbox[2] * 2.8), this.element.clientHeight / (r.bbox[3] * 2.8)))); this.tx = this.element.clientWidth / 2 - r.anchor[0] * this.scale; this.ty = this.element.clientHeight / 2 - r.anchor[1] * this.scale; this.constrain(); this.transform(); this.select(id); }
     #highlight(canvas, id, selected) {
       const index = this.state.regionIndex, region = index?.get(id); if (!region) { canvas.width = 1; canvas.height = 1; return; }
@@ -1129,7 +1135,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         menu: (menu, item) => menu.register({ ...item, id: id + ':' + item.id, signal: scope.signal }),
         window: options => ui.windows.open({ ...options, id: id + ':' + options.id, windowId: options.windowId ? id + ':' + options.windowId : undefined, signal: scope.signal }),
         layer: options => ui.viewport.addLayer({ ...options, id: id + ':' + options.id, signal: scope.signal }),
-        tool: options => ui.tools.register({ ...options, id: id + ':' + options.id }, { signal: scope.signal }),
+        onRegionClick: (handler, options = {}) => ui.regionClicks.subscribe(handler, { ...options, mode: 'passive', signal: scope.signal }),
       });
       try { const cleanup = await definition.start(context); if (typeof cleanup === 'function') scope.defer(cleanup); else if (cleanup?.dispose) scope.own(cleanup); }
       catch (error) { scope.dispose(); this.#running.delete(id); this.emit('change', {}); throw error; }
@@ -1139,32 +1145,28 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   }
   const singletonKey = Symbol('Interface'); let singleton;
   class Interface extends EventBus {
-    #statuses = new Map(); #tooltipProviders = new Map(); #titleProviders = new Map(); #badges = new Map(); #toastTimer;
+    #statuses = new Map(); #tooltipProviders = new Map(); #toastTimer;
     constructor(key) {
       super(); if (key !== singletonKey) throw new Error('Используйте AtlasUI.getUI().');
-      this.input = new EventBus(); this.tools = new root.AtlasUI.MapTools(); this.mainMenu = new root.AtlasUI.TreeMenu({ id: 'main', onError: e => this.notify(e.message) }); this.tileMenu = new root.AtlasUI.TreeMenu({ id: 'tile', onError: e => this.notify(e.message) }); this.extensions = new ExtensionHost(this);
+      this.input = new EventBus(); this.regionClicks = new root.AtlasUI.RegionClicks({ onError: e => this.notify(e.message) }); this.saveStatus = 'Локальная партия'; this.mainMenu = new root.AtlasUI.TreeMenu({ id: 'main', onError: e => this.notify(e.message) }); this.tileMenu = new root.AtlasUI.TreeMenu({ id: 'tile', onError: e => this.notify(e.message) }); this.extensions = new ExtensionHost(this);
     }
     async mount({ host, state = root.AtlasCore.getGameState() }) {
       if (this.host) return this; this.host = host; this.state = state; host.className = 'atlas-shell';
-      const header = el('header', 'shell-header'); header.append(el('span', 'shell-mark', '✧'), el('strong', 'shell-brand', 'АТЛАС'));
-      this.title = el('span', 'shell-title'); this.branch = el('span', 'branch-label'); header.append(this.title, this.branch);
-      this.saveStatus = el('span', 'save-status', 'Локальная партия'); header.append(this.saveStatus, button('Модули', () => this.showExtensions(), { className: 'modules-button' }));
       const menubar = el('nav', 'shell-menubar'); menubar.setAttribute('aria-label', 'Основное меню');
-      const toolBar = el('div', 'map-tool-bar'); this.toolSelect = document.createElement('select'); this.toolSelect.setAttribute('aria-label', 'Активный инструмент карты'); this.toolSelect.title = 'Действие по клику на карту'; this.toolSelect.onchange = () => { try { this.tools.activate(this.toolSelect.value); } catch (e) { this.notify(e.message); } }; toolBar.append(el('span', 'map-tool-caption', 'Клик:'), this.toolSelect);
       this.workspace = el('main', 'workspace'); this.mapHost = el('div', 'map-host'); this.windowHost = el('div', 'window-host'); this.workspace.append(this.mapHost, this.windowHost);
       this.tooltip = el('div', 'map-tooltip'); this.tooltip.hidden = true; this.workspace.append(this.tooltip);
       const navigation = el('div', 'map-navigation'); this.zoomLabel = el('span', 'zoom-label', '100%');
-      navigation.append(button('−', () => this.viewport.zoom(1 / 1.3), { title: 'Уменьшить' }), this.zoomLabel, button('+', () => this.viewport.zoom(1.3), { title: 'Увеличить' }), button('⊡', () => this.viewport.fit(), { title: 'Вся карта (0)' })); this.workspace.append(navigation);
+      navigation.append(button('−', () => this.viewport.zoom(1 / 1.3), { title: 'Уменьшить' }), this.zoomLabel, button('+', () => this.viewport.zoom(1.3), { title: 'Увеличить' }), button('⊡', () => this.viewport.fit(), { title: 'Вся карта' })); this.workspace.append(navigation);
       this.footer = el('footer', 'shell-footer'); this.status = el('span', 'status-text'); this.coords = el('span', 'coordinates', 'X —  Y —'); this.footer.append(this.status, this.coords);
       this.toast = el('div', 'toast'); this.toast.hidden = true; this.busyOverlay = el('div', 'busy-overlay'); this.busyOverlay.hidden = true;
-      const menuRow = el('div', 'shell-menu-row'); menuRow.append(menubar, toolBar); host.replaceChildren(header, menuRow, this.workspace, this.footer, this.toast, this.busyOverlay);
-      this.viewport = new root.AtlasUI.MapViewport(this.mapHost, state, this.input); this.windows = new root.AtlasUI.WindowManager(this.windowHost);
+      const menuRow = el('div', 'shell-menu-row'); menuRow.append(menubar); host.replaceChildren(menuRow, this.workspace, this.footer, this.toast, this.busyOverlay);
+      this.viewport = new root.AtlasUI.MapViewport(this.mapHost, state, this.input); this.windows = new root.AtlasUI.WindowManager(this.windowHost, { regionClicks: this.regionClicks });
       this.mainMenu.mountBar(menubar, () => ({ state, ui: this }));
-      const refreshTools = () => { this.toolSelect.replaceChildren(); for (const tool of this.tools.list) { const option = new Option(tool.label + (tool.shortcut ? ' · ' + tool.shortcut : ''), tool.id); option.disabled = !tool.enabled; this.toolSelect.append(option); } this.toolSelect.value = this.tools.activeId; this.viewport.panOnly = false; this.viewport.element.dataset.tool = this.tools.activeId; this.refresh(); };
-      this.tools.on('change', refreshTools); refreshTools();
-      this.input.on('province:click', event => { try { const result = this.tools.handleClick(event); result?.catch?.(e => this.notify(e.message)); } catch (e) { this.notify(e.message); } });
-      this.mainMenu.register({ id: 'ui.fit', path: ['Вид'], label: 'Вся карта', shortcut: '0', handler: () => this.viewport.fit() });
-      this.mainMenu.register({ id: 'ui.ids', path: ['Вид'], label: 'Показать / скрыть ID', shortcut: '#', handler: () => { this.viewport.showIds = !this.viewport.showIds; this.viewport.drawNumbers(); } });
+      const refreshClicks = () => { this.viewport.element.style.setProperty('--region-click-cursor', this.regionClicks.active?.cursor || 'crosshair'); this.refresh(); };
+      this.regionClicks.on('change', refreshClicks); refreshClicks();
+      this.input.on('province:click', event => this.regionClicks.dispatch(event));
+      this.mainMenu.register({ id: 'ui.fit', path: ['Вид'], label: 'Вся карта', handler: () => this.viewport.fit() });
+      this.mainMenu.register({ id: 'ui.ids', path: ['Вид'], label: 'Показать / скрыть ID', handler: () => { this.viewport.showIds = !this.viewport.showIds; this.viewport.drawNumbers(); } });
       this.mainMenu.register({ id: 'ui.base', path: ['Вид'], label: 'Сменить светлую / исходную основу', handler: () => this.viewport.setBaseStyle(this.viewport.baseStyle === 'original' ? 'light' : 'original') });
       this.mainMenu.register({ id: 'ui.modules', path: ['Вид'], label: 'Расширения', handler: () => this.showExtensions() });
       this.mainMenu.register({ id: 'ui.windows-help', path: ['Вид'], label: 'Управление окнами', handler: () => this.showWindowHelp() });
@@ -1174,17 +1176,15 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       this.viewport.on('camera:change', e => { this.zoomLabel.textContent = Math.round(e.scale * 100) + '%'; });
       this.viewport.on('ready', () => { this.refresh(); this.emit('map:ready', { state }); });
       state.on('change', () => this.refresh()); state.on('history:change', () => this.refresh());
-      document.addEventListener('keydown', e => { if (e.target.closest('input,select,textarea,[contenteditable=true]')) return; if (e.key === 'Escape') { this.mainMenu.close(); this.tileMenu.close(); this.tools.reset(); } if (!e.ctrlKey && !e.metaKey && !e.altKey && e.code === 'KeyI') { e.preventDefault(); this.tools.reset(); } if (e.code === 'Digit0') this.viewport.fit(); if (e.key === '+' || e.key === '=') this.viewport.zoom(1.3); if (e.key === '-') this.viewport.zoom(1 / 1.3); this.input.emit('key', e); });
       this.refresh(); return this;
     }
     async renderMap() { if (this.state.loaded) await this.viewport.load(); }
     refresh() {
-      if (!this.host) return; let title = this.state.originalMap?.name || 'Карта не загружена'; for (const provider of this.#titleProviders.values()) title = provider(this.state) || title;
-      this.title.textContent = title; this.branch.textContent = [...this.#badges.values()].map(p => p(this.state)).filter(Boolean).join(' | '); this.branch.hidden = !this.branch.textContent; this.status.textContent = [this.state.regions.size.toLocaleString('ru-RU') + ' областей', this.tools.active.label, ...[...this.#statuses.values()].map(p => p(this.state)).filter(Boolean)].join('  ·  ');
+      if (!this.host) return;
+      this.status.textContent = [this.state.regions.size.toLocaleString('ru-RU') + ' областей', this.regionClicks.active?.label || 'Просмотр', ...[...this.#statuses.values()].map(p => p(this.state)).filter(Boolean), this.saveStatus].filter(Boolean).join('  ·  ');
     }
+    setSaveStatus(message) { this.saveStatus = message; this.refresh(); }
     registerStatus(id, provider, { signal } = {}) { return this.#register(this.#statuses, id, provider, signal); }
-    registerTitle(id, provider, { signal } = {}) { return this.#register(this.#titleProviders, id, provider, signal); }
-    registerBadge(id, provider, { signal } = {}) { return this.#register(this.#badges, id, provider, signal); }
     registerTooltip(id, provider, { signal } = {}) { return this.#register(this.#tooltipProviders, id, provider, signal); }
     #register(registry, id, provider, signal) { if (registry.has(id)) throw new Error('Провайдер уже зарегистрирован.'); registry.set(id, provider); const dispose = () => { registry.delete(id); signal?.removeEventListener('abort', dispose); this.refresh(); }; signal?.addEventListener('abort', dispose, { once: true }); if (signal?.aborted) dispose(); this.refresh(); return dispose; }
     #showTooltip(event) { this.tooltip.hidden = !event.id; this.tooltip.replaceChildren(); if (!event.id) return; this.tooltip.append(el('strong', '', 'Провинция #' + event.id)); for (const provider of this.#tooltipProviders.values()) { const text = provider(event, this.state); if (text) this.tooltip.append(el('div', '', String(text))); } }
@@ -1451,12 +1451,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       let activeNation = Object.keys(model.data.items)[0] || null, selected = ui.viewport.selectedId;
       const protect = fn => (...args) => { try { return fn(...args); } catch (error) { ui.notify(error.message); } };
       const onState = (fn, scope) => { state.on('change', fn, { signal: scope.signal }); state.on('map:loaded', fn, { signal: scope.signal }); };
-      const mode = () => ui.tools.activeId === 'nations:paint' ? 'paint' : ui.tools.activeId === 'nations:erase' ? 'erase' : ui.tools.activeId === 'ui:select' ? 'select' : null;
-      const setMode = value => ui.tools.activate(value === 'select' ? 'ui:select' : 'nations:' + value);
+      let paintListener = null, eraseListener = null;
+      const mode = () => ui.regionClicks.activeId === 'nations:paint' ? 'paint' : ui.regionClicks.activeId === 'nations:erase' ? 'erase' : ui.regionClicks.activeId === null ? 'select' : null;
+      const setMode = value => { if (value === 'select') ui.regionClicks.clearActive(); else { openNations(); (value === 'paint' ? paintListener : eraseListener).activate(); } };
       const choose = id => { activeNation = id; setMode('paint'); ui.emit('nations:selection', {}); };
-      const paint = id => { if (!id) return; model.assign([id], mode() === 'erase' ? null : activeNation); };
-      ctx.tool({ id: 'paint', label: 'Кисть нации', shortcut: 'B', order: 10, click: protect(e => paint(e.id)) });
-      ctx.tool({ id: 'erase', label: 'Ластик нации', shortcut: 'E', order: 20, click: protect(e => paint(e.id)) });
       const addNationToSet = id => {
         const nation = model.data.items[id]; if (!nation) return;
         if (!ui.extensions.isEnabled('metadata')) { ui.notify('Включите модуль «Метаданные и статистика».'); return; }
@@ -1520,11 +1518,15 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         } });
       }
       function openNations() {
-        return ctx.window({ id: 'list', title: 'Нации', x: 14, y: 18, width: 260, height: 355, render(pane, scope) {
+        return ctx.window({ id: 'list', title: 'Нации', x: 14, y: 18, width: 260, height: 355, render(pane, scope, tab) {
+          const paint = tab.onRegionClick(protect(event => model.assign([event.id], activeNation)), { id: 'nations:paint', mode: 'active', label: 'Кисть нации', enabled: () => !!model.data.items[activeNation] });
+          const erase = tab.onRegionClick(protect(event => model.assign([event.id], null)), { id: 'nations:erase', mode: 'active', label: 'Ластик нации' });
+          paintListener = paint; eraseListener = erase;
+          scope.defer(() => { if (paintListener === paint) paintListener = null; if (eraseListener === erase) eraseListener = null; });
           const draw = () => {
             if (!model.data.items[activeNation]) activeNation = Object.keys(model.data.items)[0] || null;
             pane.replaceChildren(); const tools = el('div', 'tool-row');
-            for (const [key, label] of [['paint', 'Кисть · B'], ['select', 'Выбор · I'], ['erase', 'Ластик · E']]) { const tool = button(label, () => setMode(key), { className: mode() === key ? 'active' : '' }); tool.setAttribute('aria-pressed', String(mode() === key)); tools.append(tool); } pane.append(tools);
+            for (const [key, label] of [['paint', 'Кисть'], ['select', 'Просмотр'], ['erase', 'Ластик']]) { const tool = button(label, () => setMode(key), { className: mode() === key ? 'active' : '' }); tool.disabled = key === 'paint' && !activeNation; tool.setAttribute('aria-pressed', String(mode() === key)); tools.append(tool); } pane.append(tools);
             const counts = {}; for (const id of Object.values(model.data.owners)) counts[id] = (counts[id] || 0) + 1;
             for (const nation of Object.values(model.data.items)) {
               const row = el('div', 'nation-row' + (activeNation === nation.id ? ' selected' : '')), chooseButton = button('', () => { choose(nation.id); draw(); }, { className: 'nation-select', title: String(nation.name) });
@@ -1540,11 +1542,11 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             }
             if (!Object.keys(model.data.groups).length) pane.append(el('p', 'muted small', 'Группа объединяет несколько провинций.'));
           };
-          onState(draw, scope); ui.tools.on('change', draw, { signal: scope.signal }); ui.on('nations:selection', draw, { signal: scope.signal }); draw();
+          onState(draw, scope); ui.regionClicks.on('change', draw, { signal: scope.signal }); ui.on('nations:selection', draw, { signal: scope.signal }); draw();
         } });
       }
       function openInspector() {
-        return ctx.window({ id: 'inspector', title: 'Провинция', x: 14, y: 387, width: 260, height: 260, render(pane, scope) {
+        return ctx.window({ id: 'inspector', title: 'Провинция', x: 14, y: 387, width: 260, height: 260, render(pane, scope, tab) {
           const draw = () => {
             const region = state.regionIndex.get(selected); pane.replaceChildren(); if (!region) { pane.append(el('p', 'muted', 'Нажмите на провинцию на карте. Правый клик открывает её контекстное меню.')); return; }
             pane.append(el('div', 'inspector-id', 'ПРОВИНЦИЯ #' + selected)); const name = document.createElement('input'); name.value = model.data.names[selected] || ''; name.placeholder = 'Без названия'; name.setAttribute('aria-label', 'Название провинции'); name.onchange = protect(() => model.setRegion(selected, { name: name.value }));
@@ -1555,11 +1557,11 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             if (group.value) pane.append(button('Назначить всю группу выбранной нации', protect(() => model.assignGroup(group.value, activeNation)), { className: 'wide' }));
             pane.append(el('p', 'muted mono small', region.area.toLocaleString('ru-RU') + ' px · X ' + region.anchor[0] + ' Y ' + region.anchor[1]));
           };
-          ctx.ui.input.on('selection:change', e => { selected = e.id; draw(); }, { signal: scope.signal }); onState(draw, scope); draw();
+          const update = e => { selected = e.id; draw(); }; tab.onRegionClick(update);
+          ui.input.on('selection:change', e => { if (!e.fromClick) update(e); }, { signal: scope.signal }); onState(draw, scope); draw();
         } });
       }
       ctx.on('selection:change', event => { selected = event.id; });
-      ctx.on('key', event => { if (event.ctrlKey || event.metaKey || event.altKey) return; const value = { KeyB: 'paint', KeyI: 'select', KeyE: 'erase' }[event.code]; if (value) { event.preventDefault(); setMode(value); } });
       ctx.menu(ui.mainMenu, { id: 'open', path: ['Мир'], label: 'Нации', handler: openNations });
       ctx.menu(ui.mainMenu, { id: 'nation-info', path: ['Мир'], label: 'Информация о выбранной нации', enabled: () => !!model.data.items[activeNation], handler: () => openNationInfo() });
       ctx.menu(ui.mainMenu, { id: 'nation-set', path: ['Мир'], label: 'Добавить территории выбранной нации в набор', enabled: () => !!model.data.items[activeNation], handler: () => addNationToSet(activeNation) });
@@ -1633,12 +1635,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         } });
       }
       ctx.menu(ui.mainMenu, { id: 'open', path: ['История'], label: 'Ветки и журнал', handler: openHistory });
-      ctx.menu(ui.mainMenu, { id: 'undo', path: ['История'], label: 'Отменить', shortcut: 'Ctrl/⌘ Z', enabled: () => state.history.canUndo, handler: () => state.history.undo() });
-      ctx.menu(ui.mainMenu, { id: 'redo', path: ['История'], label: 'Повторить', shortcut: 'Ctrl/⌘ Shift Z', enabled: () => state.history.canRedo, handler: () => state.history.redo() });
+      ctx.menu(ui.mainMenu, { id: 'undo', path: ['История'], label: 'Отменить', enabled: () => state.history.canUndo, handler: () => state.history.undo() });
+      ctx.menu(ui.mainMenu, { id: 'redo', path: ['История'], label: 'Повторить', enabled: () => state.history.canRedo, handler: () => state.history.redo() });
       ctx.menu(ui.mainMenu, { id: 'export', path: ['История', 'Обмен журналами'], label: 'Экспорт активной ветки', handler: exportBranch });
       ctx.menu(ui.mainMenu, { id: 'import', path: ['История', 'Обмен журналами'], label: 'Импорт ветки', handler: importBranch });
-      ctx.on('key', e => { if (!(e.ctrlKey || e.metaKey) || e.code !== 'KeyZ') return; e.preventDefault(); if (e.shiftKey) state.history.redo(); else state.history.undo(); });
-      ui.registerBadge('history', () => state.history.activeBranch, { signal });
     }
   };
   Object.assign(root.AtlasExtensions ||= {}, { history: definition });
@@ -1679,13 +1679,11 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           } });
         }
         ctx.menu(ui.mainMenu, { id: 'settings', path: ['Файл'], label: 'Параметры партии', handler: campaignSettings, order: -100 });
-        ctx.menu(ui.mainMenu, { id: 'save', path: ['Файл'], label: 'Сохранить партию · JSON', shortcut: 'Ctrl/⌘ S', handler: exportJSON, order: -90 });
+        ctx.menu(ui.mainMenu, { id: 'save', path: ['Файл'], label: 'Сохранить партию · JSON', handler: exportJSON, order: -90 });
         ctx.menu(ui.mainMenu, { id: 'open', path: ['Файл'], label: 'Открыть партию', handler: importJSON, order: -80 });
         ctx.menu(ui.mainMenu, { id: 'png', path: ['Файл', 'Экспорт'], label: 'Карта · PNG', handler: exportPNG, order: -70 });
         ctx.menu(ui.mainMenu, { id: 'html', path: ['Файл', 'Экспорт'], label: 'Редактор и партия · HTML', handler: exportHTML, order: -60 });
         ctx.menu(ui.mainMenu, { id: 'upload', path: ['Файл'], label: 'Загрузить другую карту', handler: uploadMap, order: -50 });
-        ui.registerTitle('files', () => title(), { signal });
-        ctx.on('key', event => { if ((event.ctrlKey || event.metaKey) && event.code === 'KeyS') { event.preventDefault(); exportJSON(); } });
       }
     };
   }
@@ -1719,13 +1717,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       const highlight = ctx.layer({ id: 'chosen', order: 80, exportable: false });
       const drawChosen = () => drawRegionSet(highlight.context, state.regionIndex, showChosen ? chosen : []);
       const refreshSet = () => { drawChosen(); ui.emit('metadata:refresh', {}); ui.refresh(); };
-      const addRegions = ids => { for (const id of ids) if (state.regions.has(id)) chosen.add(id); mode = 'set'; setTitle = ''; showChosen = true; ui.tools.activate('metadata:collect'); openStatistics(); refreshSet(); };
-      ctx.tool({ id: 'collect', label: 'Набор регионов', shortcut: 'S', order: 30, click: event => {
-        if (!state.regions.has(event.id)) return;
-        if (event.originalEvent?.shiftKey || chosen.has(event.id)) chosen.delete(event.id); else chosen.add(event.id);
-        mode = 'set'; setTitle = ''; refreshSet();
-      } });
-      ui.tools.on('change', () => { if (ui.tools.activeId === 'metadata:collect') { mode = 'set'; showChosen = true; openStatistics(); } refreshSet(); }, { signal });
+      let collectListener = null;
+      const collectRegions = () => { mode = 'set'; showChosen = true; openStatistics(); collectListener.activate(); refreshSet(); };
+      const addRegions = ids => { for (const id of ids) if (state.regions.has(id)) chosen.add(id); mode = 'set'; setTitle = ''; collectRegions(); };
+      ui.regionClicks.on('change', refreshSet, { signal });
       ui.on('map:ready', drawChosen, { signal });
       const protect = fn => (...args) => { try { return fn(...args); } catch (e) { ui.notify(e.message); } };
       const watch = (fn, scope) => { state.on('change', fn, { signal: scope.signal }); state.on('map:loaded', fn, { signal: scope.signal }); ui.on('metadata:refresh', fn, { signal: scope.signal }); };
@@ -1781,41 +1776,48 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             }
             if (!entries.length) pane.append(el('p', 'muted', 'У этого тайла пока нет записей.'));
           };
-          ui.input.on('selection:change', e => { selected = e.id; draw(); }, { signal: scope.signal }); watch(draw, scope); draw();
+          const update = e => { selected = e.id; draw(); }; tab.onRegionClick(update);
+          ui.input.on('selection:change', e => { if (!e.fromClick) update(e); }, { signal: scope.signal }); watch(draw, scope); draw();
         } });
       }
       function openStatistics(ids = null, title = '') {
         if (ids) { chosen.clear(); for (const id of ids) if (state.regions.has(id)) chosen.add(id); mode = 'set'; setTitle = title; }
-        const handle = ctx.window({ id: 'statistics', title: 'Статистика регионов', x: 650, y: 35, width: 350, height: 420, render(pane, scope) {
+        const handle = ctx.window({ id: 'statistics', title: 'Статистика регионов', x: 650, y: 35, width: 350, height: 420, render(pane, scope, tab) {
+          const collector = tab.onRegionClick(event => {
+            if (!state.regions.has(event.id)) return;
+            if (chosen.has(event.id)) chosen.delete(event.id); else chosen.add(event.id);
+            mode = 'set'; setTitle = ''; refreshSet();
+          }, { id: 'metadata:collect', mode: 'active', label: 'Набор регионов', cursor: 'copy' });
+          collectListener = collector; scope.defer(() => { if (collectListener === collector) collectListener = null; });
           pane.classList.add('atlas-data-scope'); const expanded = new Map();
           const draw = () => {
             pane.replaceChildren(); const choose = document.createElement('select'); choose.setAttribute('aria-label', 'Область статистики');
             for (const [id, label] of [['current', 'Текущий тайл'], ['set', setTitle || 'Выбранный набор'], ['all', 'Вся карта']]) choose.append(new Option(label, id)); choose.value = mode; choose.onchange = () => { mode = choose.value; draw(); }; pane.append(field('Область', choose));
-            const collecting = ui.tools.activeId === 'metadata:collect', collect = button('Набор на карте · S', () => { if (ui.tools.activeId === 'metadata:collect') ui.tools.reset(); else ui.tools.activate('metadata:collect'); }, { className: collecting ? 'set-active' : '', title: 'Включить или выключить выбор набора кликами по карте' }); collect.setAttribute('aria-pressed', String(collecting));
+            const collecting = collector.selected, collect = button('Набор на карте', () => { if (collector.selected) collector.deactivate(); else collectRegions(); }, { className: collecting ? 'set-active' : '', title: 'Включить или выключить выбор набора кликами по карте' }); collect.setAttribute('aria-pressed', String(collecting));
             const tools = el('div', 'tool-row set-tools'), add = button('Добавить тайл', () => addRegions([selected])), clear = button('Очистить набор', () => { chosen.clear(); setTitle = ''; mode = 'set'; refreshSet(); }); add.disabled = !state.regions.has(selected); tools.append(collect, add, clear); pane.append(tools);
             const visible = document.createElement('input'); visible.type = 'checkbox'; visible.checked = showChosen; visible.setAttribute('aria-label', 'Подсветка набора'); visible.onchange = () => { showChosen = visible.checked; drawChosen(); }; pane.append(field('Подсветка набора', visible), el('p', 'set-count', 'В наборе: ' + chosen.size + ' провинций'));
-            if (collecting) pane.append(el('p', 'set-tool-help', 'Клик — добавить или убрать провинцию. Shift + клик — только убрать. Esc — обычный выбор. Территории целой нации добавляются кнопкой ⊞ в списке наций.'));
+            if (collecting) pane.append(el('p', 'set-tool-help', 'Клик — добавить или убрать провинцию. Кнопка «Набор на карте» выключает выбор. Закрытие окна тоже отключает его. Территории целой нации добавляются кнопкой ⊞ в списке наций.'));
             const ids = mode === 'all' ? [...state.regions.keys()] : mode === 'current' ? state.regions.has(selected) ? [selected] : [] : [...chosen].filter(id => state.regions.has(id));
             if (mode === 'set') { const chips = el('div', 'region-chips'); for (const id of ids.slice(0, 50)) { const chip = button('#' + id + ' ×', () => { chosen.delete(id); refreshSet(); }, { title: 'Убрать #' + id + ' из набора', className: 'small' }); chips.append(chip); } if (ids.length > 50) chips.append(el('span', 'muted small', 'и ещё ' + (ids.length - 50) + '; в расчёте участвует весь набор')); pane.append(chips); }
             if (!ids.length) pane.append(el('p', 'muted', 'Выберите тайл или добавьте регионы в набор.'));
             try { renderBlocks(pane, state.statistics.collect(ids), expanded); } catch (e) { pane.append(el('p', 'form-error', e.message)); }
           };
-          ui.input.on('selection:change', e => { selected = e.id; draw(); }, { signal: scope.signal }); state.statistics.on('change', draw, { signal: scope.signal }); watch(draw, scope); draw();
+          const update = e => { selected = e.id; draw(); }; tab.onRegionClick(update);
+          ui.input.on('selection:change', e => { if (!e.fromClick) update(e); }, { signal: scope.signal }); state.statistics.on('change', draw, { signal: scope.signal }); watch(draw, scope); draw();
         } }); refreshSet(); return handle;
       }
       ctx.on('selection:change', e => { selected = e.id; });
       state.on('map:loaded', () => { if (state.map.id !== mapId) { mapId = state.map.id; selected = null; chosen.clear(); setTitle = ''; mode = 'set'; refreshSet(); } }, { signal });
-      ctx.on('key', event => { if (!event.ctrlKey && !event.metaKey && !event.altKey && event.code === 'KeyS') { event.preventDefault(); if (ui.tools.activeId === 'metadata:collect') ui.tools.reset(); else ui.tools.activate('metadata:collect'); } });
       ui.on('metadata:open', e => openMetadata(e.regionId), { signal }); ui.on('statistics:open', e => openStatistics(e.regionIds, e.title), { signal });
       ui.on('statistics:add-regions', e => addRegions(e.regionIds), { signal });
       ctx.menu(ui.mainMenu, { id: 'entries', path: ['Данные'], label: 'Метаданные тайла', handler: () => openMetadata() });
       ctx.menu(ui.mainMenu, { id: 'statistics', path: ['Данные'], label: 'Статистика регионов', handler: () => openStatistics() });
-      ctx.menu(ui.mainMenu, { id: 'collect', path: ['Данные'], label: 'Набор регионов на карте', shortcut: 'S', handler: () => ui.tools.activate('metadata:collect') });
+      ctx.menu(ui.mainMenu, { id: 'collect', path: ['Данные'], label: 'Набор регионов на карте', handler: collectRegions });
       ctx.menu(ui.tileMenu, { id: 'entries', path: ['Данные'], label: 'Метаданные тайла', when: e => !!e.id, handler: e => openMetadata(e.id) });
       ctx.menu(ui.tileMenu, { id: 'add', path: ['Данные'], label: 'Добавить запись', when: e => !!e.id, handler: e => edit(e.id) });
       ctx.menu(ui.tileMenu, { id: 'statistics', path: ['Данные'], label: 'Статистика тайла', when: e => !!e.id, handler: e => { selected = e.id; mode = 'current'; openStatistics(); } });
       ctx.menu(ui.tileMenu, { id: 'set', path: ['Данные'], label: 'В набор статистики', when: e => !!e.id, handler: e => addRegions([e.id]) });
-      ui.registerStatus('metadata:set', () => chosen.size || ui.tools.activeId === 'metadata:collect' ? 'В наборе: ' + chosen.size : '', { signal });
+      ui.registerStatus('metadata:set', () => chosen.size || ui.regionClicks.activeId === 'metadata:collect' ? 'В наборе: ' + chosen.size : '', { signal });
       ui.registerTooltip('metadata', e => { const entries = state.tileMetadata.list(e.id); return entries.length ? 'Записей: ' + entries.length + ' · ' + entries.slice(0, 2).map(e => e.title).join(', ') : ''; }, { signal });
     }
   };
@@ -2094,7 +2096,8 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             if (!model.list(id).length) pane.append(el('p', 'muted', 'Объектов пока нет. Ресурсная точка усиливает подходящие производства, своего выпуска у неё нет.'));
             pane.append(el('p', 'muted small', 'На карте: золотой завод — производство, бирюзовый ромб — ресурсная точка.'));
           };
-          ui.input.on('selection:change', e => { selected = e.id; draw(); }, { signal: scope.signal }); state.on('change', draw, { signal: scope.signal }); state.on('map:loaded', draw, { signal: scope.signal }); draw();
+          const update = e => { selected = e.id; draw(); }; tab.onRegionClick(update);
+          ui.input.on('selection:change', e => { if (!e.fromClick) update(e); }, { signal: scope.signal }); state.on('change', draw, { signal: scope.signal }); state.on('map:loaded', draw, { signal: scope.signal }); draw();
         } });
       }
       ctx.on('selection:change', e => { selected = e.id; });
@@ -2124,9 +2127,9 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   let loading = false, saveTimer, revision = 0, storageNotice = false;
   const snapshot = () => ({ ...state.toJSON(), saveKey });
   async function persist() {
-    if (!state.loaded) return; const current = ++revision; ui.saveStatus.textContent = 'Сохраняем…';
-    try { await storage.put(saveKey, snapshot()); if (current === revision) ui.saveStatus.textContent = 'Сохранено локально'; }
-    catch (error) { if (current === revision) ui.saveStatus.textContent = 'Нет автосохранения'; if (!storageNotice) { storageNotice = true; ui.notify('Браузер не разрешил автосохранение. Сохраните партию в JSON.'); } }
+    if (!state.loaded) return; const current = ++revision; ui.setSaveStatus('Сохраняем…');
+    try { await storage.put(saveKey, snapshot()); if (current === revision) ui.setSaveStatus('Сохранено локально'); }
+    catch (error) { if (current === revision) ui.setSaveStatus('Нет автосохранения'); if (!storageNotice) { storageNotice = true; ui.notify('Браузер не разрешил автосохранение. Сохраните партию в JSON.'); } }
   }
   async function loadProject(project, save = true) {
     if (loading) throw new Error('Дождитесь завершения текущей загрузки.'); loading = true; ui.setBusy(true, 'Проверяем карту и восстанавливаем историю…');

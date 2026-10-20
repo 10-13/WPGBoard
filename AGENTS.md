@@ -13,3 +13,8 @@ The approved UI reference is `outputs/statistics-tree-preview.html`. Its rules
 are recorded in the application instructions and now apply to the entire UI:
 one monospace family, one 10 px text size, and a 16 px vertical rhythm. Reuse
 the application tokens and shared data-view primitives in future extensions.
+
+Region input uses `ui.regionClicks`: many passive observers and at most one
+active handler. Bind window listeners through `tab.onRegionClick` so closing
+the tab releases them. Do not restore application keyboard shortcuts, the
+click-mode selector, or the removed header; the top contains only the menu.

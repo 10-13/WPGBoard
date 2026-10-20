@@ -67,11 +67,11 @@
       if (!this.pointers.has(e.pointerId)) return; const gesture = this.gesture; this.pointers.delete(e.pointerId);
       if (this.element.hasPointerCapture(e.pointerId)) this.element.releasePointerCapture(e.pointerId);
       if (!this.pointers.size) { this.element.classList.remove('dragging'); this.pinch = null; }
-      if (!gesture.moved && !gesture.multi && !this.panOnly && e.button === 0) { const p = this.world(this.local(e)), region = this.state.regionIndex.at(p.x, p.y); this.select(region?.id || null); const event = { id: region?.id || null, region, province: region, x: p.x, y: p.y, clientX: e.clientX, clientY: e.clientY, originalEvent: e }; this.input.emit('province:click', event); window.dispatchEvent(new CustomEvent('province:click', { detail: event })); }
+      if (!gesture.moved && !gesture.multi && !this.panOnly && e.button === 0) { const p = this.world(this.local(e)), region = this.state.regionIndex.at(p.x, p.y); this.select(region?.id || null, { fromClick: true }); const event = { id: region?.id || null, region, province: region, x: p.x, y: p.y, clientX: e.clientX, clientY: e.clientY, originalEvent: e }; this.input.emit('province:click', event); window.dispatchEvent(new CustomEvent('province:click', { detail: event })); }
     }
     cancel() { this.pointers.clear(); this.gesture = null; this.pinch = null; this.element.classList.remove('dragging'); this.setHover(null); }
     setHover(id, position = {}) { if (this.hoverId === id) return; this.hoverId = id; this.#highlight(this.hoverCanvas, id, false); const event = { id, region: this.state.regionIndex?.get(id) || null, ...position }; this.input.emit('province:hover', event); }
-    select(id) { this.selectedId = id; this.#highlight(this.selectedCanvas, id, true); this.input.emit('selection:change', { id, region: this.state.regionIndex?.get(id) || null }); }
+    select(id, { fromClick = false } = {}) { this.selectedId = id; this.#highlight(this.selectedCanvas, id, true); this.input.emit('selection:change', { id, region: this.state.regionIndex?.get(id) || null, fromClick }); }
     focusRegion(id) { const r = this.state.regionIndex.get(id); if (!r) return; this.scale = Math.min(6, Math.max(this.scale, Math.min(this.element.clientWidth / (r.bbox[2] * 2.8), this.element.clientHeight / (r.bbox[3] * 2.8)))); this.tx = this.element.clientWidth / 2 - r.anchor[0] * this.scale; this.ty = this.element.clientHeight / 2 - r.anchor[1] * this.scale; this.constrain(); this.transform(); this.select(id); }
     #highlight(canvas, id, selected) {
       const index = this.state.regionIndex, region = index?.get(id); if (!region) { canvas.width = 1; canvas.height = 1; return; }

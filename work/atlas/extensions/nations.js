@@ -40,12 +40,10 @@
       let activeNation = Object.keys(model.data.items)[0] || null, selected = ui.viewport.selectedId;
       const protect = fn => (...args) => { try { return fn(...args); } catch (error) { ui.notify(error.message); } };
       const onState = (fn, scope) => { state.on('change', fn, { signal: scope.signal }); state.on('map:loaded', fn, { signal: scope.signal }); };
-      const mode = () => ui.tools.activeId === 'nations:paint' ? 'paint' : ui.tools.activeId === 'nations:erase' ? 'erase' : ui.tools.activeId === 'ui:select' ? 'select' : null;
-      const setMode = value => ui.tools.activate(value === 'select' ? 'ui:select' : 'nations:' + value);
+      let paintListener = null, eraseListener = null;
+      const mode = () => ui.regionClicks.activeId === 'nations:paint' ? 'paint' : ui.regionClicks.activeId === 'nations:erase' ? 'erase' : ui.regionClicks.activeId === null ? 'select' : null;
+      const setMode = value => { if (value === 'select') ui.regionClicks.clearActive(); else { openNations(); (value === 'paint' ? paintListener : eraseListener).activate(); } };
       const choose = id => { activeNation = id; setMode('paint'); ui.emit('nations:selection', {}); };
-      const paint = id => { if (!id) return; model.assign([id], mode() === 'erase' ? null : activeNation); };
-      ctx.tool({ id: 'paint', label: 'Кисть нации', shortcut: 'B', order: 10, click: protect(e => paint(e.id)) });
-      ctx.tool({ id: 'erase', label: 'Ластик нации', shortcut: 'E', order: 20, click: protect(e => paint(e.id)) });
       const addNationToSet = id => {
         const nation = model.data.items[id]; if (!nation) return;
         if (!ui.extensions.isEnabled('metadata')) { ui.notify('Включите модуль «Метаданные и статистика».'); return; }
@@ -109,11 +107,15 @@
         } });
       }
       function openNations() {
-        return ctx.window({ id: 'list', title: 'Нации', x: 14, y: 18, width: 260, height: 355, render(pane, scope) {
+        return ctx.window({ id: 'list', title: 'Нации', x: 14, y: 18, width: 260, height: 355, render(pane, scope, tab) {
+          const paint = tab.onRegionClick(protect(event => model.assign([event.id], activeNation)), { id: 'nations:paint', mode: 'active', label: 'Кисть нации', enabled: () => !!model.data.items[activeNation] });
+          const erase = tab.onRegionClick(protect(event => model.assign([event.id], null)), { id: 'nations:erase', mode: 'active', label: 'Ластик нации' });
+          paintListener = paint; eraseListener = erase;
+          scope.defer(() => { if (paintListener === paint) paintListener = null; if (eraseListener === erase) eraseListener = null; });
           const draw = () => {
             if (!model.data.items[activeNation]) activeNation = Object.keys(model.data.items)[0] || null;
             pane.replaceChildren(); const tools = el('div', 'tool-row');
-            for (const [key, label] of [['paint', 'Кисть · B'], ['select', 'Выбор · I'], ['erase', 'Ластик · E']]) { const tool = button(label, () => setMode(key), { className: mode() === key ? 'active' : '' }); tool.setAttribute('aria-pressed', String(mode() === key)); tools.append(tool); } pane.append(tools);
+            for (const [key, label] of [['paint', 'Кисть'], ['select', 'Просмотр'], ['erase', 'Ластик']]) { const tool = button(label, () => setMode(key), { className: mode() === key ? 'active' : '' }); tool.disabled = key === 'paint' && !activeNation; tool.setAttribute('aria-pressed', String(mode() === key)); tools.append(tool); } pane.append(tools);
             const counts = {}; for (const id of Object.values(model.data.owners)) counts[id] = (counts[id] || 0) + 1;
             for (const nation of Object.values(model.data.items)) {
               const row = el('div', 'nation-row' + (activeNation === nation.id ? ' selected' : '')), chooseButton = button('', () => { choose(nation.id); draw(); }, { className: 'nation-select', title: String(nation.name) });
@@ -129,11 +131,11 @@
             }
             if (!Object.keys(model.data.groups).length) pane.append(el('p', 'muted small', 'Группа объединяет несколько провинций.'));
           };
-          onState(draw, scope); ui.tools.on('change', draw, { signal: scope.signal }); ui.on('nations:selection', draw, { signal: scope.signal }); draw();
+          onState(draw, scope); ui.regionClicks.on('change', draw, { signal: scope.signal }); ui.on('nations:selection', draw, { signal: scope.signal }); draw();
         } });
       }
       function openInspector() {
-        return ctx.window({ id: 'inspector', title: 'Провинция', x: 14, y: 387, width: 260, height: 260, render(pane, scope) {
+        return ctx.window({ id: 'inspector', title: 'Провинция', x: 14, y: 387, width: 260, height: 260, render(pane, scope, tab) {
           const draw = () => {
             const region = state.regionIndex.get(selected); pane.replaceChildren(); if (!region) { pane.append(el('p', 'muted', 'Нажмите на провинцию на карте. Правый клик открывает её контекстное меню.')); return; }
             pane.append(el('div', 'inspector-id', 'ПРОВИНЦИЯ #' + selected)); const name = document.createElement('input'); name.value = model.data.names[selected] || ''; name.placeholder = 'Без названия'; name.setAttribute('aria-label', 'Название провинции'); name.onchange = protect(() => model.setRegion(selected, { name: name.value }));
@@ -144,11 +146,11 @@
             if (group.value) pane.append(button('Назначить всю группу выбранной нации', protect(() => model.assignGroup(group.value, activeNation)), { className: 'wide' }));
             pane.append(el('p', 'muted mono small', region.area.toLocaleString('ru-RU') + ' px · X ' + region.anchor[0] + ' Y ' + region.anchor[1]));
           };
-          ctx.ui.input.on('selection:change', e => { selected = e.id; draw(); }, { signal: scope.signal }); onState(draw, scope); draw();
+          const update = e => { selected = e.id; draw(); }; tab.onRegionClick(update);
+          ui.input.on('selection:change', e => { if (!e.fromClick) update(e); }, { signal: scope.signal }); onState(draw, scope); draw();
         } });
       }
       ctx.on('selection:change', event => { selected = event.id; });
-      ctx.on('key', event => { if (event.ctrlKey || event.metaKey || event.altKey) return; const value = { KeyB: 'paint', KeyI: 'select', KeyE: 'erase' }[event.code]; if (value) { event.preventDefault(); setMode(value); } });
       ctx.menu(ui.mainMenu, { id: 'open', path: ['Мир'], label: 'Нации', handler: openNations });
       ctx.menu(ui.mainMenu, { id: 'nation-info', path: ['Мир'], label: 'Информация о выбранной нации', enabled: () => !!model.data.items[activeNation], handler: () => openNationInfo() });
       ctx.menu(ui.mainMenu, { id: 'nation-set', path: ['Мир'], label: 'Добавить территории выбранной нации в набор', enabled: () => !!model.data.items[activeNation], handler: () => addNationToSet(activeNation) });

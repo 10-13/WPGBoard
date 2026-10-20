@@ -17,7 +17,7 @@
     #items = new Map(); #bar = null; #contextProvider; #popup = null; #popupCleanup;
     constructor({ id = uid('menu'), onError = error => console.error(error) } = {}) { super(); this.id = id; this.onError = onError; }
     get size() { return this.#items.size; }
-    register({ id = uid('action'), path = [], label, handler, signal, when = () => true, enabled = () => true, order = 0, shortcut = '' }) {
+    register({ id = uid('action'), path = [], label, handler, signal, when = () => true, enabled = () => true, order = 0 }) {
       if (this.#items.has(id)) throw new Error('Пункт меню уже зарегистрирован: ' + id);
       if (!Array.isArray(path) || path.some(x => typeof x !== 'string') || typeof label !== 'string' || !label) throw new Error('Нужны путь и подпись пункта меню.');
       const owned = !(handler instanceof ActionHandler), action = owned ? new ActionHandler(handler, { signal }) : handler;
@@ -25,7 +25,7 @@
       const dispose = () => { if (disposed) return; disposed = true; this.#items.delete(id); offInactive(); signal?.removeEventListener('abort', dispose); if (owned) action.dispose(); this.#changed(); };
       const registration = Object.freeze({ id, handler: action, dispose });
       if (!action.active || signal?.aborted) return registration;
-      this.#items.set(id, { id, path: [...path], label, handler: action, when, enabled, order, shortcut, dispose });
+      this.#items.set(id, { id, path: [...path], label, handler: action, when, enabled, order, dispose });
       offInactive = action.on('inactive', dispose); signal?.addEventListener('abort', dispose, { once: true }); this.#changed(); return registration;
     }
     unregister(id) { this.#items.get(id)?.dispose(); }
@@ -68,7 +68,7 @@
         for (const item of items) {
           const button = document.createElement('button'); button.className = 'tree-menu-item'; button.setAttribute('role', 'menuitem');
           const label = document.createElement('span'); label.textContent = item.label; button.append(label);
-          const hint = document.createElement('small'); hint.textContent = item.group ? '›' : item.shortcut; button.append(hint);
+          if (item.group) { const hint = document.createElement('small'); hint.textContent = '›'; button.append(hint); }
           if (item.group) { button.setAttribute('aria-haspopup', 'menu'); button.onclick = event => { event.stopPropagation(); const r = button.getBoundingClientRect(); draw(item.children, r.right + 2, r.top, level + 1); }; }
           else { button.disabled = !item.enabled; button.onclick = event => { event.stopPropagation(); this.#invoke(item, context); }; }
           panel.append(button);

@@ -51,12 +51,10 @@
         } });
       }
       ctx.menu(ui.mainMenu, { id: 'open', path: ['История'], label: 'Ветки и журнал', handler: openHistory });
-      ctx.menu(ui.mainMenu, { id: 'undo', path: ['История'], label: 'Отменить', shortcut: 'Ctrl/⌘ Z', enabled: () => state.history.canUndo, handler: () => state.history.undo() });
-      ctx.menu(ui.mainMenu, { id: 'redo', path: ['История'], label: 'Повторить', shortcut: 'Ctrl/⌘ Shift Z', enabled: () => state.history.canRedo, handler: () => state.history.redo() });
+      ctx.menu(ui.mainMenu, { id: 'undo', path: ['История'], label: 'Отменить', enabled: () => state.history.canUndo, handler: () => state.history.undo() });
+      ctx.menu(ui.mainMenu, { id: 'redo', path: ['История'], label: 'Повторить', enabled: () => state.history.canRedo, handler: () => state.history.redo() });
       ctx.menu(ui.mainMenu, { id: 'export', path: ['История', 'Обмен журналами'], label: 'Экспорт активной ветки', handler: exportBranch });
       ctx.menu(ui.mainMenu, { id: 'import', path: ['История', 'Обмен журналами'], label: 'Импорт ветки', handler: importBranch });
-      ctx.on('key', e => { if (!(e.ctrlKey || e.metaKey) || e.code !== 'KeyZ') return; e.preventDefault(); if (e.shiftKey) state.history.redo(); else state.history.undo(); });
-      ui.registerBadge('history', () => state.history.activeBranch, { signal });
     }
   };
   Object.assign(root.AtlasExtensions ||= {}, { history: definition });

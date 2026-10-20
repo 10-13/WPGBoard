@@ -101,7 +101,8 @@
             if (!model.list(id).length) pane.append(el('p', 'muted', 'Объектов пока нет. Ресурсная точка усиливает подходящие производства, своего выпуска у неё нет.'));
             pane.append(el('p', 'muted small', 'На карте: золотой завод — производство, бирюзовый ромб — ресурсная точка.'));
           };
-          ui.input.on('selection:change', e => { selected = e.id; draw(); }, { signal: scope.signal }); state.on('change', draw, { signal: scope.signal }); state.on('map:loaded', draw, { signal: scope.signal }); draw();
+          const update = e => { selected = e.id; draw(); }; tab.onRegionClick(update);
+          ui.input.on('selection:change', e => { if (!e.fromClick) update(e); }, { signal: scope.signal }); state.on('change', draw, { signal: scope.signal }); state.on('map:loaded', draw, { signal: scope.signal }); draw();
         } });
       }
       ctx.on('selection:change', e => { selected = e.id; });

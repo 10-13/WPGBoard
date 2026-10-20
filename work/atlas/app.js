@@ -10,9 +10,9 @@
   let loading = false, saveTimer, revision = 0, storageNotice = false;
   const snapshot = () => ({ ...state.toJSON(), saveKey });
   async function persist() {
-    if (!state.loaded) return; const current = ++revision; ui.saveStatus.textContent = 'Сохраняем…';
-    try { await storage.put(saveKey, snapshot()); if (current === revision) ui.saveStatus.textContent = 'Сохранено локально'; }
-    catch (error) { if (current === revision) ui.saveStatus.textContent = 'Нет автосохранения'; if (!storageNotice) { storageNotice = true; ui.notify('Браузер не разрешил автосохранение. Сохраните партию в JSON.'); } }
+    if (!state.loaded) return; const current = ++revision; ui.setSaveStatus('Сохраняем…');
+    try { await storage.put(saveKey, snapshot()); if (current === revision) ui.setSaveStatus('Сохранено локально'); }
+    catch (error) { if (current === revision) ui.setSaveStatus('Нет автосохранения'); if (!storageNotice) { storageNotice = true; ui.notify('Браузер не разрешил автосохранение. Сохраните партию в JSON.'); } }
   }
   async function loadProject(project, save = true) {
     if (loading) throw new Error('Дождитесь завершения текущей загрузки.'); loading = true; ui.setBusy(true, 'Проверяем карту и восстанавливаем историю…');

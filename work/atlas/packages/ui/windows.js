@@ -27,7 +27,7 @@
   }
   class WindowManager extends EventBus {
     #windows = new Map(); #tabs = new Map(); #z = 10; #gesture = null; #scope = new Scope();
-    constructor(host) { super(); this.host = host; window.addEventListener('resize', () => { for (const w of this.#windows.values()) this.#clamp(w); }, { signal: this.#scope.signal }); }
+    constructor(host, { regionClicks } = {}) { super(); this.host = host; this.regionClicks = regionClicks; window.addEventListener('resize', () => { for (const w of this.#windows.values()) this.#clamp(w); }, { signal: this.#scope.signal }); }
     get windows() { return [...this.#windows.values()].map(w => ({ id: w.id, tabIds: [...w.tabs], activeTab: w.active })); }
     get tabCount() { return this.#tabs.size; }
     open({ id = uid('tab'), title = 'Окно', windowId = id, x = 18, y = 18, width = 280, height = 340, render, content, signal } = {}) {
@@ -41,10 +41,12 @@
       const close = document.createElement('button'); close.className = 'tab-close'; close.textContent = '×'; close.title = 'Закрыть вкладку'; close.setAttribute('aria-label', 'Закрыть вкладку ' + title);
       close.onclick = event => { event.stopPropagation(); this.closeTab(id); }; button.append(label, close);
       const tab = { id, title, pane, button, scope, windowId: win.id, signal, abort: () => this.closeTab(id) };
-      tab.handle = Object.freeze({ id, element: pane, get windowId() { return tab.windowId; }, activate: () => this.activate(id), close: () => this.closeTab(id), dispose: () => this.closeTab(id), setTitle: value => { tab.title = String(value); label.textContent = value; } });
+      tab.handle = Object.freeze({ id, element: pane, signal: scope.signal, get windowId() { return tab.windowId; }, activate: () => this.activate(id), close: () => this.closeTab(id), dispose: () => this.closeTab(id), setTitle: value => { tab.title = String(value); label.textContent = value; },
+        onRegionClick: (handler, options = {}) => { if (!this.regionClicks) throw new Error('Ввод регионов не подключён.'); return this.regionClicks.subscribe(handler, { ...options, signal: scope.signal }); }
+      });
       button.addEventListener('pointerdown', event => { if (event.target.closest('button')) return; this.#startDrag(event, win, id); });
       button.addEventListener('click', event => { if (!event.target.closest('button')) this.activate(id); });
-      button.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); this.activate(id); } if (event.key === 'Delete') this.closeTab(id); });
+      button.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); this.activate(id); } });
       this.#tabs.set(id, tab); win.tabs.push(id); win.strip.append(button); win.body.append(pane); signal?.addEventListener('abort', tab.abort, { once: true });
       try { if (content) pane.append(content); const cleanup = render?.(pane, scope, tab.handle); if (typeof cleanup === 'function') scope.defer(cleanup); }
       catch (error) { this.closeTab(id); throw error; }
@@ -71,6 +73,8 @@
     #focus(win) { win.element.style.zIndex = ++this.#z; for (const w of this.#windows.values()) w.element.classList.toggle('focused', w === win); }
     #clamp(win) {
       const w = this.host.clientWidth, h = this.host.clientHeight;
+      // A hidden/reparented browser panel can briefly report a tiny viewport.
+      if (w < 160 || h < 90) return;
       win.width = Math.max(Math.min(220, w - 8), Math.min(win.width, w - 8)); win.height = Math.max(Math.min(100, h - 8), Math.min(win.height, h - 8));
       win.x = Math.max(0, Math.min(win.x, w - win.width)); win.y = Math.max(0, Math.min(win.y, h - win.height));
       Object.assign(win.element.style, { left: win.x + 'px', top: win.y + 'px', width: win.width + 'px', height: win.height + 'px' });

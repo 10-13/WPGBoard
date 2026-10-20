@@ -32,13 +32,11 @@
           } });
         }
         ctx.menu(ui.mainMenu, { id: 'settings', path: ['Файл'], label: 'Параметры партии', handler: campaignSettings, order: -100 });
-        ctx.menu(ui.mainMenu, { id: 'save', path: ['Файл'], label: 'Сохранить партию · JSON', shortcut: 'Ctrl/⌘ S', handler: exportJSON, order: -90 });
+        ctx.menu(ui.mainMenu, { id: 'save', path: ['Файл'], label: 'Сохранить партию · JSON', handler: exportJSON, order: -90 });
         ctx.menu(ui.mainMenu, { id: 'open', path: ['Файл'], label: 'Открыть партию', handler: importJSON, order: -80 });
         ctx.menu(ui.mainMenu, { id: 'png', path: ['Файл', 'Экспорт'], label: 'Карта · PNG', handler: exportPNG, order: -70 });
         ctx.menu(ui.mainMenu, { id: 'html', path: ['Файл', 'Экспорт'], label: 'Редактор и партия · HTML', handler: exportHTML, order: -60 });
         ctx.menu(ui.mainMenu, { id: 'upload', path: ['Файл'], label: 'Загрузить другую карту', handler: uploadMap, order: -50 });
-        ui.registerTitle('files', () => title(), { signal });
-        ctx.on('key', event => { if ((event.ctrlKey || event.metaKey) && event.code === 'KeyS') { event.preventDefault(); exportJSON(); } });
       }
     };
   }
