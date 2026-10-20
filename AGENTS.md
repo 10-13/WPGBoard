@@ -40,3 +40,9 @@ Visibility and composition order are not game actions: never put them in game
 metadata, history, branches, or party JSON/HTML. Persist display preferences
 separately in browser storage. Modules draw through `ctx.overlay`; hiding an
 overlay never deletes its game objects. Version actual map-object changes only.
+
+Blueprints belong to the resources extension. Their inputs/outputs are volumes;
+enterprise capacity is separate. The headless catalog and cost expansion live
+in `resource-catalog.js`; UI uses shared data views. Catalog edits are actions
+in `meta.resources.catalog`. Resource cost means consumed resources, without
+money or time. Keep the version 1 base template stable for existing parties.

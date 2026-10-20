@@ -24,7 +24,7 @@
   const definition = {
     id: 'resources', name: 'Ресурсы и производства', description: 'Рецепты, снабжение по приоритету, чистый выпуск и баффы.',
     start(ctx) {
-      const { state, ui, signal } = ctx, model = new ResourceModel(state); model.registerStatistics(signal); let selected = ui.viewport.selectedId;
+      const { state, ui, signal } = ctx, model = new ResourceModel(state), catalog = new root.AtlasExtensions.ResourceCatalog(state); model.registerStatistics(signal); catalog.registerActions(signal); new root.AtlasExtensions.ResourceCatalogUI(ctx, catalog); let selected = ui.viewport.selectedId;
       const protect = fn => (...args) => { try { return fn(...args); } catch (e) { ui.notify(e.message); } };
       const openData = (event, payload) => { if (!ui.extensions.isEnabled('metadata')) { ui.notify('Включите модуль «Метаданные и статистика».'); return; } ui.emit(event, payload); };
       const markers = ctx.overlay({ id: 'markers', title: 'Ресурсы и производства', order: 20 });
@@ -38,7 +38,7 @@
           title.value = initial?.title || (point ? 'Новая ресурсная точка' : 'Новое производство'); title.required = true; title.maxLength = 100; title.setAttribute('aria-label', 'Название объекта');
           description.value = initial?.description || ''; description.rows = 2; description.maxLength = 8000; description.setAttribute('aria-label', 'Описание объекта');
           resource.value = initial?.resource === '*' ? '' : initial?.resource || ''; resource.placeholder = point ? 'Пусто — все ресурсы' : 'Например, железо'; resource.required = !point; resource.maxLength = 80; resource.setAttribute('aria-label', 'Ресурс или продукт');
-          const examples = document.createElement('datalist'); examples.id = uid('goods'); for (const text of ['Железо', 'Уголь', 'Нефть', 'Сталь', 'Энергия', 'Продовольствие']) examples.append(new Option(text)); resource.setAttribute('list', examples.id);
+          const examples = document.createElement('datalist'); examples.id = uid('goods'); for (const good of Object.values(catalog.data.resources)) examples.append(new Option(good.name)); resource.setAttribute('list', examples.id);
           if (point) activity.append(new Option('Все виды', '*')); for (const [id, label] of Object.entries(activities)) activity.append(new Option(label, id)); activity.value = initial?.activity || (point ? '*' : 'extraction'); activity.setAttribute('aria-label', 'Вид производства');
           unit.value = initial?.unit === '*' ? '' : initial?.unit || (point ? '' : 'ед./ход'); unit.placeholder = point ? 'Пусто — любые единицы' : 'ед./ход'; unit.maxLength = 40; unit.setAttribute('aria-label', 'Единица выпуска');
           form.append(el('p', 'muted small', 'Провинция #' + regionId), field('Название', title), field('Описание', description), field(point ? 'Фильтр' : 'Ресурс', resource), examples, field('Вид', activity), field('Единицы', unit));
