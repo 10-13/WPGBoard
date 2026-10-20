@@ -10,3 +10,7 @@ __pycache__/
 dist/atlas-1936.html
 dist/atlas-1936-import.html
 dist/atlas-1936-economy.html
+# Local server copies of the other standalone parties.
+dist/atlas.html
+dist/campaign.html
+dist/workspace.html
