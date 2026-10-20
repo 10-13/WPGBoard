@@ -21,13 +21,7 @@
   function provincePaint(value) {
     if (value == null) return null;
     if (typeof value === 'string') value = { color: value };
-    if (
-      !value ||
-      typeof value !== 'object' ||
-      Array.isArray(value) ||
-      typeof value.color !== 'string' ||
-      !value.color.trim()
-    )
+    if (!value || typeof value !== 'object' || Array.isArray(value))
       throw new Error('paint должна вернуть цвет, параметры раскраски или null.');
     const {
       color,
@@ -37,6 +31,14 @@
       width = 1,
       direction = 'diagonal',
     } = value;
+    const validColor = (item) => typeof item === 'string' && item.trim();
+    if (
+      Array.isArray(color)
+        ? fill !== 'hatch' || !color.length || !color.every(validColor)
+        : !validColor(color)
+    )
+      throw new Error('Цвет — строка CSS; для штриховки также допустим непустой массив цветов.');
+    const hatchColor = Array.isArray(color) ? Object.freeze([...color]) : color;
     if (typeof opacity !== 'number' || !Number.isFinite(opacity) || opacity < 0 || opacity > 1)
       throw new Error('Прозрачность оверлея должна быть от 0 до 1.');
     if (!['solid', 'hatch'].includes(fill)) throw new Error('Тип раскраски: solid или hatch.');
@@ -53,7 +55,7 @@
     return Object.freeze(
       fill === 'solid'
         ? { color, opacity, fill }
-        : { color, opacity, fill, spacing, width, direction },
+        : { color: hatchColor, opacity, fill, spacing, width, direction },
     );
   }
   function buildSimpleOverlay(meta, index, definition) {
@@ -104,7 +106,12 @@
       context.imageSmoothingEnabled = false;
       context.clearRect(0, 0, index.width, index.height);
       for (const [id, paint] of entries) {
-        context.fillStyle = paint.color;
+        const colors = Array.isArray(paint.color) ? paint.color : [paint.color];
+        const stripeColor = (coordinate) => {
+          if (colors.length > 1)
+            context.fillStyle = colors[mod(Math.floor(coordinate / paint.spacing), colors.length)];
+        };
+        context.fillStyle = colors[0];
         context.globalAlpha = paint.opacity;
         const { spacing, width, direction } = paint;
         const [ax, ay] = index.get(id).anchor;
@@ -117,7 +124,10 @@
             return;
           }
           if (direction === 'horizontal') {
-            if (mod(y - ay, spacing) < width) context.fillRect(x, y, length, 1);
+            if (mod(y - ay, spacing) < width) {
+              stripeColor(y - ay);
+              context.fillRect(x, y, length, 1);
+            }
             return;
           }
           const coordinate =
@@ -130,7 +140,10 @@
           for (let stripe = first; stripe < end; stripe += spacing) {
             const left = Math.max(x, stripe),
               right = Math.min(end, stripe + width);
-            if (right > left) context.fillRect(left, y, right - left, 1);
+            if (right > left) {
+              stripeColor(coordinate + stripe - x);
+              context.fillRect(left, y, right - left, 1);
+            }
           }
         });
       }

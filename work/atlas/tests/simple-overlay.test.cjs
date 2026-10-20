@@ -239,6 +239,58 @@ test('all hatch directions and widths obey pixel phases and never cross a provin
     }
 });
 
+test('hatch palettes alternate by anchor-relative stripe, including negative phases and clipped wide stripes', () => {
+  const index = new RegionIndex({
+    width: 11,
+    height: 9,
+    pixels: Array.from({ length: 99 }, (_, p) => (p === 25 || p % 11 === 10 ? 0 : 1)),
+    regions: [{ id: 1, area: 89, bbox: [0, 0, 10, 9], anchor: [6, 5] }],
+  });
+  const palette = ['#ff0000', '#00ff00', '#0000ff'];
+  for (const direction of ['diagonal', 'reverse', 'horizontal', 'vertical']) {
+    const context = recordingContext();
+    const result = buildSimpleOverlay({}, index, {
+      paint: () => ({
+        color: palette,
+        fill: 'hatch',
+        direction,
+        spacing: 3,
+        width: 2,
+        opacity: 0.7,
+      }),
+    });
+    assert(Object.isFrozen(result.paints.get(1).color));
+    assert.notEqual(result.paints.get(1).color, palette);
+    drawProvincePaints(context, index, result.paints);
+    const expected = [];
+    for (let y = 0; y < 9; y++)
+      for (let x = 0; x < 11; x++) {
+        const coordinate =
+          direction === 'horizontal'
+            ? y - 5
+            : direction === 'vertical'
+              ? x - 6
+              : direction === 'reverse'
+                ? x - y - 1
+                : x + y - 11;
+        if (index.idAt(x, y) !== 1 || ((coordinate % 3) + 3) % 3 >= 2) continue;
+        const stripe = Math.floor(coordinate / 3),
+          color = palette[((stripe % 3) + 3) % 3];
+        expected.push([x, y, color, 0.7]);
+      }
+    const order = (a, b) => a[1] - b[1] || a[0] - b[0];
+    assert.deepEqual(expandedPixels(context).sort(order), expected.sort(order), direction);
+    assert.equal(context.fillStyle, '#123456');
+    assert.equal(context.globalAlpha, 1);
+  }
+  for (const paint of [
+    { color: [], fill: 'hatch' },
+    { color: ['#fff', null], fill: 'hatch' },
+    { color: ['#fff'], fill: 'solid' },
+  ])
+    assert.throws(() => buildSimpleOverlay({}, index, { paint: () => paint }));
+});
+
 class Node {
   children = [];
   style = {};

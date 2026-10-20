@@ -10,27 +10,25 @@
       this.state = ctx.state;
       this.ui = ctx.ui;
       this.model = model;
-      this.layer = ctx.overlay({ id: 'ownership', title: 'Владения наций', order: 10 });
+      this.ownership = ctx.simpleOverlay({
+        id: 'ownership',
+        title: 'Владения наций',
+        order: 10,
+        visible: true,
+        watch: (before, after) =>
+          !equal(before.meta.nations?.owners, after.meta.nations?.owners) ||
+          !equal(before.meta.nations?.items, after.meta.nations?.items),
+        paint: (_, __, { meta, provinceId }) => {
+          const nations = meta.nations || EMPTY,
+            color = nations.items?.[nations.owners?.[provinceId]]?.color;
+          return validColor(color) ? color : null;
+        },
+      });
+      this.layer = this.ownership.overlay;
       this.borderLayer = ctx.overlay({ id: 'borders', title: 'Границы наций', order: 11 });
       this.state.on('change', (e) => this.update(e), { signal: ctx.signal });
       ctx.ui.on('map:ready', () => this.drawAll(), { signal: ctx.signal });
       this.drawAll();
-    }
-    drawRegion(id) {
-      const index = this.state.regionIndex,
-        region = index.get(id);
-      if (!region) return;
-      const owner = this.model.data.owners[id],
-        nation = this.model.data.items[owner],
-        color = nation?.color,
-        ctx = this.layer.context;
-      if (validColor(color)) ctx.fillStyle = color;
-      index.forEachRun(id, (start, length) => {
-        const x = start % index.width,
-          y = Math.floor(start / index.width);
-        if (validColor(color)) ctx.fillRect(x, y, length, 1);
-        else ctx.clearRect(x, y, length, 1);
-      });
     }
     drawAll() {
       const index = this.state.regionIndex;
@@ -50,8 +48,6 @@
           source.width = source.height = 1;
         }
       }
-      this.layer.context.clearRect(0, 0, this.layer.canvas.width, this.layer.canvas.height);
-      for (const id of Object.keys(this.model.data.owners)) this.drawRegion(Number(id));
       this.borderLayer.context.clearRect(
         0,
         0,
@@ -72,7 +68,6 @@
           old.owners?.[id] !== next.owners?.[id] ||
           old.items?.[old.owners?.[id]]?.color !== next.items?.[next.owners?.[id]]?.color
         ) {
-          this.drawRegion(Number(id));
           changed.push(Number(id));
         }
       }

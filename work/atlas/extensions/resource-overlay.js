@@ -1,9 +1,9 @@
 /* Ordinary resource overlay and its compact legend; visibility lives in the registry. */
 (function (root) {
   'use strict';
-  const { EventBus, equal, normalizeOverlayScope } = root.AtlasCore;
+  const { equal, normalizeOverlayScope } = root.AtlasCore;
   const { resourceRichness, projectResourceRichness } = root.AtlasExtensions;
-  const { drawProvincePaints } =
+  const { SimpleOverlay, drawProvincePaints } =
     typeof module !== 'undefined' && module.exports
       ? require('../packages/ui/simple-overlay.js')
       : root.AtlasUI;
@@ -14,73 +14,65 @@
       new Map([...data.winners].map(([id, winner]) => [id, winner.color])),
     );
   }
+  const empty = () => ({ legend: [], winners: new Map(), provinces: new Map() });
+  const hiddenResources = (options) =>
+    Array.isArray(options.hiddenResources)
+      ? [...new Set(options.hiddenResources.filter((key) => typeof key === 'string'))].sort()
+      : [];
   const format = (n) => n.toLocaleString('ru-RU', { maximumFractionDigits: 4 }),
     shortFormat = (n) => n.toLocaleString('ru-RU', { maximumSignificantDigits: 3 });
-  class ResourceOverlay extends EventBus {
+  class ResourceOverlay extends SimpleOverlay {
     constructor(ctx) {
-      super();
-      this.ctx = ctx;
-      this.dirty = true;
-      this.data = { legend: [], winners: new Map(), provinces: new Map() };
-      this.message = '';
-      this.overlay = ctx.overlay({
+      // Display filters reproject this world cache; they never rerun the economy.
+      const source = { data: null, index: null, tiles: null, catalog: null, message: '' };
+      super(ctx, {
         id: 'richness',
         title: 'Богатство ресурсов',
         order: 15,
         visible: false,
-      });
-      Object.assign(this, this.readOptions());
-      const refresh = () => {
-        if (ctx.signal.aborted) return;
-        this.dirty = true;
-        this.painted = null;
-        this.draw();
-        this.emit('change', {});
-      };
-      ctx.state.on(
-        'change',
-        ({ before, after }) => {
+        watch: (before, after) =>
+          !equal(before.meta.tiles, after.meta.tiles) ||
+          !equal(before.meta.resources?.catalog, after.meta.resources?.catalog),
+        createState({ meta, index, options, provinceIds }) {
           if (
-            !equal(before.meta.tiles, after.meta.tiles) ||
-            !equal(before.meta.resources?.catalog, after.meta.resources?.catalog)
-          )
-            refresh();
-        },
-        { signal: ctx.signal },
-      );
-      ctx.ui.on('map:ready', refresh, { signal: ctx.signal });
-      ctx.state.statistics.on('change', refresh, { signal: ctx.signal });
-      ctx.state.overlays.on(
-        'change',
-        () => {
-          if (!ctx.signal.aborted) {
-            this.draw();
-            this.emit('change', {});
+            source.index !== index ||
+            !equal(source.tiles, meta.tiles) ||
+            !equal(source.catalog, meta.resources?.catalog)
+          ) {
+            source.message = '';
+            try {
+              const report = ctx.state.statistics.calculate([...index.regions.keys()]),
+                block = report.get('resources');
+              if (!block)
+                throw new Error(
+                  report.errors.find((e) => e.id === 'resources')?.message ||
+                    'Сборщик ресурсов недоступен.',
+                );
+              source.data = resourceRichness(block, meta.resources?.catalog);
+              if (block.invalid.length)
+                source.message =
+                  'Пропущено некорректных ресурсных записей: ' + block.invalid.length + '.';
+            } catch (error) {
+              source.data = empty();
+              source.message = 'Не удалось рассчитать ресурсы: ' + error.message;
+            }
+            source.index = index;
+            source.tiles = meta.tiles;
+            source.catalog = meta.resources?.catalog;
           }
+          return projectResourceRichness(source.data, hiddenResources(options), provinceIds);
         },
-        { signal: ctx.signal },
-      );
-      ctx.state.overlays.on(
-        'settings:change',
-        () => {
-          const options = this.readOptions();
-          if (
-            equal(options.hiddenResources, this.hiddenResources) &&
-            equal(options.provinceIds, this.provinceIds)
-          )
-            return;
-          Object.assign(this, options);
-          this.data = projectResourceRichness(this.data, this.hiddenResources, this.provinceIds);
-          this.painted = null;
-          this.draw();
-          this.emit('change', {});
-        },
-        { signal: ctx.signal },
-      );
-      ctx.scope.defer(() => {
-        this.data = { legend: [], winners: new Map(), provinces: new Map() };
-        this.painted = null;
+        paint: (_, data, { provinceId }) => data.winners.get(provinceId)?.color || null,
       });
+      this.sourceCache = source;
+      this.offStatistics = ctx.state.statistics.on(
+        'change',
+        () => {
+          source.index = null;
+          this.invalidate();
+        },
+        { signal: ctx.signal },
+      );
       ctx.windowMenu({
         id: 'resource-legend',
         label: 'Легенда ресурсов',
@@ -107,27 +99,22 @@
         },
         { signal: ctx.signal },
       );
-      this.draw();
     }
-    readOptions() {
-      const options = this.ctx.state.overlays.getOptions(this.overlay.id),
-        values = options.hiddenResources;
-      let provinceIds = null;
+    get hiddenResources() {
+      return hiddenResources(this.options);
+    }
+    get provinceIds() {
       try {
-        provinceIds = normalizeOverlayScope(options.provinceIds, this.ctx.state.regionIndex);
-      } catch (_) {}
-      return {
-        hiddenResources: Array.isArray(values)
-          ? [...new Set(values.filter((key) => typeof key === 'string'))].sort()
-          : [],
-        provinceIds,
-      };
+        return normalizeOverlayScope(this.options.provinceIds, this.ctx.state.regionIndex);
+      } catch (_) {
+        return null;
+      }
     }
-    setProvinceIds(provinceIds) {
-      this.ctx.state.overlays.setOptions(this.overlay.id, {
-        ...this.ctx.state.overlays.getOptions(this.overlay.id),
-        provinceIds,
-      });
+    get data() {
+      return !this.disposed && this.result ? this.ensure() : empty();
+    }
+    get message() {
+      return this.sourceCache.message;
     }
     setResourceVisible(key, visible) {
       const hidden = new Set(this.hiddenResources);
@@ -146,37 +133,22 @@
       });
     }
     ensure() {
-      if (!this.dirty) return this.data;
-      this.dirty = false;
-      this.message = '';
-      try {
-        const report = this.ctx.state.statistics.calculate([...this.ctx.state.regions.keys()]),
-          block = report.get('resources');
-        if (!block)
-          throw new Error(
-            report.errors.find((e) => e.id === 'resources')?.message ||
-              'Сборщик ресурсов недоступен.',
-          );
-        this.data = projectResourceRichness(
-          resourceRichness(block, this.ctx.state.meta.resources?.catalog),
-          this.hiddenResources,
-          this.provinceIds,
-        );
-        if (block.invalid.length)
-          this.message = 'Пропущено некорректных ресурсных записей: ' + block.invalid.length + '.';
-      } catch (error) {
-        this.data = { legend: [], winners: new Map(), provinces: new Map() };
-        this.message = 'Не удалось рассчитать ресурсы: ' + error.message;
-      }
-      return this.data;
+      return super.ensure().state;
     }
-    draw() {
-      if (!this.ctx.ui.viewport.ready || !this.overlay.visible) return;
-      const data = this.ensure();
-      if (this.painted === data) return;
-      drawResourceRichness(this.overlay.context, this.ctx.state.regionIndex, data);
-      this.painted = data;
+    dispose() {
+      this.offStatistics?.();
+      this.offStatistics = null;
+      super.dispose();
+      if (this.sourceCache)
+        Object.assign(this.sourceCache, {
+          data: null,
+          index: null,
+          tiles: null,
+          catalog: null,
+          message: '',
+        });
     }
+
     open() {
       const { ctx } = this;
       const { el } = root.AtlasUI.dom,

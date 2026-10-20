@@ -9,6 +9,10 @@
     typeof module !== 'undefined' && module.exports
       ? require('./resource-colors.js')
       : root.AtlasExtensions;
+  const { drawProvincePaints } =
+    typeof module !== 'undefined' && module.exports
+      ? require('../packages/ui/simple-overlay.js')
+      : root.AtlasUI;
   const normalized = (value) => value.trim().toLowerCase();
   function collectResourceBonusSources(tiles, index) {
     const points = [],
@@ -79,28 +83,22 @@
     }));
     return { legend, byProvince, pointCount, invalid: sources.invalid };
   }
-  function drawResourceBonusHatching(context, index, data) {
-    context.clearRect(0, 0, index.width, index.height);
-    context.imageSmoothingEnabled = false;
-    const mod = (n, d) => ((n % d) + d) % d,
-      spacing = 3;
-    for (const [id, row] of data.byProvince) {
-      const region = index.get(id);
-      if (!region || !row.colors.length) continue;
-      const phase = region.anchor[0] + region.anchor[1];
-      index.forEachRun(id, (start, length) => {
-        const y = Math.floor(start / index.width),
-          x = start % index.width,
-          first = x + mod(phase - x - y, spacing);
-        for (let xx = first; xx < x + length; xx += spacing) {
-          const stripe = (xx + y - phase) / spacing;
-          context.fillStyle = row.colors[mod(stripe, row.colors.length)];
-          context.fillRect(xx, y, 1, 1);
-        }
-      });
-    }
+  function resourceBonusPaint(row) {
+    return row?.colors.length ? { color: row.colors, fill: 'hatch', spacing: 3 } : null;
   }
-  const api = { collectResourceBonusSources, projectResourceBonuses, drawResourceBonusHatching };
+  function drawResourceBonusHatching(context, index, data) {
+    drawProvincePaints(
+      context,
+      index,
+      new Map([...data.byProvince].map(([id, row]) => [id, resourceBonusPaint(row)])),
+    );
+  }
+  const api = {
+    collectResourceBonusSources,
+    projectResourceBonuses,
+    resourceBonusPaint,
+    drawResourceBonusHatching,
+  };
   Object.assign((root.AtlasExtensions ||= {}), api);
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);

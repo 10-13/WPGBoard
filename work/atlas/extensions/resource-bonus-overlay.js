@@ -1,14 +1,22 @@
 /* Ordinary resource-point overlay and a passive, tab-owned inspector. */
 (function (root) {
   'use strict';
-  const { EventBus, equal } = root.AtlasCore;
+  const { equal } = root.AtlasCore;
   const {
     collectResourceBonusSources,
     projectResourceBonuses,
-    drawResourceBonusHatching,
+    resourceBonusPaint,
     RESOURCE_BONUSES: bonuses,
     RESOURCE_ACTIVITIES: activities,
   } = root.AtlasExtensions;
+  const { SimpleOverlay } =
+    typeof module !== 'undefined' && module.exports
+      ? require('../packages/ui/simple-overlay.js')
+      : root.AtlasUI;
+  const filterOptions = (value) => ({
+    resource: typeof value.resource === 'string' ? value.resource : '',
+    type: Object.hasOwn(bonuses, value.type) ? value.type : '',
+  });
   const empty = () => ({ legend: [], byProvince: new Map(), pointCount: 0, invalid: [] });
   const format = (n) => n.toLocaleString('ru-RU', { maximumFractionDigits: 4 });
   const resourceName = (resource) => (resource === '*' ? 'Все ресурсы' : resource);
@@ -29,71 +37,43 @@
               : point.unit))
     );
   }
-  class ResourceBonusOverlay extends EventBus {
+  class ResourceBonusOverlay extends SimpleOverlay {
     constructor(ctx) {
-      super();
-      this.ctx = ctx;
-      this.dirty = true;
-      this.data = empty();
-      this.selectedId = ctx.ui.viewport.selectedId;
-      this.overlay = ctx.overlay({
+      const source = { data: undefined, index: null, tiles: null };
+      super(ctx, {
         id: 'bonuses',
         title: 'Ресурсные точки',
         order: 18,
         visible: false,
-      });
-      this.options = this.readOptions();
-      const refresh = () => {
-        if (ctx.signal.aborted) return;
-        this.dirty = true;
-        this.painted = null;
-        this.draw();
-        this.emit('change', {});
-      };
-      ctx.state.on(
-        'change',
-        ({ before, after }) => {
-          if (
-            !equal(before.meta.tiles, after.meta.tiles) ||
-            !equal(before.meta.resources?.catalog, after.meta.resources?.catalog)
-          )
-            refresh();
+        watch: (before, after) =>
+          !equal(before.meta.tiles, after.meta.tiles) ||
+          !equal(before.meta.resources?.catalog, after.meta.resources?.catalog),
+        createState({ meta, index, options, provinceIds }) {
+          if (source.index !== index || !equal(source.tiles, meta.tiles)) {
+            source.data = collectResourceBonusSources(meta.tiles, index);
+            source.index = index;
+            source.tiles = meta.tiles;
+          }
+          const ids = provinceIds === null ? null : new Set(provinceIds),
+            sources = ids
+              ? {
+                  ...source.data,
+                  points: source.data.points.filter((point) => ids.has(point.regionId)),
+                }
+              : source.data;
+          return projectResourceBonuses(sources, filterOptions(options), meta.resources?.catalog);
         },
-        { signal: ctx.signal },
-      );
-      ctx.ui.on(
+        paint: (_, data, { provinceId }) => resourceBonusPaint(data.byProvince.get(provinceId)),
+      });
+      this.sourceCache = source;
+      this.selectedId = ctx.ui.viewport.selectedId;
+      this.offMap = ctx.ui.on(
         'map:ready',
         () => {
           this.selectedId = ctx.ui.viewport.selectedId;
-          refresh();
         },
         { signal: ctx.signal },
       );
-      ctx.state.overlays.on(
-        'change',
-        () => {
-          this.draw();
-          this.emit('change', {});
-        },
-        { signal: ctx.signal },
-      );
-      ctx.state.overlays.on(
-        'settings:change',
-        () => {
-          const options = this.readOptions();
-          if (equal(options, this.options)) return;
-          this.options = options;
-          this.project();
-          this.draw();
-          this.emit('change', {});
-        },
-        { signal: ctx.signal },
-      );
-      ctx.scope.defer(() => {
-        this.sources = null;
-        this.data = empty();
-        this.painted = null;
-      });
       ctx.windowMenu({
         id: 'bonus-legend',
         label: 'Ресурсные точки и бонусы',
@@ -125,48 +105,25 @@
         },
         { signal: ctx.signal },
       );
-      this.draw();
     }
-    readOptions() {
-      const value = this.ctx.state.overlays.getOptions(this.overlay.id);
-      return {
-        resource: typeof value.resource === 'string' ? value.resource : '',
-        type: Object.hasOwn(bonuses, value.type) ? value.type : '',
-      };
+    get sources() {
+      return this.sourceCache.data;
+    }
+    get data() {
+      return !this.disposed && this.result ? this.ensure() : empty();
     }
     setOptions(changes) {
-      this.ctx.state.overlays.setOptions(this.overlay.id, {
-        ...this.ctx.state.overlays.getOptions(this.overlay.id),
-        ...this.options,
-        ...changes,
-      });
-    }
-    project() {
-      if (!this.sources || this.dirty) return;
-      this.data = projectResourceBonuses(
-        this.sources,
-        this.options,
-        this.ctx.state.meta.resources?.catalog,
-      );
-      this.painted = null;
+      super.setOptions({ ...filterOptions(this.options), ...changes });
     }
     ensure() {
-      if (this.dirty) {
-        this.sources = collectResourceBonusSources(
-          this.ctx.state.meta.tiles,
-          this.ctx.state.regionIndex,
-        );
-        this.dirty = false;
-        this.project();
-      }
-      return this.data;
+      return super.ensure().state;
     }
-    draw() {
-      if (!this.ctx.ui.viewport.ready || !this.overlay.visible) return;
-      const data = this.ensure();
-      if (data === this.painted) return;
-      drawResourceBonusHatching(this.overlay.context, this.ctx.state.regionIndex, data);
-      this.painted = data;
+    dispose() {
+      this.offMap?.();
+      this.offMap = null;
+      super.dispose();
+      if (this.sourceCache)
+        Object.assign(this.sourceCache, { data: null, index: null, tiles: null });
     }
     open() {
       const { ctx } = this,
@@ -218,14 +175,14 @@
               resource.append(
                 new Option(this.options.resource + ' · нет точек', this.options.resource),
               );
-            resource.value = this.options.resource;
+            resource.value = this.options.resource || '';
             resource.onchange = () => this.setOptions({ resource: resource.value });
             const type = document.createElement('select');
             type.setAttribute('aria-label', 'Тип бонуса точек');
             type.append(new Option('Все типы бонусов', ''));
             for (const [id, spec] of Object.entries(bonuses))
               type.append(new Option(spec.label, id));
-            type.value = this.options.type;
+            type.value = this.options.type || '';
             type.onchange = () => this.setOptions({ type: type.value });
             pane.append(
               field('Ресурс', resource),

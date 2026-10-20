@@ -3487,13 +3487,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   function provincePaint(value) {
     if (value == null) return null;
     if (typeof value === 'string') value = { color: value };
-    if (
-      !value ||
-      typeof value !== 'object' ||
-      Array.isArray(value) ||
-      typeof value.color !== 'string' ||
-      !value.color.trim()
-    )
+    if (!value || typeof value !== 'object' || Array.isArray(value))
       throw new Error('paint должна вернуть цвет, параметры раскраски или null.');
     const {
       color,
@@ -3503,6 +3497,14 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       width = 1,
       direction = 'diagonal',
     } = value;
+    const validColor = (item) => typeof item === 'string' && item.trim();
+    if (
+      Array.isArray(color)
+        ? fill !== 'hatch' || !color.length || !color.every(validColor)
+        : !validColor(color)
+    )
+      throw new Error('Цвет — строка CSS; для штриховки также допустим непустой массив цветов.');
+    const hatchColor = Array.isArray(color) ? Object.freeze([...color]) : color;
     if (typeof opacity !== 'number' || !Number.isFinite(opacity) || opacity < 0 || opacity > 1)
       throw new Error('Прозрачность оверлея должна быть от 0 до 1.');
     if (!['solid', 'hatch'].includes(fill)) throw new Error('Тип раскраски: solid или hatch.');
@@ -3519,7 +3521,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     return Object.freeze(
       fill === 'solid'
         ? { color, opacity, fill }
-        : { color, opacity, fill, spacing, width, direction },
+        : { color: hatchColor, opacity, fill, spacing, width, direction },
     );
   }
   function buildSimpleOverlay(meta, index, definition) {
@@ -3570,7 +3572,12 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       context.imageSmoothingEnabled = false;
       context.clearRect(0, 0, index.width, index.height);
       for (const [id, paint] of entries) {
-        context.fillStyle = paint.color;
+        const colors = Array.isArray(paint.color) ? paint.color : [paint.color];
+        const stripeColor = (coordinate) => {
+          if (colors.length > 1)
+            context.fillStyle = colors[mod(Math.floor(coordinate / paint.spacing), colors.length)];
+        };
+        context.fillStyle = colors[0];
         context.globalAlpha = paint.opacity;
         const { spacing, width, direction } = paint;
         const [ax, ay] = index.get(id).anchor;
@@ -3583,7 +3590,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             return;
           }
           if (direction === 'horizontal') {
-            if (mod(y - ay, spacing) < width) context.fillRect(x, y, length, 1);
+            if (mod(y - ay, spacing) < width) {
+              stripeColor(y - ay);
+              context.fillRect(x, y, length, 1);
+            }
             return;
           }
           const coordinate =
@@ -3596,7 +3606,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           for (let stripe = first; stripe < end; stripe += spacing) {
             const left = Math.max(x, stripe),
               right = Math.min(end, stripe + width);
-            if (right > left) context.fillRect(left, y, right - left, 1);
+            if (right > left) {
+              stripeColor(coordinate + stripe - x);
+              context.fillRect(left, y, right - left, 1);
+            }
           }
         });
       }
@@ -5922,27 +5935,25 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       this.state = ctx.state;
       this.ui = ctx.ui;
       this.model = model;
-      this.layer = ctx.overlay({ id: 'ownership', title: 'Владения наций', order: 10 });
+      this.ownership = ctx.simpleOverlay({
+        id: 'ownership',
+        title: 'Владения наций',
+        order: 10,
+        visible: true,
+        watch: (before, after) =>
+          !equal(before.meta.nations?.owners, after.meta.nations?.owners) ||
+          !equal(before.meta.nations?.items, after.meta.nations?.items),
+        paint: (_, __, { meta, provinceId }) => {
+          const nations = meta.nations || EMPTY,
+            color = nations.items?.[nations.owners?.[provinceId]]?.color;
+          return validColor(color) ? color : null;
+        },
+      });
+      this.layer = this.ownership.overlay;
       this.borderLayer = ctx.overlay({ id: 'borders', title: 'Границы наций', order: 11 });
       this.state.on('change', (e) => this.update(e), { signal: ctx.signal });
       ctx.ui.on('map:ready', () => this.drawAll(), { signal: ctx.signal });
       this.drawAll();
-    }
-    drawRegion(id) {
-      const index = this.state.regionIndex,
-        region = index.get(id);
-      if (!region) return;
-      const owner = this.model.data.owners[id],
-        nation = this.model.data.items[owner],
-        color = nation?.color,
-        ctx = this.layer.context;
-      if (validColor(color)) ctx.fillStyle = color;
-      index.forEachRun(id, (start, length) => {
-        const x = start % index.width,
-          y = Math.floor(start / index.width);
-        if (validColor(color)) ctx.fillRect(x, y, length, 1);
-        else ctx.clearRect(x, y, length, 1);
-      });
     }
     drawAll() {
       const index = this.state.regionIndex;
@@ -5962,8 +5973,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           source.width = source.height = 1;
         }
       }
-      this.layer.context.clearRect(0, 0, this.layer.canvas.width, this.layer.canvas.height);
-      for (const id of Object.keys(this.model.data.owners)) this.drawRegion(Number(id));
       this.borderLayer.context.clearRect(
         0,
         0,
@@ -5984,7 +5993,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           old.owners?.[id] !== next.owners?.[id] ||
           old.items?.[old.owners?.[id]]?.color !== next.items?.[next.owners?.[id]]?.color
         ) {
-          this.drawRegion(Number(id));
           changed.push(Number(id));
         }
       }
@@ -10522,9 +10530,9 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 /* Ordinary resource overlay and its compact legend; visibility lives in the registry. */
 (function (root) {
   'use strict';
-  const { EventBus, equal, normalizeOverlayScope } = root.AtlasCore;
+  const { equal, normalizeOverlayScope } = root.AtlasCore;
   const { resourceRichness, projectResourceRichness } = root.AtlasExtensions;
-  const { drawProvincePaints } =
+  const { SimpleOverlay, drawProvincePaints } =
     typeof module !== 'undefined' && module.exports
       ? require('../packages/ui/simple-overlay.js')
       : root.AtlasUI;
@@ -10535,73 +10543,65 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       new Map([...data.winners].map(([id, winner]) => [id, winner.color])),
     );
   }
+  const empty = () => ({ legend: [], winners: new Map(), provinces: new Map() });
+  const hiddenResources = (options) =>
+    Array.isArray(options.hiddenResources)
+      ? [...new Set(options.hiddenResources.filter((key) => typeof key === 'string'))].sort()
+      : [];
   const format = (n) => n.toLocaleString('ru-RU', { maximumFractionDigits: 4 }),
     shortFormat = (n) => n.toLocaleString('ru-RU', { maximumSignificantDigits: 3 });
-  class ResourceOverlay extends EventBus {
+  class ResourceOverlay extends SimpleOverlay {
     constructor(ctx) {
-      super();
-      this.ctx = ctx;
-      this.dirty = true;
-      this.data = { legend: [], winners: new Map(), provinces: new Map() };
-      this.message = '';
-      this.overlay = ctx.overlay({
+      // Display filters reproject this world cache; they never rerun the economy.
+      const source = { data: null, index: null, tiles: null, catalog: null, message: '' };
+      super(ctx, {
         id: 'richness',
         title: 'Богатство ресурсов',
         order: 15,
         visible: false,
-      });
-      Object.assign(this, this.readOptions());
-      const refresh = () => {
-        if (ctx.signal.aborted) return;
-        this.dirty = true;
-        this.painted = null;
-        this.draw();
-        this.emit('change', {});
-      };
-      ctx.state.on(
-        'change',
-        ({ before, after }) => {
+        watch: (before, after) =>
+          !equal(before.meta.tiles, after.meta.tiles) ||
+          !equal(before.meta.resources?.catalog, after.meta.resources?.catalog),
+        createState({ meta, index, options, provinceIds }) {
           if (
-            !equal(before.meta.tiles, after.meta.tiles) ||
-            !equal(before.meta.resources?.catalog, after.meta.resources?.catalog)
-          )
-            refresh();
-        },
-        { signal: ctx.signal },
-      );
-      ctx.ui.on('map:ready', refresh, { signal: ctx.signal });
-      ctx.state.statistics.on('change', refresh, { signal: ctx.signal });
-      ctx.state.overlays.on(
-        'change',
-        () => {
-          if (!ctx.signal.aborted) {
-            this.draw();
-            this.emit('change', {});
+            source.index !== index ||
+            !equal(source.tiles, meta.tiles) ||
+            !equal(source.catalog, meta.resources?.catalog)
+          ) {
+            source.message = '';
+            try {
+              const report = ctx.state.statistics.calculate([...index.regions.keys()]),
+                block = report.get('resources');
+              if (!block)
+                throw new Error(
+                  report.errors.find((e) => e.id === 'resources')?.message ||
+                    'Сборщик ресурсов недоступен.',
+                );
+              source.data = resourceRichness(block, meta.resources?.catalog);
+              if (block.invalid.length)
+                source.message =
+                  'Пропущено некорректных ресурсных записей: ' + block.invalid.length + '.';
+            } catch (error) {
+              source.data = empty();
+              source.message = 'Не удалось рассчитать ресурсы: ' + error.message;
+            }
+            source.index = index;
+            source.tiles = meta.tiles;
+            source.catalog = meta.resources?.catalog;
           }
+          return projectResourceRichness(source.data, hiddenResources(options), provinceIds);
         },
-        { signal: ctx.signal },
-      );
-      ctx.state.overlays.on(
-        'settings:change',
-        () => {
-          const options = this.readOptions();
-          if (
-            equal(options.hiddenResources, this.hiddenResources) &&
-            equal(options.provinceIds, this.provinceIds)
-          )
-            return;
-          Object.assign(this, options);
-          this.data = projectResourceRichness(this.data, this.hiddenResources, this.provinceIds);
-          this.painted = null;
-          this.draw();
-          this.emit('change', {});
-        },
-        { signal: ctx.signal },
-      );
-      ctx.scope.defer(() => {
-        this.data = { legend: [], winners: new Map(), provinces: new Map() };
-        this.painted = null;
+        paint: (_, data, { provinceId }) => data.winners.get(provinceId)?.color || null,
       });
+      this.sourceCache = source;
+      this.offStatistics = ctx.state.statistics.on(
+        'change',
+        () => {
+          source.index = null;
+          this.invalidate();
+        },
+        { signal: ctx.signal },
+      );
       ctx.windowMenu({
         id: 'resource-legend',
         label: 'Легенда ресурсов',
@@ -10628,27 +10628,22 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         },
         { signal: ctx.signal },
       );
-      this.draw();
     }
-    readOptions() {
-      const options = this.ctx.state.overlays.getOptions(this.overlay.id),
-        values = options.hiddenResources;
-      let provinceIds = null;
+    get hiddenResources() {
+      return hiddenResources(this.options);
+    }
+    get provinceIds() {
       try {
-        provinceIds = normalizeOverlayScope(options.provinceIds, this.ctx.state.regionIndex);
-      } catch (_) {}
-      return {
-        hiddenResources: Array.isArray(values)
-          ? [...new Set(values.filter((key) => typeof key === 'string'))].sort()
-          : [],
-        provinceIds,
-      };
+        return normalizeOverlayScope(this.options.provinceIds, this.ctx.state.regionIndex);
+      } catch (_) {
+        return null;
+      }
     }
-    setProvinceIds(provinceIds) {
-      this.ctx.state.overlays.setOptions(this.overlay.id, {
-        ...this.ctx.state.overlays.getOptions(this.overlay.id),
-        provinceIds,
-      });
+    get data() {
+      return !this.disposed && this.result ? this.ensure() : empty();
+    }
+    get message() {
+      return this.sourceCache.message;
     }
     setResourceVisible(key, visible) {
       const hidden = new Set(this.hiddenResources);
@@ -10667,37 +10662,22 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       });
     }
     ensure() {
-      if (!this.dirty) return this.data;
-      this.dirty = false;
-      this.message = '';
-      try {
-        const report = this.ctx.state.statistics.calculate([...this.ctx.state.regions.keys()]),
-          block = report.get('resources');
-        if (!block)
-          throw new Error(
-            report.errors.find((e) => e.id === 'resources')?.message ||
-              'Сборщик ресурсов недоступен.',
-          );
-        this.data = projectResourceRichness(
-          resourceRichness(block, this.ctx.state.meta.resources?.catalog),
-          this.hiddenResources,
-          this.provinceIds,
-        );
-        if (block.invalid.length)
-          this.message = 'Пропущено некорректных ресурсных записей: ' + block.invalid.length + '.';
-      } catch (error) {
-        this.data = { legend: [], winners: new Map(), provinces: new Map() };
-        this.message = 'Не удалось рассчитать ресурсы: ' + error.message;
-      }
-      return this.data;
+      return super.ensure().state;
     }
-    draw() {
-      if (!this.ctx.ui.viewport.ready || !this.overlay.visible) return;
-      const data = this.ensure();
-      if (this.painted === data) return;
-      drawResourceRichness(this.overlay.context, this.ctx.state.regionIndex, data);
-      this.painted = data;
+    dispose() {
+      this.offStatistics?.();
+      this.offStatistics = null;
+      super.dispose();
+      if (this.sourceCache)
+        Object.assign(this.sourceCache, {
+          data: null,
+          index: null,
+          tiles: null,
+          catalog: null,
+          message: '',
+        });
     }
+
     open() {
       const { ctx } = this;
       const { el } = root.AtlasUI.dom,
@@ -10851,6 +10831,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     typeof module !== 'undefined' && module.exports
       ? require('./resource-colors.js')
       : root.AtlasExtensions;
+  const { drawProvincePaints } =
+    typeof module !== 'undefined' && module.exports
+      ? require('../packages/ui/simple-overlay.js')
+      : root.AtlasUI;
   const normalized = (value) => value.trim().toLowerCase();
   function collectResourceBonusSources(tiles, index) {
     const points = [],
@@ -10921,28 +10905,22 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     }));
     return { legend, byProvince, pointCount, invalid: sources.invalid };
   }
-  function drawResourceBonusHatching(context, index, data) {
-    context.clearRect(0, 0, index.width, index.height);
-    context.imageSmoothingEnabled = false;
-    const mod = (n, d) => ((n % d) + d) % d,
-      spacing = 3;
-    for (const [id, row] of data.byProvince) {
-      const region = index.get(id);
-      if (!region || !row.colors.length) continue;
-      const phase = region.anchor[0] + region.anchor[1];
-      index.forEachRun(id, (start, length) => {
-        const y = Math.floor(start / index.width),
-          x = start % index.width,
-          first = x + mod(phase - x - y, spacing);
-        for (let xx = first; xx < x + length; xx += spacing) {
-          const stripe = (xx + y - phase) / spacing;
-          context.fillStyle = row.colors[mod(stripe, row.colors.length)];
-          context.fillRect(xx, y, 1, 1);
-        }
-      });
-    }
+  function resourceBonusPaint(row) {
+    return row?.colors.length ? { color: row.colors, fill: 'hatch', spacing: 3 } : null;
   }
-  const api = { collectResourceBonusSources, projectResourceBonuses, drawResourceBonusHatching };
+  function drawResourceBonusHatching(context, index, data) {
+    drawProvincePaints(
+      context,
+      index,
+      new Map([...data.byProvince].map(([id, row]) => [id, resourceBonusPaint(row)])),
+    );
+  }
+  const api = {
+    collectResourceBonusSources,
+    projectResourceBonuses,
+    resourceBonusPaint,
+    drawResourceBonusHatching,
+  };
   Object.assign((root.AtlasExtensions ||= {}), api);
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);
@@ -10951,14 +10929,22 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 /* Ordinary resource-point overlay and a passive, tab-owned inspector. */
 (function (root) {
   'use strict';
-  const { EventBus, equal } = root.AtlasCore;
+  const { equal } = root.AtlasCore;
   const {
     collectResourceBonusSources,
     projectResourceBonuses,
-    drawResourceBonusHatching,
+    resourceBonusPaint,
     RESOURCE_BONUSES: bonuses,
     RESOURCE_ACTIVITIES: activities,
   } = root.AtlasExtensions;
+  const { SimpleOverlay } =
+    typeof module !== 'undefined' && module.exports
+      ? require('../packages/ui/simple-overlay.js')
+      : root.AtlasUI;
+  const filterOptions = (value) => ({
+    resource: typeof value.resource === 'string' ? value.resource : '',
+    type: Object.hasOwn(bonuses, value.type) ? value.type : '',
+  });
   const empty = () => ({ legend: [], byProvince: new Map(), pointCount: 0, invalid: [] });
   const format = (n) => n.toLocaleString('ru-RU', { maximumFractionDigits: 4 });
   const resourceName = (resource) => (resource === '*' ? 'Все ресурсы' : resource);
@@ -10979,71 +10965,43 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
               : point.unit))
     );
   }
-  class ResourceBonusOverlay extends EventBus {
+  class ResourceBonusOverlay extends SimpleOverlay {
     constructor(ctx) {
-      super();
-      this.ctx = ctx;
-      this.dirty = true;
-      this.data = empty();
-      this.selectedId = ctx.ui.viewport.selectedId;
-      this.overlay = ctx.overlay({
+      const source = { data: undefined, index: null, tiles: null };
+      super(ctx, {
         id: 'bonuses',
         title: 'Ресурсные точки',
         order: 18,
         visible: false,
-      });
-      this.options = this.readOptions();
-      const refresh = () => {
-        if (ctx.signal.aborted) return;
-        this.dirty = true;
-        this.painted = null;
-        this.draw();
-        this.emit('change', {});
-      };
-      ctx.state.on(
-        'change',
-        ({ before, after }) => {
-          if (
-            !equal(before.meta.tiles, after.meta.tiles) ||
-            !equal(before.meta.resources?.catalog, after.meta.resources?.catalog)
-          )
-            refresh();
+        watch: (before, after) =>
+          !equal(before.meta.tiles, after.meta.tiles) ||
+          !equal(before.meta.resources?.catalog, after.meta.resources?.catalog),
+        createState({ meta, index, options, provinceIds }) {
+          if (source.index !== index || !equal(source.tiles, meta.tiles)) {
+            source.data = collectResourceBonusSources(meta.tiles, index);
+            source.index = index;
+            source.tiles = meta.tiles;
+          }
+          const ids = provinceIds === null ? null : new Set(provinceIds),
+            sources = ids
+              ? {
+                  ...source.data,
+                  points: source.data.points.filter((point) => ids.has(point.regionId)),
+                }
+              : source.data;
+          return projectResourceBonuses(sources, filterOptions(options), meta.resources?.catalog);
         },
-        { signal: ctx.signal },
-      );
-      ctx.ui.on(
+        paint: (_, data, { provinceId }) => resourceBonusPaint(data.byProvince.get(provinceId)),
+      });
+      this.sourceCache = source;
+      this.selectedId = ctx.ui.viewport.selectedId;
+      this.offMap = ctx.ui.on(
         'map:ready',
         () => {
           this.selectedId = ctx.ui.viewport.selectedId;
-          refresh();
         },
         { signal: ctx.signal },
       );
-      ctx.state.overlays.on(
-        'change',
-        () => {
-          this.draw();
-          this.emit('change', {});
-        },
-        { signal: ctx.signal },
-      );
-      ctx.state.overlays.on(
-        'settings:change',
-        () => {
-          const options = this.readOptions();
-          if (equal(options, this.options)) return;
-          this.options = options;
-          this.project();
-          this.draw();
-          this.emit('change', {});
-        },
-        { signal: ctx.signal },
-      );
-      ctx.scope.defer(() => {
-        this.sources = null;
-        this.data = empty();
-        this.painted = null;
-      });
       ctx.windowMenu({
         id: 'bonus-legend',
         label: 'Ресурсные точки и бонусы',
@@ -11075,48 +11033,25 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         },
         { signal: ctx.signal },
       );
-      this.draw();
     }
-    readOptions() {
-      const value = this.ctx.state.overlays.getOptions(this.overlay.id);
-      return {
-        resource: typeof value.resource === 'string' ? value.resource : '',
-        type: Object.hasOwn(bonuses, value.type) ? value.type : '',
-      };
+    get sources() {
+      return this.sourceCache.data;
+    }
+    get data() {
+      return !this.disposed && this.result ? this.ensure() : empty();
     }
     setOptions(changes) {
-      this.ctx.state.overlays.setOptions(this.overlay.id, {
-        ...this.ctx.state.overlays.getOptions(this.overlay.id),
-        ...this.options,
-        ...changes,
-      });
-    }
-    project() {
-      if (!this.sources || this.dirty) return;
-      this.data = projectResourceBonuses(
-        this.sources,
-        this.options,
-        this.ctx.state.meta.resources?.catalog,
-      );
-      this.painted = null;
+      super.setOptions({ ...filterOptions(this.options), ...changes });
     }
     ensure() {
-      if (this.dirty) {
-        this.sources = collectResourceBonusSources(
-          this.ctx.state.meta.tiles,
-          this.ctx.state.regionIndex,
-        );
-        this.dirty = false;
-        this.project();
-      }
-      return this.data;
+      return super.ensure().state;
     }
-    draw() {
-      if (!this.ctx.ui.viewport.ready || !this.overlay.visible) return;
-      const data = this.ensure();
-      if (data === this.painted) return;
-      drawResourceBonusHatching(this.overlay.context, this.ctx.state.regionIndex, data);
-      this.painted = data;
+    dispose() {
+      this.offMap?.();
+      this.offMap = null;
+      super.dispose();
+      if (this.sourceCache)
+        Object.assign(this.sourceCache, { data: null, index: null, tiles: null });
     }
     open() {
       const { ctx } = this,
@@ -11168,14 +11103,14 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
               resource.append(
                 new Option(this.options.resource + ' · нет точек', this.options.resource),
               );
-            resource.value = this.options.resource;
+            resource.value = this.options.resource || '';
             resource.onchange = () => this.setOptions({ resource: resource.value });
             const type = document.createElement('select');
             type.setAttribute('aria-label', 'Тип бонуса точек');
             type.append(new Option('Все типы бонусов', ''));
             for (const [id, spec] of Object.entries(bonuses))
               type.append(new Option(spec.label, id));
-            type.value = this.options.type;
+            type.value = this.options.type || '';
             type.onchange = () => this.setOptions({ type: type.value });
             pane.append(
               field('Ресурс', resource),
