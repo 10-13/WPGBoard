@@ -3,6 +3,7 @@
   'use strict';
   const { el, button, field } = root.AtlasUI.dom, { uid } = root.AtlasCore;
   const { ResourceModel, readResourceEntry, RESOURCE_ACTIVITIES: activities, RESOURCE_BONUSES: bonuses } = root.AtlasExtensions;
+  const { createDataRow, createDataGroup } = root.AtlasUI.dataView;
   const format = n => n.toLocaleString('ru-RU', { maximumFractionDigits: 4 });
   function drawResourceMarkers(context, regions, tiles) {
     for (const [key, tile] of Object.entries(tiles || {})) {
@@ -81,20 +82,21 @@
       function open(regionId = selected) {
         if (regionId && state.regions.has(regionId)) { selected = regionId; ui.viewport.select(regionId); }
         return ctx.window({ id: 'objects', title: 'Ресурсы и производства', x: 295, y: 55, width: 350, height: 400, render(pane, scope, tab) {
+          const expanded = new Map();
           const draw = () => {
             pane.replaceChildren(); if (!state.regions.has(selected)) { pane.append(el('p', 'muted', 'Выберите провинцию на карте.')); return; }
             const id = selected; tab.setTitle('Объекты #' + id); pane.append(el('div', 'inspector-id', 'ПРОВИНЦИЯ #' + id));
             const tools = el('div', 'tool-row'); tools.append(button('+ Производство', () => edit(id)), button('+ Ресурсная точка', () => edit(id, 'resource-point'))); pane.append(tools);
             pane.append(button('Статистика провинции', () => openData('statistics:open', { regionIds: [id], title: 'Провинция #' + id }), { className: 'wide small' }));
             for (const entry of model.list(id)) {
-              const card = el('section', 'metadata-card'); card.append(el('strong', 'metadata-title', entry.title));
+              const key = id + ':' + entry.id, group = createDataGroup(entry.title, { id: entry.id, open: expanded.has(key) ? expanded.get(key) : true, onToggle: open => expanded.set(key, open) }), card = group.body;
               try {
-                const value = readResourceEntry(entry); card.append(el('p', 'muted small', (value.resource === '*' ? 'Все ресурсы' : value.resource) + ' · ' + (activities[value.activity] || 'Все виды')));
-                if (value.kind === 'production') { card.append(el('p', 'mono', 'Базовый выпуск: ' + format(value.baseOutput) + ' ' + value.unit), el('p', 'muted small', 'Приоритет снабжения: ' + value.priority)); for (const input of value.inputs) card.append(el('p', 'small', 'Расход: ' + input.resource + ' · ' + format(input.amount) + ' ' + input.unit)); }
-                else for (const buff of value.bonuses) card.append(el('p', 'small', bonuses[buff.type].label + ': ' + (bonuses[buff.type].efficiency ? '−' : '+') + format(buff.value) + (bonuses[buff.type].percent ? '%' : '') + (buff.inputResource && buff.inputResource !== '*' ? ' · ' + buff.inputResource : '') + (buff.inputUnit && buff.inputUnit !== '*' ? ' · ' + buff.inputUnit : '')));
+                const value = readResourceEntry(entry); card.append(createDataRow('Ресурс', value.resource === '*' ? 'Все ресурсы' : value.resource), createDataRow('Вид', activities[value.activity] || 'Все виды'));
+                if (value.kind === 'production') { card.append(createDataRow('Базовый выпуск', format(value.baseOutput) + ' ' + value.unit), createDataRow('Приоритет снабжения', String(value.priority))); for (const input of value.inputs) card.append(createDataRow('Расход: ' + input.resource, format(input.amount) + ' ' + input.unit)); }
+                else for (const buff of value.bonuses) card.append(createDataRow(bonuses[buff.type].label, (bonuses[buff.type].efficiency ? '−' : '+') + format(buff.value) + (bonuses[buff.type].percent ? '%' : '') + (buff.inputResource && buff.inputResource !== '*' ? ' · ' + buff.inputResource : '') + (buff.inputUnit && buff.inputUnit !== '*' ? ' · ' + buff.inputUnit : '')));
               } catch (e) { card.append(el('p', 'form-error', e.message)); }
               if (entry.description) card.append(el('p', 'metadata-description', entry.description)); const actions = el('div', 'form-actions');
-              actions.append(button('Изменить', () => edit(id, entry.kind, entry), { className: 'small' }), button('Метаданные', () => openData('metadata:open', { regionId: id }), { className: 'small' }), button('Удалить', protect(() => model.remove(id, entry.id)), { className: 'small' })); card.append(actions); pane.append(card);
+              actions.append(button('Изменить', () => edit(id, entry.kind, entry), { className: 'small' }), button('Метаданные', () => openData('metadata:open', { regionId: id }), { className: 'small' }), button('Удалить', protect(() => model.remove(id, entry.id)), { className: 'small' })); card.append(actions); pane.append(group.element);
             }
             if (!model.list(id).length) pane.append(el('p', 'muted', 'Объектов пока нет. Ресурсная точка усиливает подходящие производства, своего выпуска у неё нет.'));
             pane.append(el('p', 'muted small', 'На карте: золотой завод — производство, бирюзовый ромб — ресурсная точка.'));

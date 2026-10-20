@@ -10,6 +10,6 @@ files, isolated QA parties and generated archives are ignored; do not force-add
 them. The existing source history is preserved on `main`.
 
 The approved UI reference is `outputs/statistics-tree-preview.html`. Its rules
-are recorded in the application instructions. The current rollout is limited
-to metadata lists, their editor and the statistics tree. The user will request
-the remaining application rollout separately.
+are recorded in the application instructions and now apply to the entire UI:
+one monospace family, one 10 px text size, and a 16 px vertical rhythm. Reuse
+the application tokens and shared data-view primitives in future extensions.

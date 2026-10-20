@@ -6,61 +6,209 @@
 <meta name="theme-color" content="#172127">
 <meta name="description" content="Редактор военно-политической игры: карта, независимые расширения, окна, вкладки и история изменений.">
 <title>АТЛАС — рабочее пространство ВПИ</title>
-<style>:root{color-scheme:dark;--surface:#1b252c;--raised:#26323a;--line:#415058;--text:#d3dcdf;--muted:#82959d;--accent:#b9a270;--focus:#93b4c2;font:11px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);background:#243c48;font-synthesis:none}
-*{box-sizing:border-box}body{margin:0;overflow:hidden}button,input,select{font:inherit;color:inherit}button{cursor:pointer;background:#28353d;border:1px solid #4b5960;border-radius:1px;min-height:23px;padding:3px 8px;text-align:center}button:hover{background:#34464f;border-color:#6b818c}button:disabled{opacity:.35;cursor:default}button:focus-visible,[role=tab]:focus-visible,[role=separator]:focus-visible{outline:1px solid var(--focus);outline-offset:2px}button.accent{color:#dfd0ac;border-color:#81704e;background:#3d3c32}button.accent:hover{background:#514a37}.active{border-color:#a5bbc4!important;background:#394c57!important;color:#edf4f6!important}[hidden]{display:none!important}
-input,select{background:#111c23;border:1px solid #42515a;border-radius:1px;padding:5px 6px;min-width:0;width:100%;height:27px}input:focus,select:focus{outline:1px solid #7c9aa8}input[type=color]{padding:1px;width:68px;cursor:pointer}input[type=checkbox]{width:13px;height:13px;accent-color:#aebcb9;margin:0}input[type=file]{height:auto;padding:6px;font-size:10px}p{line-height:1.65;margin:8px 0}small{font-size:9px}strong{font-weight:500}.muted{color:var(--muted)}.small{font-size:10px}.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.wide{display:block;width:100%;margin-top:9px}.field{display:flex;align-items:center;gap:8px;margin:8px 0}.field-label{font-size:10px;color:#9badb4;min-width:65px}.field>input,.field>select{flex:1}.form-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:13px}.tool-row{display:flex;gap:4px;margin-bottom:9px}.tool-row>button{flex:1;white-space:nowrap;padding:4px;font-size:10px}.inline-form{display:flex;gap:5px;margin-top:14px}.inline-form input{flex:1}.icon-button{padding:2px 5px;min-width:23px;min-height:22px}
-.atlas-shell{display:grid;grid-template-rows:34px 26px 1fr 23px;height:100dvh;overflow:hidden}.shell-header{display:flex;align-items:center;gap:10px;background:linear-gradient(#27333b,#1b252c);border-bottom:1px solid #0e1b23;padding:0 11px;z-index:100}.shell-mark{font:26px Georgia,serif;color:#c2b28c;line-height:1}.shell-brand{font-size:12px;letter-spacing:3px;color:#e3e8e7}.shell-title{color:#aebdc2;font-size:10px;border-left:1px solid #46565f;padding-left:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.branch-label{font:9px ui-monospace,monospace;color:#b5c4c7;border:1px solid #52615f;padding:2px 6px;border-radius:1px;margin-left:3px}.save-status{margin-left:auto;color:#7f949f;font-size:9px;white-space:nowrap}.modules-button{min-height:22px;font-size:10px;padding:2px 8px}.shell-menubar{display:flex;align-items:stretch;gap:1px;background:#18242c;border-bottom:1px solid #4b5a60;padding:0 6px;z-index:100}.menubar-item{font-size:10px;background:none;border:0;min-height:25px;padding:4px 13px;color:#bac9cf}.menubar-item:hover{background:#304550;border:0}.workspace{position:relative;min-height:0;min-width:0;overflow:hidden;isolation:isolate}.map-host{position:absolute;inset:0}.map-viewport{position:absolute;inset:0;overflow:hidden;touch-action:none;outline:none;background:#304f5e;cursor:crosshair}.map-viewport.dragging{cursor:grabbing}.map-stage{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}.map-stage>canvas{position:absolute;top:0;left:0;image-rendering:crisp-edges;image-rendering:pixelated}.map-base{z-index:0;display:block}.map-layer,.map-highlight{pointer-events:none}.map-numbers{position:absolute;inset:0;pointer-events:none}.window-host{position:absolute;inset:0;z-index:50;pointer-events:none}.map-navigation{position:absolute;right:13px;bottom:13px;display:flex;align-items:center;z-index:40;border:1px solid #5b707a;background:#192b34ed;box-shadow:0 2px 8px #0c1b2350}.map-navigation button{width:30px;height:28px;min-height:28px;border:0;border-left:1px solid #445b68;background:none;font-size:16px;padding:2px}.map-navigation button:first-child{border:0}.zoom-label{font:10px ui-monospace,monospace;min-width:45px;text-align:center}.shell-footer{display:flex;align-items:center;padding:0 11px;font-size:9px;color:#8ea4b0;background:#15242d;border-top:1px solid #4b5d67;z-index:100}.status-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.coordinates{margin-left:auto;white-space:nowrap;padding-left:14px;font:9px ui-monospace,monospace}.map-tooltip{position:absolute;z-index:40;pointer-events:none;padding:8px 11px;max-width:270px;background:#18272fee;border:1px solid #647d89;box-shadow:0 3px 15px #071b2360;font-size:10px;line-height:1.7}.map-tooltip strong{display:block;color:#d2e1e7}.map-tooltip div{font-size:9px;color:#9aafb7}.busy-overlay{position:absolute;inset:0;background:#182d37ed;z-index:10000;display:flex;align-items:center;justify-content:center;font-size:13px;letter-spacing:.4px}.toast{position:fixed;bottom:39px;left:50%;transform:translateX(-50%);background:#142731f5;color:#c6d8df;border:1px solid #728a93;padding:11px 16px;max-width:min(580px,90vw);z-index:200000;font-size:11px;line-height:1.7;box-shadow:0 6px 30px #0a1c2666}
-.overlay-window{position:absolute;display:flex;flex-direction:column;pointer-events:auto;background:#1b252cf5;border:1px solid #4b5b64;box-shadow:0 6px 22px #06151d70;min-width:160px;min-height:90px;color:#c5d0d5}.overlay-window.focused{border-color:#80929c}.window-chrome{height:25px;min-height:25px;display:flex;align-items:stretch;background:linear-gradient(#36434b,#253139);border-bottom:1px solid #0f1d25;user-select:none;touch-action:none}.window-grip{display:flex;align-items:center;justify-content:center;min-width:15px;color:#748e9a;font-size:13px;cursor:move}.window-tabs{display:flex;align-items:stretch;flex:1;min-width:0;overflow:hidden;gap:1px;cursor:move}.window-tab{display:flex;align-items:center;gap:7px;min-width:65px;max-width:180px;padding:0 4px 0 7px;font-size:10px;cursor:move;color:#a3b5bf;border:1px solid transparent;border-top:0;border-bottom:0;user-select:none;touch-action:none}.window-tab.active{background:#1e2a32!important;border-color:#52636c!important;color:#dce6eb!important}.tab-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:135px;pointer-events:none}.tab-close,.window-close{border:0;background:none;font-size:14px;font-weight:300;color:#8aa1ac;min-height:22px;height:22px;line-height:18px;padding:0 2px;min-width:15px}.tab-close:hover,.window-close:hover{background:#71413d;color:#f2cebd;border:0}.window-close{min-width:21px;border-left:1px solid #455962;margin-left:2px}.window-body{position:relative;min-height:0;flex:1;display:flex;flex-direction:column}.window-pane{padding:10px;overflow:auto;min-height:0;flex:1;scrollbar-width:thin;scrollbar-color:#51616b #1b252c;font-size:11px}.window-resize{position:absolute;right:0;bottom:0;width:13px;height:13px;cursor:nwse-resize;touch-action:none;z-index:1;background:repeating-linear-gradient(135deg,transparent,transparent 3px,#768b9455 3px,#768b9455 4px);clip-path:polygon(100% 0,100% 100%,0 100%)}.dragging-window{opacity:.85}.drop-target{outline:2px solid #a7bcbf;outline-offset:2px}.drop-target::after{content:'Объединить вкладки';position:absolute;inset:25px 0 0;display:flex;align-items:center;justify-content:center;color:#d9e9ee;background:#51738677;pointer-events:none;font-size:12px}.tab-drag-ghost{position:fixed;z-index:150000;pointer-events:none;border:1px solid #95acb4;background:#263c47;padding:7px 13px;color:#dfebee;font-size:11px}
-.tree-menu-root{position:fixed;inset:0;z-index:200001;pointer-events:none}.tree-menu-panel{position:fixed;pointer-events:auto;min-width:200px;max-width:310px;background:#1e2b34;border:1px solid #657b86;padding:3px;box-shadow:0 6px 24px #08192580}.tree-menu-item{display:flex;align-items:center;justify-content:space-between;gap:20px;width:100%;background:none;border:0;min-height:27px;padding:5px 10px;text-align:left;color:#cfdbdf;font-size:10px}.tree-menu-item:hover{background:#3d5360;border:0}.tree-menu-item small{color:#8da3af;font-size:9px}.tree-menu-item:disabled:hover{background:none}.extension-row{display:flex;align-items:flex-start;gap:10px;border-bottom:1px solid #354650;padding:12px 0;cursor:pointer}.extension-row input{flex-shrink:0;margin-top:3px}.extension-row strong{font-size:11px;display:block}.extension-row small{display:block;color:#839ca8;font-size:10px;line-height:1.6;margin-top:4px}.file-input-proxy{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0}
-.nation-row{display:flex;gap:3px;margin-bottom:4px;align-items:center;border:1px solid transparent;background:#24333b4d}.nation-row.selected{border-color:#657e89;background:#31465188}.nation-select{flex:1;min-width:0;display:flex;align-items:center;gap:8px;background:none;border:0;height:32px;text-align:left;padding:4px 7px}.nation-select:hover{border:0;background:#344b5766}.nation-swatch{width:15px;height:20px;display:block;border:1px solid #b8c8ca33;border-radius:0 0 4px 4px;flex-shrink:0}.nation-name{font-size:11px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nation-count{margin-left:auto;color:#819ca9;flex-shrink:0}.nation-row>.icon-button{background:none;border:0;color:#9eafb6}.section-line{border-top:1px solid #42515b;padding-top:10px;margin:15px 0 5px;display:flex;align-items:center;justify-content:space-between;font-size:8px;letter-spacing:1px;color:#94a8b2}.group-row{display:flex;align-items:center;gap:5px;border-bottom:1px solid #34454f;padding:3px 0}.group-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;border:0;background:none;padding-left:0}.inspector-id{font:10px ui-monospace,monospace;color:#d0c196;margin-bottom:12px;letter-spacing:1px}.branch-row{display:flex;align-items:center;gap:5px;padding:8px 0;border-bottom:1px solid #3a4c56}.branch-description{flex:1;min-width:0}.branch-description strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}.branch-description small{display:block;margin-top:5px;font-size:8px}.branch-row button{font-size:9px;padding:3px 6px}.log-row{padding:10px 0;border-bottom:1px solid #344650}.log-row strong{font-size:11px;display:block;line-height:1.5}.log-row small{font-size:8px;display:block;margin-top:5px}.conflict-path{font-size:9px;padding:5px 0;overflow-wrap:anywhere;color:#d3b7a3}
-@media(max-width:600px){.shell-title{max-width:140px;padding-left:8px;font-size:9px}.shell-header{gap:7px;padding:0 8px}.shell-brand{font-size:10px;letter-spacing:2px}.shell-mark{font-size:23px}.save-status{display:none}.modules-button{margin-left:auto}.shell-menubar{padding-left:3px}.menubar-item{padding:4px 10px}.branch-label{font-size:8px;padding:2px 4px}.coordinates{display:none}.shell-footer{font-size:8px}.overlay-window{box-shadow:0 4px 14px #06151d66}.window-pane{padding:8px}.tree-menu-panel{min-width:180px}.map-navigation{right:8px;bottom:8px}}
-.nation-info-header{display:flex;align-items:center;gap:9px;margin:1px 0 8px}.nation-info-name{font-size:13px;overflow-wrap:anywhere;min-width:0}.nation-diplomacy-status{padding:6px 8px;border:1px solid #476357;background:#273c3433;color:#a3bcae;font-size:10px}.nation-diplomacy-status.at-war{border-color:#9c514a;background:#6a302d44;color:#f29b91}.nation-enemy-row{display:flex;align-items:center;gap:6px;border-bottom:1px solid #354650;padding:4px 0}.nation-enemy-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;border:0;background:none;padding-left:0;color:#dbaaa2}button.danger{background:#572e2b;border-color:#9c514a;color:#f0b4aa}button.danger:hover{background:#743b35;border-color:#c9796f}
-textarea{font:inherit;color:inherit;resize:vertical;min-width:0;width:100%;padding:6px;background:#111c23;border:1px solid #42515a;border-radius:1px}.field>textarea{flex:1}.metadata-card{border-bottom:1px solid #3d505b;padding:12px 0}.metadata-title{display:block;color:#d3dfe2;overflow-wrap:anywhere;line-height:1.5}.metadata-description{white-space:pre-wrap;overflow-wrap:anywhere;color:#a2b5bf;font-size:10px}.metadata-stat-row,.resource-buff-row{padding:7px 0;border-bottom:1px solid #344650}.metadata-stat-controls{display:flex;gap:5px;margin-top:5px;align-items:center}.metadata-stat-controls>select{width:100px;flex-shrink:0}.metadata-stat-controls>input{flex:1;min-width:0}.metadata-stat-controls>input[type=checkbox]{flex:none;width:15px}.resource-buff-row>select{font-size:10px}.statistics-block .section-line{letter-spacing:.3px;line-height:1.5}.statistic-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:5px 0;border-bottom:1px solid #31434b;font-size:10px;line-height:1.6}.statistic-row>span:first-child{min-width:0;overflow-wrap:anywhere}.statistic-row>strong,.statistic-row>.mono{max-width:60%;overflow-wrap:anywhere;white-space:pre-wrap;text-align:right;font-size:10px}.form-error{color:#edaa9e;font-size:10px;overflow-wrap:anywhere}.region-chips{display:flex;gap:4px;flex-wrap:wrap;max-height:80px;overflow:auto;margin:8px 0}.region-chips button{padding:2px 5px;min-height:21px}
-.statistics-folder{padding:5px 0}.statistics-folder>summary{cursor:pointer;padding:6px 0;color:#bccdd5;font-size:10px;line-height:1.6}.statistics-folder>.statistics-folder{border-left:1px solid #425661;margin-left:4px;padding-left:9px}.statistics-folder>.statistic-row{margin-left:9px}.statistics-folder[open]>summary{color:#d6c69f}
-.resource-input-row{padding:7px 0;border-bottom:1px solid #344650}.resource-input-controls{display:flex;gap:5px;margin-top:5px}.resource-input-controls>input{flex:1;min-width:0}
-.shell-menu-row{display:flex;min-width:0;background:#18242c;border-bottom:1px solid #4b5a60;z-index:100}.shell-menu-row>.shell-menubar{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;border-bottom:0}.map-tool-bar{display:flex;align-items:center;gap:6px;padding:0 7px 0 4px;flex-shrink:0}.map-tool-caption{font-size:9px;color:#829aa5}.map-tool-bar>select{width:170px;height:22px;padding:1px 5px;font-size:10px;border-color:#607680}.map-viewport[data-tool="metadata:collect"]{cursor:copy}.map-viewport.dragging{cursor:grabbing}.set-tool-help{padding:7px 8px;border:1px solid #466a72;background:#25434a55;color:#9dcbd3;font-size:10px;line-height:1.7}.set-count{color:#83d9df;font-size:10px;margin:8px 0}.set-tools{flex-wrap:wrap}.set-tools>button{flex:1 1 100px}.tool-row .set-active{border-color:#71cfd7;background:#28505c;color:#d7f7fa}@media(max-width:720px){.map-tool-caption{display:none}.map-tool-bar>select{width:135px}.map-tool-bar{padding-right:3px}.shell-menu-row .menubar-item{padding-left:8px;padding-right:8px}}
+<style>:root {
+  color-scheme:dark;
+  --surface:#1b252c; --raised:#26323a; --line:#415058; --text:#d3dcdf;
+  --muted:#82959d; --accent:#b9a270; --focus:#93b4c2;
+  --atlas-font:Menlo,Consolas,"Liberation Mono",monospace;
+  --atlas-font-size:10px; --atlas-step:16px;
+  font-family:var(--atlas-font); font-size:var(--atlas-font-size);
+  line-height:var(--atlas-step); color:var(--text); background:#243c48;
+  font-synthesis:none;
+}
+:where(*,::before,::after) { box-sizing:border-box; font-family:inherit; font-size:inherit; font-style:normal; line-height:inherit }
+body { margin:0; overflow:hidden }
+button,input,select,textarea { font:inherit; color:inherit }
+button {
+  --control-line:#4b5960; cursor:pointer; background:#28353d; border:0;
+  box-shadow:inset 0 0 0 1px var(--control-line); border-radius:1px;
+  min-height:var(--atlas-step); max-width:100%; padding:0 6px;
+  line-height:var(--atlas-step); text-align:center; white-space:normal; overflow-wrap:anywhere;
+}
+button:hover { background:#34464f; --control-line:#6b818c }
+button:disabled { opacity:.35; cursor:default }
+button:focus-visible,[role=tab]:focus-visible,[role=separator]:focus-visible,summary:focus-visible { outline:1px solid var(--focus); outline-offset:0 }
+button.accent { color:#dfd0ac; --control-line:#81704e; background:#3d3c32 }
+button.accent:hover { background:#514a37 }
+button.danger { background:#572e2b; --control-line:#9c514a; color:#f0b4aa }
+button.danger:hover { background:#743b35; --control-line:#c9796f }
+.active { --control-line:#a5bbc4!important; background:#394c57!important; color:#edf4f6!important }
+[hidden] { display:none!important }
+input,select,textarea { background:#111c23; border:1px solid #42515a; border-radius:1px; min-width:0; width:100% }
+input,select { height:var(--atlas-step); padding:0 4px; line-height:calc(var(--atlas-step) - 2px) }
+input:focus,select:focus,textarea:focus { outline:1px solid #7c9aa8; outline-offset:0 }
+input[type=color] { padding:1px; width:68px; cursor:pointer }
+input[type=checkbox] { width:12px; height:12px; accent-color:#aebcb9; margin:2px 0; flex-shrink:0 }
+input[type=file] { height:calc(2 * var(--atlas-step)); padding:7px 4px }
+input::file-selector-button { font:inherit; border:0; padding:0 4px; background:#28353d; color:inherit }
+textarea { resize:vertical; height:calc(4 * var(--atlas-step)); min-height:calc(4 * var(--atlas-step)); padding:7px 5px; line-height:var(--atlas-step) }
+p { margin:0; padding:0; overflow-wrap:anywhere }
+strong { font-weight:600 }
+small,.small,.mono { font-size:inherit; font-family:inherit }
+.muted { color:var(--muted) }
+.wide { display:block; width:100%; margin-top:var(--atlas-step) }
+.field { display:flex; align-items:flex-start; gap:8px; min-height:var(--atlas-step); margin:0 }
+.field-label { color:#9badb4; flex:0 1 auto; min-width:72px; max-width:45%; overflow-wrap:anywhere }
+.field>input,.field>select,.field>textarea { flex:1; min-width:0 }
+.form-actions,.tool-row { display:flex; flex-wrap:wrap; align-items:flex-start; column-gap:4px; row-gap:0; margin:0 }
+.tool-row { margin-bottom:var(--atlas-step) }
+.tool-row>button { flex:1 1 auto }
+.inline-form { display:flex; align-items:flex-start; gap:4px; margin-top:var(--atlas-step) }
+.inline-form input { flex:1; min-width:0 }
+.inline-form button { flex-shrink:0 }
+.icon-button { width:var(--atlas-step); min-width:var(--atlas-step); padding:0; flex-shrink:0 }
 
-/* Approved data views; adoption is explicit so other extensions stay unchanged. */
-:root{--atlas-data-font:Menlo,Consolas,"Liberation Mono",monospace;--atlas-data-font-size:10px;--atlas-data-step:16px}
-.atlas-data-scope{--data-font:var(--atlas-data-font);--data-font-size:var(--atlas-data-font-size);--data-step:var(--atlas-data-step);font-family:var(--data-font);font-size:var(--data-font-size);line-height:var(--data-step);font-style:normal}
-.atlas-data-scope *{font-family:var(--data-font);font-size:var(--data-font-size);font-style:normal;line-height:var(--data-step)}
-.atlas-data-row{display:flex;align-items:flex-start;gap:6px;min-height:var(--data-step);padding:0;margin:0;border:0;line-height:var(--data-step)}
-.atlas-data-row>.data-name{flex:0 1 auto;min-width:0;max-width:65%;white-space:pre-wrap;overflow-wrap:anywhere;color:#c2d0d7}
-.atlas-data-row>.data-leader{flex:1 0 10px;min-width:10px;border-top:1px solid #435964;margin-top:8px;opacity:.75}
-.atlas-data-row>.data-value{flex:0 1 auto;min-width:0;max-width:60%;white-space:pre-wrap;overflow-wrap:anywhere;text-align:right;font-weight:400;color:#d7e3e8}
-.atlas-data-group{margin:0;padding:0;border:0}
-.atlas-data-group>summary{display:flex;align-items:flex-start;gap:6px;min-height:var(--data-step);margin:0;padding:0;list-style:none;cursor:pointer;color:#a7bdc8;user-select:none}
-.atlas-data-group>summary::-webkit-details-marker{display:none}.atlas-data-group>summary::marker{content:''}.atlas-data-group>summary::before{content:none}
-.atlas-data-group>summary::after{content:'';flex:1 0 12px;min-width:12px;height:3px;margin-top:7px;border-top:1px solid currentColor;border-bottom:1px solid currentColor;opacity:.5}
-.atlas-data-group>summary>.data-group-name{flex:0 1 auto;min-width:0;max-width:calc(100% - 18px);white-space:pre-wrap;overflow-wrap:anywhere}
-.atlas-data-group[open]>summary{color:#c5ba9d}
-.atlas-data-group>.data-children{margin:0 0 0 3px;padding:0 0 0 17px;border-left:1px solid #354b56}
-.atlas-data-group>summary:focus-visible{outline:1px solid #93b4c2;outline-offset:0}
-.atlas-data-scope .metadata-description{margin:0;padding:0;line-height:var(--data-step);white-space:pre-wrap;overflow-wrap:anywhere;color:#a2b5bf}
-.atlas-data-scope p{margin:0;padding:0;line-height:var(--data-step);overflow-wrap:anywhere}
-.atlas-data-scope .inspector-id{font-family:var(--data-font);line-height:var(--data-step);letter-spacing:0;margin:0}
-.atlas-data-scope .field{min-height:var(--data-step);margin:0;gap:8px;align-items:center}
-.atlas-data-scope .field-label{font-size:var(--data-font-size);line-height:var(--data-step)}
-.atlas-data-scope input:not([type=checkbox]),.atlas-data-scope select{height:var(--data-step);min-height:var(--data-step);padding:0 4px;line-height:14px;font-family:var(--data-font);font-size:var(--data-font-size)}
-.atlas-data-scope input[type=checkbox]{width:12px;height:12px}
-.atlas-data-scope textarea{height:64px;min-height:64px;padding:7px 5px;line-height:var(--data-step);font-family:var(--data-font);font-size:var(--data-font-size)}
-.atlas-data-scope button,.atlas-data-scope .tool-row>button{min-height:var(--data-step);height:var(--data-step);padding:0 5px;font-family:var(--data-font);font-size:var(--data-font-size);line-height:14px;white-space:nowrap}
-.atlas-data-scope .tool-row{display:flex;flex-wrap:wrap;column-gap:4px;row-gap:0;margin:0 0 var(--data-step)}
-.atlas-data-scope .tool-row>button{flex:1 1 auto}
-.atlas-data-scope .form-actions{display:flex;flex-wrap:wrap;column-gap:4px;row-gap:0;margin:0}
-.atlas-data-scope .wide{margin-top:var(--data-step)}
-.atlas-data-scope .metadata-stat-row{padding:0;margin:0 0 var(--data-step);border:0}
-.atlas-data-scope .metadata-stat-controls{gap:4px;min-height:var(--data-step);margin:0;align-items:center}
-.atlas-data-scope .metadata-stat-controls>select{width:90px}
-.atlas-data-scope .metadata-stat-controls>.icon-button{min-width:16px;padding:0 3px}
-.atlas-data-scope .section-line{min-height:var(--data-step);margin:0;padding:0;border:0;letter-spacing:0;line-height:var(--data-step);color:#c5ba9d;gap:6px}
-.atlas-data-scope .section-line::after{content:'';flex:1;height:3px;border-top:1px solid currentColor;border-bottom:1px solid currentColor;opacity:.5}
-.atlas-data-scope .region-chips{margin:0;column-gap:4px;row-gap:0;max-height:80px}
-.atlas-data-scope .set-count{margin:0;color:#83d9df}
-.atlas-data-scope .set-tool-help{margin:0;padding:7px;border:1px solid #466a72;line-height:var(--data-step)}
-/* Scope window chrome only while one of this module's tabs is active. */
-.overlay-window:has(.window-tab.active[data-tab^="metadata:"])>.window-chrome,
-.overlay-window:has(.window-tab.active[data-tab^="metadata:"])>.window-chrome *{font-family:var(--atlas-data-font);font-size:var(--atlas-data-font-size);font-style:normal}
+/* Application chrome uses the same type and 16 px rhythm as the data views. */
+.atlas-shell { display:grid; grid-template-rows:auto auto minmax(0,1fr) auto; height:100dvh; overflow:hidden }
+.shell-header { display:flex; flex-wrap:wrap; align-items:center; gap:0 8px; min-height:calc(2 * var(--atlas-step)); background:linear-gradient(#27333b,#1b252c); box-shadow:inset 0 -1px #0e1b23; padding:8px 11px; z-index:100 }
+.shell-mark { color:#c2b28c }
+.shell-brand { letter-spacing:1px; color:#e3e8e7 }
+.shell-title { color:#aebdc2; border-left:1px solid #46565f; padding-left:8px; min-width:0; overflow-wrap:anywhere }
+.branch-label { color:#b5c4c7; box-shadow:inset 0 0 0 1px #52615f; padding:0 6px; max-width:24ch; overflow-wrap:anywhere }
+.save-status { margin-left:auto; color:#7f949f }
+.modules-button { padding:0 8px; flex-shrink:0 }
+.shell-menu-row { display:flex; align-items:flex-start; min-width:0; background:#18242c; box-shadow:inset 0 -1px #4b5a60; z-index:100 }
+.shell-menubar { display:flex; flex-wrap:wrap; align-items:stretch; flex:1; min-width:0; padding:0 6px }
+.menubar-item { background:none; box-shadow:none; padding:0 8px; color:#bac9cf }
+.menubar-item:hover { background:#304550 }
+.map-tool-bar { display:flex; align-items:center; gap:6px; padding:0 7px 0 4px; flex-shrink:0 }
+.map-tool-caption { color:#829aa5 }
+.map-tool-bar>select { width:170px; border-color:#607680 }
+.shell-footer { display:flex; align-items:flex-start; min-height:var(--atlas-step); padding:0 11px; color:#8ea4b0; background:#15242d; box-shadow:inset 0 1px #4b5d67; z-index:100 }
+.status-text { flex:1; min-width:0; overflow-wrap:anywhere }
+.coordinates { margin-left:auto; white-space:nowrap; padding-left:8px; flex-shrink:0 }
+
+/* Pixel map and its controls. */
+.workspace { position:relative; min-height:0; min-width:0; overflow:hidden; isolation:isolate }
+.map-host,.map-viewport { position:absolute; inset:0 }
+.map-viewport { overflow:hidden; touch-action:none; outline:none; background:#304f5e; cursor:crosshair }
+.map-viewport[data-tool="metadata:collect"] { cursor:copy }
+.map-viewport.dragging { cursor:grabbing }
+.map-stage { position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform }
+.map-stage>canvas { position:absolute; top:0; left:0; image-rendering:crisp-edges; image-rendering:pixelated }
+.map-base { z-index:0; display:block }
+.map-layer,.map-highlight { pointer-events:none }
+.map-numbers { position:absolute; inset:0; pointer-events:none }
+.window-host { position:absolute; inset:0; z-index:50; pointer-events:none }
+.map-navigation { position:absolute; right:var(--atlas-step); bottom:var(--atlas-step); display:flex; align-items:center; z-index:40; box-shadow:inset 0 0 0 1px #5b707a,0 2px 8px #0c1b2350; background:#192b34ed }
+.map-navigation button { width:calc(2 * var(--atlas-step)); padding:0; background:none; box-shadow:inset 1px 0 #445b68 }
+.map-navigation button:first-child { box-shadow:none }
+.zoom-label { min-width:45px; text-align:center }
+.map-tooltip { position:absolute; z-index:40; pointer-events:none; padding:8px; max-width:min(300px,calc(100% - 10px)); background:#18272fee; box-shadow:inset 0 0 0 1px #647d89,0 3px 15px #071b2360; overflow-wrap:anywhere }
+.map-tooltip strong { display:block; color:#d2e1e7 }
+.map-tooltip div { color:#9aafb7 }
+.busy-overlay { position:absolute; inset:0; background:#182d37ed; z-index:10000; display:flex; align-items:center; justify-content:center }
+.toast { position:fixed; bottom:calc(2 * var(--atlas-step)); left:50%; transform:translateX(-50%); background:#142731f5; color:#c6d8df; box-shadow:inset 0 0 0 1px #728a93,0 6px 30px #0a1c2666; padding:8px 16px; max-width:min(580px,90vw); overflow-wrap:anywhere; z-index:200000 }
+
+/* Resizable windows: titles can wrap without hiding their names. */
+.overlay-window { position:absolute; display:flex; flex-direction:column; pointer-events:auto; background:#1b252cf5; border:1px solid #4b5b64; box-shadow:0 6px 22px #06151d70; min-width:160px; min-height:90px; color:#c5d0d5 }
+.overlay-window.focused { border-color:#80929c }
+.window-chrome { min-height:var(--atlas-step); display:flex; flex-shrink:0; align-items:flex-start; background:linear-gradient(#36434b,#253139); box-shadow:inset 0 -1px #0f1d25; user-select:none; touch-action:none }
+.window-grip { display:flex; align-items:center; justify-content:center; min-width:var(--atlas-step); color:#748e9a; cursor:move }
+.window-tabs { display:flex; flex-wrap:wrap; align-items:stretch; flex:1; min-width:0; gap:0 1px; cursor:move }
+.window-tab { display:flex; align-items:flex-start; gap:4px; min-width:0; max-width:min(220px,100%); margin:0; border:0; padding:0 4px 0 0; cursor:move; color:#a3b5bf; user-select:none; touch-action:none }
+.window-tab.active { background:#1e2a32!important; box-shadow:inset 1px 0 #52636c,inset -1px 0 #52636c; color:#dce6eb!important }
+.tab-label { display:block; min-width:0; padding-inline-start:calc(var(--atlas-step) / 2); white-space:normal; overflow-wrap:anywhere; pointer-events:none }
+.tab-close,.window-close { background:none; box-shadow:none; color:#8aa1ac; padding:0; width:var(--atlas-step); min-width:var(--atlas-step); flex-shrink:0 }
+.tab-close:hover,.window-close:hover { background:#71413d; color:#f2cebd }
+.window-close { box-shadow:inset 1px 0 #455962 }
+.window-body { position:relative; min-height:0; flex:1; display:flex; flex-direction:column }
+.window-pane { padding:8px; overflow:auto; min-height:0; flex:1; scrollbar-width:thin; scrollbar-color:#51616b #1b252c }
+.window-resize { position:absolute; right:0; bottom:0; width:13px; height:13px; cursor:nwse-resize; touch-action:none; z-index:1; background:repeating-linear-gradient(135deg,transparent,transparent 3px,#768b9455 3px,#768b9455 4px); clip-path:polygon(100% 0,100% 100%,0 100%) }
+.dragging-window { opacity:.85 }
+.drop-target { outline:2px solid #a7bcbf; outline-offset:2px }
+.drop-target::after { content:'Объединить вкладки'; position:absolute; inset:var(--atlas-step) 0 0; display:flex; align-items:center; justify-content:center; color:#d9e9ee; background:#51738677; pointer-events:none }
+.tab-drag-ghost { position:fixed; z-index:150000; pointer-events:none; box-shadow:inset 0 0 0 1px #95acb4; background:#263c47; padding:8px; color:#dfebee; max-width:300px; overflow-wrap:anywhere }
+
+/* Public menus share the same dimensions, including submenus and context menus. */
+.tree-menu-root { position:fixed; inset:0; z-index:200001; pointer-events:none }
+.tree-menu-panel { position:fixed; pointer-events:auto; min-width:200px; max-width:min(360px,calc(100vw - 8px)); max-height:calc(100dvh - 8px); overflow:auto; background:#1e2b34; padding:8px; box-shadow:inset 0 0 0 1px #657b86,0 6px 24px #08192580 }
+.tree-menu-item { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; width:100%; background:none; box-shadow:none; padding:0 8px; text-align:left; color:#cfdbdf }
+.tree-menu-item>span { min-width:0; overflow-wrap:anywhere }
+.tree-menu-item small { color:#8da3af; white-space:nowrap; flex-shrink:0 }
+.tree-menu-item:hover { background:#3d5360 }
+.tree-menu-item:disabled:hover { background:none }
+.extension-row { display:flex; align-items:flex-start; gap:8px; padding:0; margin:0 0 var(--atlas-step); cursor:pointer }
+.extension-row>span { flex:1; min-width:0; overflow-wrap:anywhere }
+.extension-row strong,.extension-row small { display:block }
+.extension-row small { color:#839ca8 }
+.file-input-proxy { position:fixed; left:-9999px; top:0; width:1px; height:1px; opacity:0 }
+
+/* Domain lists and forms use the shared row rhythm instead of separator bars. */
+.nation-row { display:flex; gap:4px; align-items:flex-start; margin:0; background:#24333b4d }
+.nation-row.selected { box-shadow:inset 0 0 0 1px #657e89; background:#31465188 }
+.nation-select { flex:1; min-width:0; display:flex; align-items:flex-start; gap:4px; background:none; box-shadow:none; text-align:left; padding:0 4px }
+.nation-select:hover { background:#344b5766 }
+.nation-select>.atlas-data-row { flex:1; min-width:0 }
+.nation-select>.atlas-data-row>.data-name,.group-name>.atlas-data-row>.data-name { max-width:none }
+.nation-select>.atlas-data-row>.data-value,.group-name>.atlas-data-row>.data-value { flex-shrink:0; max-width:none }
+.nation-swatch { width:8px; height:var(--atlas-step); display:block; box-shadow:inset 0 0 0 1px #b8c8ca33; flex-shrink:0 }
+.nation-row>.icon-button { background:none; box-shadow:none; color:#9eafb6 }
+.section-line { min-height:var(--atlas-step); margin:0; padding:0; display:flex; align-items:flex-start; gap:6px; color:#c5ba9d; overflow-wrap:anywhere }
+.section-line>span { min-width:0 }
+.section-line::after { content:''; flex:1 0 10px; min-width:10px; height:3px; margin-top:7px; border-top:1px solid currentColor; border-bottom:1px solid currentColor; opacity:.5 }
+.section-line>button { order:2 }
+.group-row,.branch-row,.nation-enemy-row { display:flex; align-items:flex-start; gap:4px; min-height:var(--atlas-step); padding:0; margin:0 }
+.group-name,.nation-enemy-name { flex:1; min-width:0; text-align:left; background:none; box-shadow:none; padding:0 }
+.inspector-id { color:#d0c196; margin:0; overflow-wrap:anywhere }
+.branch-description { flex:1; min-width:0 }
+.branch-description strong,.branch-description small { display:block; margin:0; overflow-wrap:anywhere }
+.branch-row button { flex-shrink:0 }
+.log-row { margin:0 0 var(--atlas-step); padding:0; overflow-wrap:anywhere }
+.log-row strong,.log-row small { display:block; margin:0 }
+.conflict-path { padding:0; overflow-wrap:anywhere; color:#d3b7a3 }
+.nation-info-header { display:flex; align-items:flex-start; gap:6px; margin:0 }
+.nation-info-name { overflow-wrap:anywhere; min-width:0 }
+.nation-diplomacy-status { padding:0 8px; box-shadow:inset 0 0 0 1px #476357; background:#273c3433; color:#a3bcae }
+.nation-diplomacy-status.at-war { box-shadow:inset 0 0 0 1px #9c514a; background:#6a302d44; color:#f29b91 }
+.nation-enemy-name .data-name { color:#dbaaa2 }
+.metadata-description { white-space:pre-wrap; overflow-wrap:anywhere; color:#a2b5bf }
+.metadata-stat-row,.resource-buff-row,.resource-input-row { padding:0; margin:0 0 var(--atlas-step) }
+.metadata-stat-controls,.resource-input-controls { display:flex; align-items:flex-start; gap:4px; min-height:var(--atlas-step); margin:0 }
+.metadata-stat-controls>select { width:90px; flex-shrink:0 }
+.metadata-stat-controls>input,.resource-input-controls>input { flex:1; min-width:0 }
+.metadata-stat-controls>input[type=checkbox] { flex:none; width:12px }
+.form-error { color:#edaa9e; overflow-wrap:anywhere }
+.region-chips { display:flex; column-gap:4px; row-gap:0; flex-wrap:wrap; max-height:80px; overflow:auto; margin:0 }
+.set-tool-help { padding:8px; box-shadow:inset 0 0 0 1px #466a72; background:#25434a55; color:#9dcbd3 }
+.set-count { color:#83d9df; margin:0 }
+.set-tools>button { flex:1 1 100px }
+.tool-row .set-active { --control-line:#71cfd7; background:#28505c; color:#d7f7fa }
+@media(max-width:720px) {
+  .map-tool-caption { display:none }
+  .map-tool-bar>select { width:135px }
+  .map-tool-bar { padding-right:3px }
+  .shell-menu-row .menubar-item { padding-left:6px; padding-right:6px }
+}
+@media(max-width:600px) {
+  .shell-header { gap:0 6px; padding:8px }
+  .shell-title { flex:1; padding-left:6px }
+  .save-status { display:none }
+  .modules-button { margin-left:auto }
+  .shell-menubar { padding-left:3px }
+  .coordinates { display:none }
+  .overlay-window { box-shadow:0 4px 14px #06151d66 }
+  .tree-menu-panel { min-width:180px }
+  .map-navigation { right:8px; bottom:8px }
+}
+
+/* Domain-free data primitives; typography comes from the application's tokens. */
+:root { --atlas-data-font:var(--atlas-font); --atlas-data-font-size:var(--atlas-font-size); --atlas-data-step:var(--atlas-step) }
+.atlas-data-row,.atlas-data-group { --data-step:var(--atlas-data-step) }
+.atlas-data-row { display:flex; align-items:flex-start; gap:6px; min-height:var(--data-step); padding:0; margin:0; border:0; line-height:var(--data-step) }
+.atlas-data-row>.data-name { flex:0 1 auto; min-width:0; max-width:65%; white-space:pre-wrap; overflow-wrap:anywhere; color:#c2d0d7 }
+.atlas-data-row>.data-leader { flex:1 0 10px; min-width:10px; border-top:1px solid #435964; margin-top:8px; opacity:.75 }
+.atlas-data-row>.data-value { flex:0 1 auto; min-width:0; max-width:60%; white-space:pre-wrap; overflow-wrap:anywhere; text-align:right; font-weight:400; color:#d7e3e8 }
+.atlas-data-row>.data-value:empty { display:none }
+.atlas-data-group { margin:0; padding:0; border:0 }
+.atlas-data-group>summary { display:flex; align-items:flex-start; gap:6px; min-height:var(--data-step); margin:0; padding:0; list-style:none; cursor:pointer; color:#a7bdc8; user-select:none }
+.atlas-data-group>summary::-webkit-details-marker { display:none }
+.atlas-data-group>summary::marker { content:'' }
+.atlas-data-group>summary::before { content:none }
+.atlas-data-group>summary::after { content:''; flex:1 0 12px; min-width:12px; height:3px; margin-top:7px; border-top:1px solid currentColor; border-bottom:1px solid currentColor; opacity:.5 }
+.atlas-data-group>summary>.data-group-name { flex:0 1 auto; min-width:0; max-width:calc(100% - 18px); white-space:pre-wrap; overflow-wrap:anywhere }
+.atlas-data-group[open]>summary { color:#c5ba9d }
+.atlas-data-group>.data-children { margin:0 0 0 3px; padding:0 0 0 17px; border-left:1px solid #354b56 }
 </style>
 </head>
 <body>
@@ -872,7 +1020,7 @@ textarea{font:inherit;color:inherit;resize:vertical;min-width:0;width:100%;paddi
       layer.context.imageSmoothingEnabled = false;
       this.#layers.set(id, layer); signal?.addEventListener('abort', dispose, { once: true }); if (signal?.aborted) dispose(); return layer;
     }
-    exportCanvas() { const out = document.createElement('canvas'); out.width = this.canvas.width; out.height = this.canvas.height; const ctx = out.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.drawImage(this.canvas, 0, 0); for (const layer of [...this.#layers.values()].filter(layer => layer.exportable).sort((a, b) => a.order - b.order)) ctx.drawImage(layer.canvas, 0, 0); if (this.showIds) this.#drawIds(ctx, 1, 0, 0, out.width, out.height, 14); return out; }
+    exportCanvas() { const out = document.createElement('canvas'); out.width = this.canvas.width; out.height = this.canvas.height; const ctx = out.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.drawImage(this.canvas, 0, 0); for (const layer of [...this.#layers.values()].filter(layer => layer.exportable).sort((a, b) => a.order - b.order)) ctx.drawImage(layer.canvas, 0, 0); if (this.showIds) this.#drawIds(ctx, 1, 0, 0, out.width, out.height); return out; }
     local(e) { const r = this.element.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
     world(p) { return { x: (p.x - this.tx) / this.scale, y: (p.y - this.ty) / this.scale }; }
     fitScale() { return Math.max(.01, Math.min((this.element.clientWidth - 28) / this.canvas.width, (this.element.clientHeight - 56) / this.canvas.height)); }
@@ -912,8 +1060,8 @@ textarea{font:inherit;color:inherit;resize:vertical;min-width:0;width:100%;paddi
       ctx.fillStyle = selected ? 'rgba(225,181,88,.24)' : 'rgba(225,237,241,.32)'; index.forEachRun(id, (start, length) => ctx.fillRect(start % index.width - x, Math.floor(start / index.width) - y, length, 1));
       ctx.fillStyle = selected ? '#e8c87c' : '#d8e9ef'; index.forEachRun(id, (start, length) => { const xx = start % index.width - x, yy = Math.floor(start / index.width) - y; ctx.fillRect(xx, yy, 1, 1); ctx.fillRect(xx + length - 1, yy, 1, 1); });
     }
-    #drawIds(ctx, scale, tx, ty, width, height, fontSize = 10) {
-      ctx.font = fontSize + 'px ui-monospace,monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.strokeStyle = '#162832'; ctx.fillStyle = '#e1e8eb'; ctx.lineWidth = 3;
+    #drawIds(ctx, scale, tx, ty, width, height) {
+      const type = getComputedStyle(this.element); ctx.font = type.fontSize + ' ' + type.fontFamily; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.strokeStyle = '#162832'; ctx.fillStyle = '#e1e8eb'; ctx.lineWidth = 3;
       for (const r of this.state.regions.values()) { if (r.area * scale * scale < 800 || r.bbox[2] * scale < 24 || r.bbox[3] * scale < 12) continue; const x = r.anchor[0] * scale + tx, y = r.anchor[1] * scale + ty; if (x < 0 || y < 0 || x > width || y > height) continue; ctx.strokeText(String(r.id), x, y); ctx.fillText(String(r.id), x, y); }
     }
     drawNumbers() {
@@ -1266,6 +1414,7 @@ textarea{font:inherit;color:inherit;resize:vertical;min-width:0;width:100%;paddi
   'use strict';
   const { equal } = root.AtlasCore, { el, button, field } = root.AtlasUI.dom;
   const { NationsModel, EMPTY_NATIONS: EMPTY, validNationColor: validColor } = root.AtlasExtensions;
+  const { createDataRow } = root.AtlasUI.dataView;
   class NationPainter {
     constructor(ctx, model) {
       this.state = ctx.state; this.ui = ctx.ui; this.model = model; this.layer = ctx.layer({ id: 'ownership', order: 10 }); this.borderLayer = ctx.layer({ id: 'borders', order: 11 });
@@ -1335,7 +1484,7 @@ textarea{font:inherit;color:inherit;resize:vertical;min-width:0;width:100%;paddi
             const header = el('div', 'nation-info-header'), swatch = el('span', 'nation-swatch'); swatch.style.background = validColor(nation.color) ? nation.color : '#888888';
             header.append(swatch, el('strong', 'nation-info-name', nation.name)); pane.replaceChildren(header);
             const count = Object.values(model.data.owners).filter(owner => owner === id).length;
-            pane.append(el('p', 'muted small', 'Провинций: ' + count + ' · Противников: ' + enemies.length));
+            pane.append(createDataRow('Провинций', String(count)), createDataRow('Противников', String(enemies.length)));
             const status = el('div', 'nation-diplomacy-status' + (enemies.length ? ' at-war' : ''), enemies.length ? 'В состоянии войны' : 'Мир');
             pane.append(status, button('Редактировать нацию', () => editNation(id), { className: 'small wide' }));
             pane.append(button('Статистика территорий', () => { if (!ui.extensions.isEnabled('metadata')) { ui.notify('Включите модуль «Метаданные и статистика».'); return; } ui.emit('statistics:open', { regionIds: Object.entries(model.data.owners).filter(([, owner]) => owner === id).map(([regionId]) => Number(regionId)), title: nation.name }); }, { className: 'small wide' }));
@@ -1343,6 +1492,7 @@ textarea{font:inherit;color:inherit;resize:vertical;min-width:0;width:100%;paddi
             pane.append(el('div', 'section-line', 'ПРОТИВНИКИ'));
             for (const enemy of enemies) {
               const row = el('div', 'nation-enemy-row'), name = button(enemy.name, () => openNationInfo(enemy.id), { className: 'nation-enemy-name', title: 'Информация о нации ' + enemy.name });
+              name.replaceChildren(createDataRow(enemy.name, ''));
               const peace = button('Мир', protect(() => model.setWar(id, enemy.id, false)), { className: 'small', title: 'Заключить мир с нацией ' + enemy.name }); peace.setAttribute('aria-label', 'Заключить мир с нацией ' + enemy.name);
               row.append(name, peace); pane.append(row);
             }
@@ -1378,7 +1528,7 @@ textarea{font:inherit;color:inherit;resize:vertical;min-width:0;width:100%;paddi
             const counts = {}; for (const id of Object.values(model.data.owners)) counts[id] = (counts[id] || 0) + 1;
             for (const nation of Object.values(model.data.items)) {
               const row = el('div', 'nation-row' + (activeNation === nation.id ? ' selected' : '')), chooseButton = button('', () => { choose(nation.id); draw(); }, { className: 'nation-select', title: String(nation.name) });
-              const swatch = el('span', 'nation-swatch'); swatch.style.background = validColor(nation.color) ? nation.color : '#888888'; chooseButton.append(swatch, el('span', 'nation-name', String(nation.name)), el('small', 'nation-count', String(counts[nation.id] || 0)));
+              const swatch = el('span', 'nation-swatch'); swatch.style.background = validColor(nation.color) ? nation.color : '#888888'; chooseButton.append(swatch, createDataRow(String(nation.name), String(counts[nation.id] || 0)));
               const info = button('ⓘ', () => openNationInfo(nation.id), { title: 'Информация о нации ' + nation.name, className: 'icon-button' }); info.setAttribute('aria-label', 'Информация о нации ' + nation.name);
               const add = button('⊞', () => addNationToSet(nation.id), { title: 'Добавить территории нации ' + nation.name + ' в набор', className: 'icon-button' }); add.setAttribute('aria-label', 'Добавить территории нации ' + nation.name + ' в набор');
               row.append(chooseButton, add, info, button('✎', () => editNation(nation.id), { title: 'Редактировать ' + nation.name, className: 'icon-button' })); pane.append(row);
@@ -1386,7 +1536,7 @@ textarea{font:inherit;color:inherit;resize:vertical;min-width:0;width:100%;paddi
             pane.append(button('+ Нация', () => editNation(), { className: 'wide' }));
             const heading = el('div', 'section-line'); heading.append(el('span', '', 'ГРУППЫ ТЕРРИТОРИЙ'), button('+', () => editGroup(), { title: 'Создать группу', className: 'icon-button' })); pane.append(heading);
             for (const group of Object.values(model.data.groups)) {
-              const row = el('div', 'group-row'); row.append(button(String(group.name), () => editGroup(group.id), { className: 'group-name' }), el('small', 'muted', String(model.groupMembers(group.id).length)), button('▣', protect(() => model.assignGroup(group.id, activeNation)), { title: 'Закрасить группу ' + group.name, className: 'icon-button' })); pane.append(row);
+              const row = el('div', 'group-row'), name = button('', () => editGroup(group.id), { className: 'group-name', title: String(group.name) }); name.append(createDataRow(String(group.name), String(model.groupMembers(group.id).length))); row.append(name, button('▣', protect(() => model.assignGroup(group.id, activeNation)), { title: 'Закрасить группу ' + group.name, className: 'icon-button' })); pane.append(row);
             }
             if (!Object.keys(model.data.groups).length) pane.append(el('p', 'muted small', 'Группа объединяет несколько провинций.'));
           };
@@ -1846,6 +1996,7 @@ textarea{font:inherit;color:inherit;resize:vertical;min-width:0;width:100%;paddi
   'use strict';
   const { el, button, field } = root.AtlasUI.dom, { uid } = root.AtlasCore;
   const { ResourceModel, readResourceEntry, RESOURCE_ACTIVITIES: activities, RESOURCE_BONUSES: bonuses } = root.AtlasExtensions;
+  const { createDataRow, createDataGroup } = root.AtlasUI.dataView;
   const format = n => n.toLocaleString('ru-RU', { maximumFractionDigits: 4 });
   function drawResourceMarkers(context, regions, tiles) {
     for (const [key, tile] of Object.entries(tiles || {})) {
@@ -1924,20 +2075,21 @@ textarea{font:inherit;color:inherit;resize:vertical;min-width:0;width:100%;paddi
       function open(regionId = selected) {
         if (regionId && state.regions.has(regionId)) { selected = regionId; ui.viewport.select(regionId); }
         return ctx.window({ id: 'objects', title: 'Ресурсы и производства', x: 295, y: 55, width: 350, height: 400, render(pane, scope, tab) {
+          const expanded = new Map();
           const draw = () => {
             pane.replaceChildren(); if (!state.regions.has(selected)) { pane.append(el('p', 'muted', 'Выберите провинцию на карте.')); return; }
             const id = selected; tab.setTitle('Объекты #' + id); pane.append(el('div', 'inspector-id', 'ПРОВИНЦИЯ #' + id));
             const tools = el('div', 'tool-row'); tools.append(button('+ Производство', () => edit(id)), button('+ Ресурсная точка', () => edit(id, 'resource-point'))); pane.append(tools);
             pane.append(button('Статистика провинции', () => openData('statistics:open', { regionIds: [id], title: 'Провинция #' + id }), { className: 'wide small' }));
             for (const entry of model.list(id)) {
-              const card = el('section', 'metadata-card'); card.append(el('strong', 'metadata-title', entry.title));
+              const key = id + ':' + entry.id, group = createDataGroup(entry.title, { id: entry.id, open: expanded.has(key) ? expanded.get(key) : true, onToggle: open => expanded.set(key, open) }), card = group.body;
               try {
-                const value = readResourceEntry(entry); card.append(el('p', 'muted small', (value.resource === '*' ? 'Все ресурсы' : value.resource) + ' · ' + (activities[value.activity] || 'Все виды')));
-                if (value.kind === 'production') { card.append(el('p', 'mono', 'Базовый выпуск: ' + format(value.baseOutput) + ' ' + value.unit), el('p', 'muted small', 'Приоритет снабжения: ' + value.priority)); for (const input of value.inputs) card.append(el('p', 'small', 'Расход: ' + input.resource + ' · ' + format(input.amount) + ' ' + input.unit)); }
-                else for (const buff of value.bonuses) card.append(el('p', 'small', bonuses[buff.type].label + ': ' + (bonuses[buff.type].efficiency ? '−' : '+') + format(buff.value) + (bonuses[buff.type].percent ? '%' : '') + (buff.inputResource && buff.inputResource !== '*' ? ' · ' + buff.inputResource : '') + (buff.inputUnit && buff.inputUnit !== '*' ? ' · ' + buff.inputUnit : '')));
+                const value = readResourceEntry(entry); card.append(createDataRow('Ресурс', value.resource === '*' ? 'Все ресурсы' : value.resource), createDataRow('Вид', activities[value.activity] || 'Все виды'));
+                if (value.kind === 'production') { card.append(createDataRow('Базовый выпуск', format(value.baseOutput) + ' ' + value.unit), createDataRow('Приоритет снабжения', String(value.priority))); for (const input of value.inputs) card.append(createDataRow('Расход: ' + input.resource, format(input.amount) + ' ' + input.unit)); }
+                else for (const buff of value.bonuses) card.append(createDataRow(bonuses[buff.type].label, (bonuses[buff.type].efficiency ? '−' : '+') + format(buff.value) + (bonuses[buff.type].percent ? '%' : '') + (buff.inputResource && buff.inputResource !== '*' ? ' · ' + buff.inputResource : '') + (buff.inputUnit && buff.inputUnit !== '*' ? ' · ' + buff.inputUnit : '')));
               } catch (e) { card.append(el('p', 'form-error', e.message)); }
               if (entry.description) card.append(el('p', 'metadata-description', entry.description)); const actions = el('div', 'form-actions');
-              actions.append(button('Изменить', () => edit(id, entry.kind, entry), { className: 'small' }), button('Метаданные', () => openData('metadata:open', { regionId: id }), { className: 'small' }), button('Удалить', protect(() => model.remove(id, entry.id)), { className: 'small' })); card.append(actions); pane.append(card);
+              actions.append(button('Изменить', () => edit(id, entry.kind, entry), { className: 'small' }), button('Метаданные', () => openData('metadata:open', { regionId: id }), { className: 'small' }), button('Удалить', protect(() => model.remove(id, entry.id)), { className: 'small' })); card.append(actions); pane.append(group.element);
             }
             if (!model.list(id).length) pane.append(el('p', 'muted', 'Объектов пока нет. Ресурсная точка усиливает подходящие производства, своего выпуска у неё нет.'));
             pane.append(el('p', 'muted small', 'На карте: золотой завод — производство, бирюзовый ромб — ресурсная точка.'));

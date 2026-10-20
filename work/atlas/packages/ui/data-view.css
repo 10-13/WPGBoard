@@ -1,41 +1,17 @@
-/* Approved data views; adoption is explicit so other extensions stay unchanged. */
-:root{--atlas-data-font:Menlo,Consolas,"Liberation Mono",monospace;--atlas-data-font-size:10px;--atlas-data-step:16px}
-.atlas-data-scope{--data-font:var(--atlas-data-font);--data-font-size:var(--atlas-data-font-size);--data-step:var(--atlas-data-step);font-family:var(--data-font);font-size:var(--data-font-size);line-height:var(--data-step);font-style:normal}
-.atlas-data-scope *{font-family:var(--data-font);font-size:var(--data-font-size);font-style:normal;line-height:var(--data-step)}
-.atlas-data-row{display:flex;align-items:flex-start;gap:6px;min-height:var(--data-step);padding:0;margin:0;border:0;line-height:var(--data-step)}
-.atlas-data-row>.data-name{flex:0 1 auto;min-width:0;max-width:65%;white-space:pre-wrap;overflow-wrap:anywhere;color:#c2d0d7}
-.atlas-data-row>.data-leader{flex:1 0 10px;min-width:10px;border-top:1px solid #435964;margin-top:8px;opacity:.75}
-.atlas-data-row>.data-value{flex:0 1 auto;min-width:0;max-width:60%;white-space:pre-wrap;overflow-wrap:anywhere;text-align:right;font-weight:400;color:#d7e3e8}
-.atlas-data-group{margin:0;padding:0;border:0}
-.atlas-data-group>summary{display:flex;align-items:flex-start;gap:6px;min-height:var(--data-step);margin:0;padding:0;list-style:none;cursor:pointer;color:#a7bdc8;user-select:none}
-.atlas-data-group>summary::-webkit-details-marker{display:none}.atlas-data-group>summary::marker{content:''}.atlas-data-group>summary::before{content:none}
-.atlas-data-group>summary::after{content:'';flex:1 0 12px;min-width:12px;height:3px;margin-top:7px;border-top:1px solid currentColor;border-bottom:1px solid currentColor;opacity:.5}
-.atlas-data-group>summary>.data-group-name{flex:0 1 auto;min-width:0;max-width:calc(100% - 18px);white-space:pre-wrap;overflow-wrap:anywhere}
-.atlas-data-group[open]>summary{color:#c5ba9d}
-.atlas-data-group>.data-children{margin:0 0 0 3px;padding:0 0 0 17px;border-left:1px solid #354b56}
-.atlas-data-group>summary:focus-visible{outline:1px solid #93b4c2;outline-offset:0}
-.atlas-data-scope .metadata-description{margin:0;padding:0;line-height:var(--data-step);white-space:pre-wrap;overflow-wrap:anywhere;color:#a2b5bf}
-.atlas-data-scope p{margin:0;padding:0;line-height:var(--data-step);overflow-wrap:anywhere}
-.atlas-data-scope .inspector-id{font-family:var(--data-font);line-height:var(--data-step);letter-spacing:0;margin:0}
-.atlas-data-scope .field{min-height:var(--data-step);margin:0;gap:8px;align-items:center}
-.atlas-data-scope .field-label{font-size:var(--data-font-size);line-height:var(--data-step)}
-.atlas-data-scope input:not([type=checkbox]),.atlas-data-scope select{height:var(--data-step);min-height:var(--data-step);padding:0 4px;line-height:14px;font-family:var(--data-font);font-size:var(--data-font-size)}
-.atlas-data-scope input[type=checkbox]{width:12px;height:12px}
-.atlas-data-scope textarea{height:64px;min-height:64px;padding:7px 5px;line-height:var(--data-step);font-family:var(--data-font);font-size:var(--data-font-size)}
-.atlas-data-scope button,.atlas-data-scope .tool-row>button{min-height:var(--data-step);height:var(--data-step);padding:0 5px;font-family:var(--data-font);font-size:var(--data-font-size);line-height:14px;white-space:nowrap}
-.atlas-data-scope .tool-row{display:flex;flex-wrap:wrap;column-gap:4px;row-gap:0;margin:0 0 var(--data-step)}
-.atlas-data-scope .tool-row>button{flex:1 1 auto}
-.atlas-data-scope .form-actions{display:flex;flex-wrap:wrap;column-gap:4px;row-gap:0;margin:0}
-.atlas-data-scope .wide{margin-top:var(--data-step)}
-.atlas-data-scope .metadata-stat-row{padding:0;margin:0 0 var(--data-step);border:0}
-.atlas-data-scope .metadata-stat-controls{gap:4px;min-height:var(--data-step);margin:0;align-items:center}
-.atlas-data-scope .metadata-stat-controls>select{width:90px}
-.atlas-data-scope .metadata-stat-controls>.icon-button{min-width:16px;padding:0 3px}
-.atlas-data-scope .section-line{min-height:var(--data-step);margin:0;padding:0;border:0;letter-spacing:0;line-height:var(--data-step);color:#c5ba9d;gap:6px}
-.atlas-data-scope .section-line::after{content:'';flex:1;height:3px;border-top:1px solid currentColor;border-bottom:1px solid currentColor;opacity:.5}
-.atlas-data-scope .region-chips{margin:0;column-gap:4px;row-gap:0;max-height:80px}
-.atlas-data-scope .set-count{margin:0;color:#83d9df}
-.atlas-data-scope .set-tool-help{margin:0;padding:7px;border:1px solid #466a72;line-height:var(--data-step)}
-/* Scope window chrome only while one of this module's tabs is active. */
-.overlay-window:has(.window-tab.active[data-tab^="metadata:"])>.window-chrome,
-.overlay-window:has(.window-tab.active[data-tab^="metadata:"])>.window-chrome *{font-family:var(--atlas-data-font);font-size:var(--atlas-data-font-size);font-style:normal}
+/* Domain-free data primitives; typography comes from the application's tokens. */
+:root { --atlas-data-font:var(--atlas-font); --atlas-data-font-size:var(--atlas-font-size); --atlas-data-step:var(--atlas-step) }
+.atlas-data-row,.atlas-data-group { --data-step:var(--atlas-data-step) }
+.atlas-data-row { display:flex; align-items:flex-start; gap:6px; min-height:var(--data-step); padding:0; margin:0; border:0; line-height:var(--data-step) }
+.atlas-data-row>.data-name { flex:0 1 auto; min-width:0; max-width:65%; white-space:pre-wrap; overflow-wrap:anywhere; color:#c2d0d7 }
+.atlas-data-row>.data-leader { flex:1 0 10px; min-width:10px; border-top:1px solid #435964; margin-top:8px; opacity:.75 }
+.atlas-data-row>.data-value { flex:0 1 auto; min-width:0; max-width:60%; white-space:pre-wrap; overflow-wrap:anywhere; text-align:right; font-weight:400; color:#d7e3e8 }
+.atlas-data-row>.data-value:empty { display:none }
+.atlas-data-group { margin:0; padding:0; border:0 }
+.atlas-data-group>summary { display:flex; align-items:flex-start; gap:6px; min-height:var(--data-step); margin:0; padding:0; list-style:none; cursor:pointer; color:#a7bdc8; user-select:none }
+.atlas-data-group>summary::-webkit-details-marker { display:none }
+.atlas-data-group>summary::marker { content:'' }
+.atlas-data-group>summary::before { content:none }
+.atlas-data-group>summary::after { content:''; flex:1 0 12px; min-width:12px; height:3px; margin-top:7px; border-top:1px solid currentColor; border-bottom:1px solid currentColor; opacity:.5 }
+.atlas-data-group>summary>.data-group-name { flex:0 1 auto; min-width:0; max-width:calc(100% - 18px); white-space:pre-wrap; overflow-wrap:anywhere }
+.atlas-data-group[open]>summary { color:#c5ba9d }
+.atlas-data-group>.data-children { margin:0 0 0 3px; padding:0 0 0 17px; border-left:1px solid #354b56 }

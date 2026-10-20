@@ -39,7 +39,7 @@
       layer.context.imageSmoothingEnabled = false;
       this.#layers.set(id, layer); signal?.addEventListener('abort', dispose, { once: true }); if (signal?.aborted) dispose(); return layer;
     }
-    exportCanvas() { const out = document.createElement('canvas'); out.width = this.canvas.width; out.height = this.canvas.height; const ctx = out.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.drawImage(this.canvas, 0, 0); for (const layer of [...this.#layers.values()].filter(layer => layer.exportable).sort((a, b) => a.order - b.order)) ctx.drawImage(layer.canvas, 0, 0); if (this.showIds) this.#drawIds(ctx, 1, 0, 0, out.width, out.height, 14); return out; }
+    exportCanvas() { const out = document.createElement('canvas'); out.width = this.canvas.width; out.height = this.canvas.height; const ctx = out.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.drawImage(this.canvas, 0, 0); for (const layer of [...this.#layers.values()].filter(layer => layer.exportable).sort((a, b) => a.order - b.order)) ctx.drawImage(layer.canvas, 0, 0); if (this.showIds) this.#drawIds(ctx, 1, 0, 0, out.width, out.height); return out; }
     local(e) { const r = this.element.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
     world(p) { return { x: (p.x - this.tx) / this.scale, y: (p.y - this.ty) / this.scale }; }
     fitScale() { return Math.max(.01, Math.min((this.element.clientWidth - 28) / this.canvas.width, (this.element.clientHeight - 56) / this.canvas.height)); }
@@ -79,8 +79,8 @@
       ctx.fillStyle = selected ? 'rgba(225,181,88,.24)' : 'rgba(225,237,241,.32)'; index.forEachRun(id, (start, length) => ctx.fillRect(start % index.width - x, Math.floor(start / index.width) - y, length, 1));
       ctx.fillStyle = selected ? '#e8c87c' : '#d8e9ef'; index.forEachRun(id, (start, length) => { const xx = start % index.width - x, yy = Math.floor(start / index.width) - y; ctx.fillRect(xx, yy, 1, 1); ctx.fillRect(xx + length - 1, yy, 1, 1); });
     }
-    #drawIds(ctx, scale, tx, ty, width, height, fontSize = 10) {
-      ctx.font = fontSize + 'px ui-monospace,monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.strokeStyle = '#162832'; ctx.fillStyle = '#e1e8eb'; ctx.lineWidth = 3;
+    #drawIds(ctx, scale, tx, ty, width, height) {
+      const type = getComputedStyle(this.element); ctx.font = type.fontSize + ' ' + type.fontFamily; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.strokeStyle = '#162832'; ctx.fillStyle = '#e1e8eb'; ctx.lineWidth = 3;
       for (const r of this.state.regions.values()) { if (r.area * scale * scale < 800 || r.bbox[2] * scale < 24 || r.bbox[3] * scale < 12) continue; const x = r.anchor[0] * scale + tx, y = r.anchor[1] * scale + ty; if (x < 0 || y < 0 || x > width || y > height) continue; ctx.strokeText(String(r.id), x, y); ctx.fillText(String(r.id), x, y); }
     }
     drawNumbers() {

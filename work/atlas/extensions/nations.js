@@ -3,6 +3,7 @@
   'use strict';
   const { equal } = root.AtlasCore, { el, button, field } = root.AtlasUI.dom;
   const { NationsModel, EMPTY_NATIONS: EMPTY, validNationColor: validColor } = root.AtlasExtensions;
+  const { createDataRow } = root.AtlasUI.dataView;
   class NationPainter {
     constructor(ctx, model) {
       this.state = ctx.state; this.ui = ctx.ui; this.model = model; this.layer = ctx.layer({ id: 'ownership', order: 10 }); this.borderLayer = ctx.layer({ id: 'borders', order: 11 });
@@ -72,7 +73,7 @@
             const header = el('div', 'nation-info-header'), swatch = el('span', 'nation-swatch'); swatch.style.background = validColor(nation.color) ? nation.color : '#888888';
             header.append(swatch, el('strong', 'nation-info-name', nation.name)); pane.replaceChildren(header);
             const count = Object.values(model.data.owners).filter(owner => owner === id).length;
-            pane.append(el('p', 'muted small', 'Провинций: ' + count + ' · Противников: ' + enemies.length));
+            pane.append(createDataRow('Провинций', String(count)), createDataRow('Противников', String(enemies.length)));
             const status = el('div', 'nation-diplomacy-status' + (enemies.length ? ' at-war' : ''), enemies.length ? 'В состоянии войны' : 'Мир');
             pane.append(status, button('Редактировать нацию', () => editNation(id), { className: 'small wide' }));
             pane.append(button('Статистика территорий', () => { if (!ui.extensions.isEnabled('metadata')) { ui.notify('Включите модуль «Метаданные и статистика».'); return; } ui.emit('statistics:open', { regionIds: Object.entries(model.data.owners).filter(([, owner]) => owner === id).map(([regionId]) => Number(regionId)), title: nation.name }); }, { className: 'small wide' }));
@@ -80,6 +81,7 @@
             pane.append(el('div', 'section-line', 'ПРОТИВНИКИ'));
             for (const enemy of enemies) {
               const row = el('div', 'nation-enemy-row'), name = button(enemy.name, () => openNationInfo(enemy.id), { className: 'nation-enemy-name', title: 'Информация о нации ' + enemy.name });
+              name.replaceChildren(createDataRow(enemy.name, ''));
               const peace = button('Мир', protect(() => model.setWar(id, enemy.id, false)), { className: 'small', title: 'Заключить мир с нацией ' + enemy.name }); peace.setAttribute('aria-label', 'Заключить мир с нацией ' + enemy.name);
               row.append(name, peace); pane.append(row);
             }
@@ -115,7 +117,7 @@
             const counts = {}; for (const id of Object.values(model.data.owners)) counts[id] = (counts[id] || 0) + 1;
             for (const nation of Object.values(model.data.items)) {
               const row = el('div', 'nation-row' + (activeNation === nation.id ? ' selected' : '')), chooseButton = button('', () => { choose(nation.id); draw(); }, { className: 'nation-select', title: String(nation.name) });
-              const swatch = el('span', 'nation-swatch'); swatch.style.background = validColor(nation.color) ? nation.color : '#888888'; chooseButton.append(swatch, el('span', 'nation-name', String(nation.name)), el('small', 'nation-count', String(counts[nation.id] || 0)));
+              const swatch = el('span', 'nation-swatch'); swatch.style.background = validColor(nation.color) ? nation.color : '#888888'; chooseButton.append(swatch, createDataRow(String(nation.name), String(counts[nation.id] || 0)));
               const info = button('ⓘ', () => openNationInfo(nation.id), { title: 'Информация о нации ' + nation.name, className: 'icon-button' }); info.setAttribute('aria-label', 'Информация о нации ' + nation.name);
               const add = button('⊞', () => addNationToSet(nation.id), { title: 'Добавить территории нации ' + nation.name + ' в набор', className: 'icon-button' }); add.setAttribute('aria-label', 'Добавить территории нации ' + nation.name + ' в набор');
               row.append(chooseButton, add, info, button('✎', () => editNation(nation.id), { title: 'Редактировать ' + nation.name, className: 'icon-button' })); pane.append(row);
@@ -123,7 +125,7 @@
             pane.append(button('+ Нация', () => editNation(), { className: 'wide' }));
             const heading = el('div', 'section-line'); heading.append(el('span', '', 'ГРУППЫ ТЕРРИТОРИЙ'), button('+', () => editGroup(), { title: 'Создать группу', className: 'icon-button' })); pane.append(heading);
             for (const group of Object.values(model.data.groups)) {
-              const row = el('div', 'group-row'); row.append(button(String(group.name), () => editGroup(group.id), { className: 'group-name' }), el('small', 'muted', String(model.groupMembers(group.id).length)), button('▣', protect(() => model.assignGroup(group.id, activeNation)), { title: 'Закрасить группу ' + group.name, className: 'icon-button' })); pane.append(row);
+              const row = el('div', 'group-row'), name = button('', () => editGroup(group.id), { className: 'group-name', title: String(group.name) }); name.append(createDataRow(String(group.name), String(model.groupMembers(group.id).length))); row.append(name, button('▣', protect(() => model.assignGroup(group.id, activeNation)), { title: 'Закрасить группу ' + group.name, className: 'icon-button' })); pane.append(row);
             }
             if (!Object.keys(model.data.groups).length) pane.append(el('p', 'muted small', 'Группа объединяет несколько провинций.'));
           };
