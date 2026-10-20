@@ -2,7 +2,7 @@
 const test = require('node:test'), assert = require('node:assert/strict');
 const { getGameState, RegionIndex } = require('../packages/core/index.js');
 const { registerBasicStatistics } = require('../packages/statistics/basic.js');
-const { ResourceModel, resourceKey } = require('../extensions/resources-model.js');
+const { ResourceModel, resourceKey, collectResourceStats } = require('../extensions/resources-model.js');
 function fixture(t) {
   const state = getGameState(), index = new RegionIndex({ width: 3, height: 1, pixels: [1, 2, 3], regions: [1, 2, 3].map((id, i) => ({ id, area: 1, bbox: [i, 0, 1, 1], anchor: [i, 0] })) });
   state.load({ schemaVersion: 2, map: { id: 'resources', original: { dataURL: 'data:image/png;base64,AAAA', width: 3, height: 1, name: 'test.png' }, indexImage: 'data:image/png;base64,AAAA' }, meta: {} }, index);
@@ -11,6 +11,14 @@ function fixture(t) {
 const production = (baseOutput, extra = {}) => ({ title: 'Mine', kind: 'production', resource: 'Железо', activity: 'extraction', unit: 'т/ход', baseOutput, ...extra });
 const point = (bonuses, extra = {}) => ({ title: 'Deposit', kind: 'resource-point', resource: 'Железо', activity: 'extraction', unit: 'т/ход', bonuses, ...extra });
 const resourceBlock = (state, ids) => { const r = state.statistics.collect(ids); assert.deepEqual(r.errors, []); return r.get('resources'); };
+test('large allocations keep every enterprise in priority order across report pages', () => {
+  const entries = Array.from({ length: 601 }, (_, i) => ({ regionId: 1, entry: { id: 'p' + i, title: 'Mine ' + i, source: 'resources', kind: 'production', stats: { 'resource.name': 'Уголь', 'resource.unit': 'ед./ход', 'resource.activity': 'extraction', 'resource.baseOutput': 1, 'resource.priority': 601 - i } } }));
+  const report = collectResourceStats({ entries }), tree = report.children.find(n => n.id === 'gross').children.find(n => n.id === 'facilities');
+  assert.equal(report.resources[0].net, 601); assert.equal(tree.defaultOpen, false); assert.equal(tree.children.length, 7);
+  const rows = tree.children.flatMap(page => page.children);
+  assert.deepEqual(rows.map(row => JSON.parse(row.id)[1]), report.allocation.map(p => p.id));
+  assert.equal(rows.length, 601); assert.equal(rows[0].title, 'Mine 600 · #1');
+});
 test('both provincial flat bonuses run at stage 4, followed strictly by 2, 3 and 1', t => {
   const { state, model } = fixture(t); model.save(1, production(100)); model.save(1, production(200)); model.save(2, production(50));
   model.save(1, point([{ type: 'province-flat-total', value: 10 }, { type: 'province-flat-each', value: 5 }, { type: 'province-percent', value: 50 }]));

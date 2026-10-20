@@ -1,0 +1,6509 @@
+{
+  "version": 1,
+  "referencePeriod": "около 1936 года",
+  "sources": {
+    "mineral1936": {
+      "title": "Mineral statistics 1934–1936, Imperial Institute / BGS",
+      "url": "https://nora.nerc.ac.uk/id/eprint/535292/",
+      "role": "Контекст производства сырья в середине 1930-х; игровые количества рассчитаны отдельно."
+    },
+    "aramco": {
+      "title": "Aramco: commercial oil at Dammam began in 1938",
+      "url": "https://www.aramco.com/en/about-us/our-history"
+    },
+    "jamaica": {
+      "title": "Jamaica Bauxite Institute: industry began in 1952",
+      "url": "https://jbi.org.jm/industry/"
+    },
+    "eagle": {
+      "title": "USGS: Eagle Mountain mining began in 1948",
+      "url": "https://pubs.usgs.gov/of/1984/0631/report.pdf"
+    },
+    "helium": {
+      "title": "Texas Historical Commission: Amarillo Helium Plant, 1929",
+      "url": "https://thc.texas.gov/review/federal-project-review/mitigation/amarillo-helium-plant"
+    },
+    "guleman": {
+      "title": "Alacakaya district administration: Guleman exploitation, 1936",
+      "url": "https://www.alacakaya.gov.tr/guleman-mahallesi"
+    },
+    "ruhr": {
+      "title": "Zollverein: Shaft XII began mining in 1932",
+      "url": "https://www.zollverein.de/zollverein-unesco-world-heritage-site/history/"
+    },
+    "ford": {
+      "title": "The Henry Ford: Rouge factory, photograph of 1927",
+      "url": "https://www.thehenryford.org/collections/explore/artifact/523962"
+    },
+    "pittsburgh": {
+      "title": "US National Park Service: History of Pittsburgh",
+      "url": "https://www.nps.gov/articles/000/history-of-pittsburgh.htm"
+    },
+    "magnitka": {
+      "title": "Официальный туристический сайт Магнитогорска: комбинат с 1932 года",
+      "url": "https://visit.magnitogorsk.ru/city/story/"
+    },
+    "tata": {
+      "title": "Tata Steel: Jamshedpur started production in 1912",
+      "url": "https://www.tatasteel.com/corporate/our-value-chain/the-making-of-steel/"
+    },
+    "japan": {
+      "title": "Sites of Japan’s Meiji Industrial Revolution: Yawata, 1901",
+      "url": "https://www.japansmeijiindustrialrevolution.com/en/site/yawata/component01.html"
+    },
+    "hydro": {
+      "title": "Hydro: industrial development in Rjukan and Notodden before 1917",
+      "url": "https://www.hydro.com/en/global/about-hydro/company-history/1900---1917/"
+    },
+    "yearbook": {
+      "title": "UN Statistics: archive of international statistical yearbooks, including the League of Nations series",
+      "url": "https://unstats.un.org/unsd/publications/statistical-yearbook/past-issues/",
+      "role": "Справочная коллекция для экономической географии эпохи; не отдельное подтверждение каждого городского узла."
+    }
+  },
+  "sourceReview": [
+    {
+      "sourceIndex": 1,
+      "name": "Рурский бассейн",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 2,
+      "name": "Верхняя Силезия",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 3,
+      "name": "Саарский бассейн",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 4,
+      "name": "Валлония и Север Франции",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 5,
+      "name": "Йоркшир и Уэльс",
+      "decision": "adjusted",
+      "note": "Один маркер относится к Йоркширу; Уэльс не считается находящимся в той же провинции.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 6,
+      "name": "Астурия",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 7,
+      "name": "Чехия (Острава-Карвина)",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 8,
+      "name": "Донбасс",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 9,
+      "name": "Кузбасс",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 10,
+      "name": "Подмосковный бассейн",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 11,
+      "name": "Аппалачский бассейн",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 12,
+      "name": "Иллинойсский бассейн",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 13,
+      "name": "Трансвааль (Витбанк)",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 14,
+      "name": "Маньчжурия (Фушунь)",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 15,
+      "name": "Дамодар / Бихар",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 16,
+      "name": "Новый Южный Уэльс (Сидней)",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 17,
+      "name": "Плоешти",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 18,
+      "name": "Баку",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 19,
+      "name": "Грозный и Майкоп",
+      "decision": "adjusted",
+      "note": "Уточнён локальный узел; Майкоп добавлен отдельной точкой.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 20,
+      "name": "Хузестан (Абадан)",
+      "decision": "adjusted",
+      "note": "Вместо неточного маркера у Ахваза использовано старое нефтепромысловое месторождение. Абадан отмечен отдельно как переработка.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 21,
+      "name": "Киркук и Мосул",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 22,
+      "name": "Даммам / Аль-Хаса",
+      "decision": "late",
+      "note": "Коммерческая добыча Даммама началась в 1938 году.",
+      "sources": [
+        "aramco"
+      ]
+    },
+    {
+      "sourceIndex": 23,
+      "name": "Восточный Техас",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 24,
+      "name": "Бассейн Лос-Анджелеса",
+      "decision": "adjusted",
+      "note": "Исходные координаты находятся у Бейкерсфилда, а не в бассейне города Лос-Анджелес.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 25,
+      "name": "Тампико / Поса-Рика",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 26,
+      "name": "Озеро Маракайбо",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 27,
+      "name": "Суматра и Борнео",
+      "decision": "adjusted",
+      "note": "Этот маркер относится к Палембангу; Борнео имеет отдельную точку.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 28,
+      "name": "Лотарингия",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 29,
+      "name": "Французские Альпы",
+      "decision": "uncertain",
+      "note": "В исходнике не указан конкретный действующий в 1936 году железный рудник Альп; активный бонус не добавлен.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 30,
+      "name": "Кливленд / Нортгемптон",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 31,
+      "name": "Уэнза",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 32,
+      "name": "Кируна и Елливаре",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 33,
+      "name": "Кривой Рог (Кривбасс)",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 34,
+      "name": "Магнитная гора",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 35,
+      "name": "Хребет Месаби",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 36,
+      "name": "Бирмингем",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 37,
+      "name": "Игл-Маунтин",
+      "decision": "late",
+      "note": "Промышленная разработка Игл-Маунтин началась в 1948 году.",
+      "sources": [
+        "eagle"
+      ]
+    },
+    {
+      "sourceIndex": 38,
+      "name": "Аньшань",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 39,
+      "name": "Сингхбхум (Бихар)",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 40,
+      "name": "Марампа",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 41,
+      "name": "Горы Баконь / Гант",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 42,
+      "name": "Ле-Бо (Прованс)",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 43,
+      "name": "Абруццо и Истрия",
+      "decision": "adjusted",
+      "note": "Один маркер соответствует Истрии; Абруццо не объединено с ней в одну провинцию.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 44,
+      "name": "Никшич",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 45,
+      "name": "Парнас / Ампфиса",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 46,
+      "name": "Североуральск («Красная Шапочка»)",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 47,
+      "name": "Паранама и Маккензи",
+      "decision": "adjusted",
+      "note": "Паранам — более поздний промышленный комплекс. Использован старый добывающий район Моэнго; Маккензи добавлен отдельно.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 48,
+      "name": "Остров Бинтан",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 49,
+      "name": "Ямайка",
+      "decision": "late",
+      "note": "Бокситовая промышленность Ямайки началась в 1952 году.",
+      "sources": [
+        "jamaica"
+      ]
+    },
+    {
+      "sourceIndex": 50,
+      "name": "Бокситогорск (Тихвин)",
+      "decision": "adjusted",
+      "note": "Уточнены координаты бокситового района у Бокситогорска.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 51,
+      "name": "Петсамо (Печенга)",
+      "decision": "not-operating",
+      "note": "Петсамо было известно, но крупный добывающий комплекс ещё не работал; активный бонус исключён.",
+      "sources": []
+    },
+    {
+      "sourceIndex": 52,
+      "name": "Гулеман (Анатолия)",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "guleman"
+      ]
+    },
+    {
+      "sourceIndex": 53,
+      "name": "Радуша (Скопье)",
+      "decision": "uncertain",
+      "note": "Не подтверждён необходимый масштаб работы конкретного рудника Радуша на дату сценария.",
+      "sources": []
+    },
+    {
+      "sourceIndex": 54,
+      "name": "Орск и Ижевск",
+      "decision": "mislocated",
+      "note": "Маркер стоит у Ижевска, а комплекс назван также по Орску. Такой никелевый узел не перенесён как подтверждённый рудник 1936 года.",
+      "sources": []
+    },
+    {
+      "sourceIndex": 55,
+      "name": "Бассейн Садбери",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 56,
+      "name": "Никаро и Моа",
+      "decision": "late-or-uncertain",
+      "note": "Никелевая индустрия Никаро и Моа относится к более позднему периоду; активный бонус исключён.",
+      "sources": []
+    },
+    {
+      "sourceIndex": 57,
+      "name": "Бушвельдский комплекс",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 58,
+      "name": "Новая Каледония",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 59,
+      "name": "Масинлок (Лусон)",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 60,
+      "name": "Панашкейра и Галисия",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 61,
+      "name": "Даюй (Цзянси)",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 62,
+      "name": "Сандон",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 63,
+      "name": "Чойлья",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 64,
+      "name": "Пайн-Крик (Милл-Сити)",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 65,
+      "name": "Малайя, Ява и Суматра",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 66,
+      "name": "Плантации Индокитая",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 67,
+      "name": "Плантации Firestone",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 68,
+      "name": "Бассейн реки Конго",
+      "decision": "retained",
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ]
+    },
+    {
+      "sourceIndex": 69,
+      "name": "Клиффсайд (Амарилло)",
+      "decision": "adjusted",
+      "note": "Действующий с 1929 года гелиевый узел. Речь о промышленном источнике эпохи, а не об отсутствии гелия где-либо ещё.",
+      "sources": [
+        "helium"
+      ]
+    }
+  ],
+  "deposits": [
+    {
+      "id": "historic-01",
+      "name": "Рурский бассейн",
+      "resourceId": "coal",
+      "coords": [
+        51.5,
+        7.2
+      ],
+      "originSourceIndex": 1,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1063,
+      "provinceName": "Дортмунд",
+      "namedRegion": "Северная Германия",
+      "mapPoint": [
+        2732.42,
+        839.85
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-02",
+      "name": "Верхняя Силезия",
+      "resourceId": "coal",
+      "coords": [
+        50.3,
+        18.9
+      ],
+      "originSourceIndex": 2,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1168,
+      "provinceName": "Бойтен",
+      "namedRegion": "Польская равнина",
+      "mapPoint": [
+        2920.38,
+        867.79
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-03",
+      "name": "Саарский бассейн",
+      "resourceId": "coal",
+      "coords": [
+        49.3,
+        6.9
+      ],
+      "originSourceIndex": 3,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1256,
+      "provinceName": "Мец",
+      "namedRegion": "Северная Франция",
+      "mapPoint": [
+        2727.77,
+        886.69
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-04",
+      "name": "Валлония и Север Франции",
+      "resourceId": "coal",
+      "coords": [
+        50.5,
+        3.5
+      ],
+      "originSourceIndex": 4,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1128,
+      "provinceName": "Лилль",
+      "namedRegion": "Северная Франция",
+      "mapPoint": [
+        2673.77,
+        860.87
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-05",
+      "name": "Шахты Южного Йоркшира",
+      "resourceId": "coal",
+      "coords": [
+        53.5,
+        -1.5
+      ],
+      "originSourceIndex": 5,
+      "note": "Один маркер относится к Йоркширу; Уэльс не считается находящимся в той же провинции.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 886,
+      "provinceName": "Шеффилд",
+      "namedRegion": "Британские острова",
+      "mapPoint": [
+        2595.62,
+        794.22
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-06",
+      "name": "Астурия",
+      "resourceId": "coal",
+      "coords": [
+        43.3,
+        -5.8
+      ],
+      "originSourceIndex": 6,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1688,
+      "provinceName": "Хихон",
+      "namedRegion": "Иберия",
+      "mapPoint": [
+        2529.72,
+        1001.34
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-07",
+      "name": "Чехия (Острава-Карвина)",
+      "resourceId": "coal",
+      "coords": [
+        49.8,
+        18.3
+      ],
+      "originSourceIndex": 7,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1226,
+      "provinceName": "Острава",
+      "namedRegion": "Богемия и Моравия",
+      "mapPoint": [
+        2910.42,
+        877.61
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-08",
+      "name": "Донбасс",
+      "resourceId": "coal",
+      "coords": [
+        48.0,
+        37.8
+      ],
+      "originSourceIndex": 8,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1347,
+      "provinceName": "Сталино",
+      "namedRegion": "Донбасс и Приазовье",
+      "mapPoint": [
+        3209.77,
+        909.87
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-09",
+      "name": "Кузбасс",
+      "resourceId": "coal",
+      "coords": [
+        54.5,
+        86.5
+      ],
+      "originSourceIndex": 9,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 803,
+      "provinceName": "Прокопьевск",
+      "namedRegion": "Восточная Сибирь",
+      "mapPoint": [
+        3971.48,
+        775.31
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-10",
+      "name": "Подмосковный бассейн",
+      "resourceId": "coal",
+      "coords": [
+        54.2,
+        37.6
+      ],
+      "originSourceIndex": 10,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 821,
+      "provinceName": "Тула",
+      "namedRegion": "Центральная Россия",
+      "mapPoint": [
+        3207.16,
+        783.07
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-11",
+      "name": "Аппалачский бассейн",
+      "resourceId": "coal",
+      "coords": [
+        38.5,
+        -80.5
+      ],
+      "originSourceIndex": 11,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1272,
+      "provinceName": "Хантингтон",
+      "namedRegion": "Новая Англия и Атлантика",
+      "mapPoint": [
+        1362.9,
+        898.29
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-12",
+      "name": "Иллинойсский бассейн",
+      "resourceId": "coal",
+      "coords": [
+        39.5,
+        -89.0
+      ],
+      "originSourceIndex": 12,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1198,
+      "provinceName": "Белвилл",
+      "namedRegion": "Великие озёра",
+      "mapPoint": [
+        1229.46,
+        880.22
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-13",
+      "name": "Трансвааль (Витбанк)",
+      "resourceId": "coal",
+      "coords": [
+        -25.8,
+        29.2
+      ],
+      "originSourceIndex": 13,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 4390,
+      "provinceName": "Претория",
+      "namedRegion": "Южная Африка",
+      "mapPoint": [
+        3077.23,
+        2155.31
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-14",
+      "name": "Маньчжурия (Фушунь)",
+      "resourceId": "coal",
+      "coords": [
+        41.8,
+        123.9
+      ],
+      "originSourceIndex": 14,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1729,
+      "provinceName": "Мукден",
+      "namedRegion": "Маньчжурия",
+      "mapPoint": [
+        4553.31,
+        1028.84
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-15",
+      "name": "Дамодар / Бихар",
+      "resourceId": "coal",
+      "coords": [
+        23.6,
+        87.0
+      ],
+      "originSourceIndex": 15,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 2862,
+      "provinceName": "Асансол",
+      "namedRegion": "Бенгалия и Ассам",
+      "mapPoint": [
+        3974.16,
+        1356.01
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-16",
+      "name": "Новый Южный Уэльс (Сидней)",
+      "resourceId": "coal",
+      "coords": [
+        -33.0,
+        151.5
+      ],
+      "originSourceIndex": 16,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 4452,
+      "provinceName": "Ньюкасл",
+      "namedRegion": "Восточная Австралия",
+      "mapPoint": [
+        4982.32,
+        2276.59
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-17",
+      "name": "Плоешти",
+      "resourceId": "oil",
+      "coords": [
+        44.9,
+        26.0
+      ],
+      "originSourceIndex": 17,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1603,
+      "provinceName": "Бухарест",
+      "namedRegion": "Карпаты и Нижний Дунай",
+      "mapPoint": [
+        3028.95,
+        971.89
+      ],
+      "snapPixels": 0.96
+    },
+    {
+      "id": "historic-18",
+      "name": "Баку",
+      "resourceId": "oil",
+      "coords": [
+        40.4,
+        49.8
+      ],
+      "originSourceIndex": 18,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1872,
+      "provinceName": "Баку",
+      "namedRegion": "Кавказ",
+      "mapPoint": [
+        3393.88,
+        1057.2
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-19",
+      "name": "Грозненские нефтепромыслы",
+      "resourceId": "oil",
+      "coords": [
+        43.32,
+        45.69
+      ],
+      "originSourceIndex": 19,
+      "note": "Уточнён локальный узел; Майкоп добавлен отдельной точкой.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1661,
+      "provinceName": "Грозный",
+      "namedRegion": "Кавказ",
+      "mapPoint": [
+        3328.5,
+        1001.67
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-20",
+      "name": "Месджеде-Солейман · Хузестан",
+      "resourceId": "oil",
+      "coords": [
+        31.98,
+        49.3
+      ],
+      "originSourceIndex": 20,
+      "note": "Вместо неточного маркера у Ахваза использовано старое нефтепромысловое месторождение. Абадан отмечен отдельно как переработка.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 2475,
+      "provinceName": "Ахваз",
+      "namedRegion": "Иранское нагорье",
+      "mapPoint": [
+        3389.72,
+        1210.54
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-21",
+      "name": "Киркук и Мосул",
+      "resourceId": "oil",
+      "coords": [
+        35.5,
+        44.4
+      ],
+      "originSourceIndex": 21,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 2168,
+      "provinceName": "Сулеймания",
+      "namedRegion": "Месопотамия",
+      "mapPoint": [
+        3311.37,
+        1146.91
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-23",
+      "name": "Восточный Техас",
+      "resourceId": "oil",
+      "coords": [
+        31.5,
+        -95.0
+      ],
+      "originSourceIndex": 23,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1643,
+      "provinceName": "Хьюстон",
+      "namedRegion": "Техас и Юго-Запад",
+      "mapPoint": [
+        1138.55,
+        1024.64
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-24",
+      "name": "Нефтепромыслы Керн-Ривер",
+      "resourceId": "oil",
+      "coords": [
+        35.43,
+        -119.03
+      ],
+      "originSourceIndex": 24,
+      "note": "Исходные координаты находятся у Бейкерсфилда, а не в бассейне города Лос-Анджелес.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1329,
+      "provinceName": "Фресно",
+      "namedRegion": "Тихоокеанское побережье",
+      "mapPoint": [
+        760.11,
+        950.82
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-25",
+      "name": "Тампико / Поса-Рика",
+      "resourceId": "oil",
+      "coords": [
+        22.3,
+        -97.8
+      ],
+      "originSourceIndex": 25,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 2367,
+      "provinceName": "Тампико",
+      "namedRegion": "Центральная Мексика",
+      "mapPoint": [
+        1094.67,
+        1181.38
+      ],
+      "snapPixels": 2.7
+    },
+    {
+      "id": "historic-26",
+      "name": "Озеро Маракайбо",
+      "resourceId": "oil",
+      "coords": [
+        10.3,
+        -71.6
+      ],
+      "originSourceIndex": 26,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 2926,
+      "provinceName": "Маракайбо",
+      "namedRegion": "Карибское побережье и Ориноко",
+      "mapPoint": [
+        1501.8,
+        1378.74
+      ],
+      "snapPixels": 3.92
+    },
+    {
+      "id": "historic-27",
+      "name": "Нефтепромыслы Южной Суматры",
+      "resourceId": "oil",
+      "coords": [
+        -3.0,
+        104.6
+      ],
+      "originSourceIndex": 27,
+      "note": "Этот маркер относится к Палембангу; Борнео имеет отдельную точку.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 3855,
+      "provinceName": "Палембанг",
+      "namedRegion": "Суматра",
+      "mapPoint": [
+        4251.28,
+        1787.87
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-28",
+      "name": "Лотарингия",
+      "resourceId": "iron-ore",
+      "coords": [
+        49.2,
+        6.1
+      ],
+      "originSourceIndex": 28,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1256,
+      "provinceName": "Мец",
+      "namedRegion": "Северная Франция",
+      "mapPoint": [
+        2715.23,
+        888.86
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-30",
+      "name": "Кливленд / Нортгемптон",
+      "resourceId": "iron-ore",
+      "coords": [
+        54.5,
+        -1.2
+      ],
+      "originSourceIndex": 30,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 838,
+      "provinceName": "Кингстон-апон-Халл",
+      "namedRegion": "Британские острова",
+      "mapPoint": [
+        2600.29,
+        774.19
+      ],
+      "snapPixels": 0.86
+    },
+    {
+      "id": "historic-31",
+      "name": "Уэнза",
+      "resourceId": "iron-ore",
+      "coords": [
+        35.9,
+        8.2
+      ],
+      "originSourceIndex": 31,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 2192,
+      "provinceName": "Тебесса",
+      "namedRegion": "Магриб",
+      "mapPoint": [
+        2747.36,
+        1139.57
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-32",
+      "name": "Кируна и Елливаре",
+      "resourceId": "iron-ore",
+      "coords": [
+        67.8,
+        20.2
+      ],
+      "originSourceIndex": 32,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 239,
+      "provinceName": "Лулео",
+      "namedRegion": "Лапландия",
+      "mapPoint": [
+        2937.78,
+        464.93
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-33",
+      "name": "Кривой Рог (Кривбасс)",
+      "resourceId": "iron-ore",
+      "coords": [
+        47.9,
+        33.4
+      ],
+      "originSourceIndex": 33,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1331,
+      "provinceName": "Кривой Рог",
+      "namedRegion": "Поднепровье",
+      "mapPoint": [
+        3142.99,
+        913.22
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-34",
+      "name": "Магнитная гора",
+      "resourceId": "iron-ore",
+      "coords": [
+        53.4,
+        59.0
+      ],
+      "originSourceIndex": 34,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 823,
+      "provinceName": "Магнитогорск",
+      "namedRegion": "Урал",
+      "mapPoint": [
+        3539.97,
+        800.37
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-35",
+      "name": "Хребет Месаби",
+      "resourceId": "iron-ore",
+      "coords": [
+        47.5,
+        -92.5
+      ],
+      "originSourceIndex": 35,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 613,
+      "provinceName": "Дулут",
+      "namedRegion": "Великие озёра",
+      "mapPoint": [
+        1175.48,
+        723.83
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-36",
+      "name": "Бирмингем",
+      "resourceId": "iron-ore",
+      "coords": [
+        33.5,
+        -86.8
+      ],
+      "originSourceIndex": 36,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1622,
+      "provinceName": "Бирмингем",
+      "namedRegion": "Американский Юг",
+      "mapPoint": [
+        1264.47,
+        989.65
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-38",
+      "name": "Аньшань",
+      "resourceId": "iron-ore",
+      "coords": [
+        41.1,
+        122.9
+      ],
+      "originSourceIndex": 38,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1821,
+      "provinceName": "Аньшань",
+      "namedRegion": "Маньчжурия",
+      "mapPoint": [
+        4537.17,
+        1042.25
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-39",
+      "name": "Сингхбхум (Бихар)",
+      "resourceId": "iron-ore",
+      "coords": [
+        22.8,
+        86.2
+      ],
+      "originSourceIndex": 39,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 2861,
+      "provinceName": "Джамшедпур",
+      "namedRegion": "Бенгалия и Ассам",
+      "mapPoint": [
+        3961.88,
+        1369.98
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-40",
+      "name": "Марампа",
+      "resourceId": "iron-ore",
+      "coords": [
+        8.7,
+        -12.5
+      ],
+      "originSourceIndex": 40,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 3446,
+      "provinceName": "Макени",
+      "namedRegion": "Западная Африка",
+      "mapPoint": [
+        2425.55,
+        1597.1
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-41",
+      "name": "Горы Баконь / Гант",
+      "resourceId": "bauxite",
+      "coords": [
+        47.4,
+        18.4
+      ],
+      "originSourceIndex": 41,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1408,
+      "provinceName": "Секешфехервар",
+      "namedRegion": "Паннония",
+      "mapPoint": [
+        2909.97,
+        923.85
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-42",
+      "name": "Ле-Бо (Прованс)",
+      "resourceId": "bauxite",
+      "coords": [
+        43.7,
+        4.8
+      ],
+      "originSourceIndex": 42,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1634,
+      "provinceName": "Авиньон",
+      "namedRegion": "Южная Франция",
+      "mapPoint": [
+        2694.23,
+        990.32
+      ],
+      "snapPixels": 0.83
+    },
+    {
+      "id": "historic-43",
+      "name": "Бокситы Истрии",
+      "resourceId": "bauxite",
+      "coords": [
+        45.0,
+        14.0
+      ],
+      "originSourceIndex": 43,
+      "note": "Один маркер соответствует Истрии; Абруццо не объединено с ней в одну провинцию.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1561,
+      "provinceName": "Пула",
+      "namedRegion": "Балканы",
+      "mapPoint": [
+        2836.39,
+        966.81
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-44",
+      "name": "Никшич",
+      "resourceId": "bauxite",
+      "coords": [
+        42.8,
+        18.9
+      ],
+      "originSourceIndex": 44,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1708,
+      "provinceName": "Подгорица",
+      "namedRegion": "Балканы",
+      "mapPoint": [
+        2914.7,
+        1010.88
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-45",
+      "name": "Парнас / Ампфиса",
+      "resourceId": "bauxite",
+      "coords": [
+        38.5,
+        22.5
+      ],
+      "originSourceIndex": 45,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1996,
+      "provinceName": "Халкида",
+      "namedRegion": "Балканы",
+      "mapPoint": [
+        2968.55,
+        1091.22
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-46",
+      "name": "Североуральск («Красная Шапочка»)",
+      "resourceId": "bauxite",
+      "coords": [
+        60.1,
+        59.9
+      ],
+      "originSourceIndex": 46,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 472,
+      "provinceName": "Нижний Тагил",
+      "namedRegion": "Урал",
+      "mapPoint": [
+        3564.36,
+        650.97
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-47",
+      "name": "Бокситы Моэнго",
+      "resourceId": "bauxite",
+      "coords": [
+        5.6,
+        -54.4
+      ],
+      "originSourceIndex": 47,
+      "note": "Паранам — более поздний промышленный комплекс. Использован старый добывающий район Моэнго; Маккензи добавлен отдельно.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 3112,
+      "provinceName": "Парамарибо",
+      "namedRegion": "Гвиана",
+      "mapPoint": [
+        1771.53,
+        1453.91
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-48",
+      "name": "Остров Бинтан",
+      "resourceId": "bauxite",
+      "coords": [
+        1.0,
+        104.5
+      ],
+      "originSourceIndex": 48,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 3777,
+      "provinceName": "Танджунг-Пинанг",
+      "namedRegion": "Суматра",
+      "mapPoint": [
+        4251.0,
+        1725.44
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-50",
+      "name": "Тихвинские бокситы",
+      "resourceId": "bauxite",
+      "coords": [
+        59.47,
+        33.85
+      ],
+      "originSourceIndex": 50,
+      "note": "Уточнены координаты бокситового района у Бокситогорска.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 466,
+      "provinceName": "Тихвин",
+      "namedRegion": "Ингрия и Приильменье",
+      "mapPoint": [
+        3148.36,
+        665.17
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-52",
+      "name": "Гулеман (Анатолия)",
+      "resourceId": "alloy-ore",
+      "coords": [
+        38.5,
+        39.8
+      ],
+      "originSourceIndex": 52,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "guleman"
+      ],
+      "provinceId": 1977,
+      "provinceName": "Элязыг",
+      "namedRegion": "Восточная Анатолия",
+      "mapPoint": [
+        3237.54,
+        1092.04
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-55",
+      "name": "Бассейн Садбери",
+      "resourceId": "alloy-ore",
+      "coords": [
+        46.5,
+        -81.0
+      ],
+      "originSourceIndex": 55,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 655,
+      "provinceName": "Грейтер-Садбери",
+      "namedRegion": "Великие озёра",
+      "mapPoint": [
+        1355.11,
+        744.8
+      ],
+      "snapPixels": 0.8
+    },
+    {
+      "id": "historic-57",
+      "name": "Бушвельдский комплекс",
+      "resourceId": "alloy-ore",
+      "coords": [
+        -25.0,
+        27.5
+      ],
+      "originSourceIndex": 57,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 4356,
+      "provinceName": "Питерсбург",
+      "namedRegion": "Южная Африка",
+      "mapPoint": [
+        3050.92,
+        2141.18
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-58",
+      "name": "Новая Каледония",
+      "resourceId": "alloy-ore",
+      "coords": [
+        -21.5,
+        165.5
+      ],
+      "originSourceIndex": 58,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 4338,
+      "provinceName": "Нумеа",
+      "namedRegion": "Меланезия",
+      "mapPoint": [
+        5201.47,
+        2083.75
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-59",
+      "name": "Масинлок (Лусон)",
+      "resourceId": "alloy-ore",
+      "coords": [
+        15.5,
+        120.0
+      ],
+      "originSourceIndex": 59,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 3163,
+      "provinceName": "Багио",
+      "namedRegion": "Филиппины",
+      "mapPoint": [
+        4498.32,
+        1496.75
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-60",
+      "name": "Панашкейра и Галисия",
+      "resourceId": "tungsten-ore",
+      "coords": [
+        40.1,
+        -7.7
+      ],
+      "originSourceIndex": 60,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1848,
+      "provinceName": "Каштелу-Бранку",
+      "namedRegion": "Иберия",
+      "mapPoint": [
+        2499.18,
+        1063.36
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-61",
+      "name": "Даюй (Цзянси)",
+      "resourceId": "tungsten-ore",
+      "coords": [
+        25.5,
+        114.5
+      ],
+      "originSourceIndex": 61,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 2760,
+      "provinceName": "Ганьчжоу",
+      "namedRegion": "Южный Китай",
+      "mapPoint": [
+        4409.36,
+        1323.2
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-62",
+      "name": "Сандон",
+      "resourceId": "tungsten-ore",
+      "coords": [
+        37.1,
+        128.8
+      ],
+      "originSourceIndex": 62,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 2118,
+      "provinceName": "Пхохан",
+      "namedRegion": "Корея",
+      "mapPoint": [
+        4630.69,
+        1116.54
+      ],
+      "snapPixels": 0.83
+    },
+    {
+      "id": "historic-63",
+      "name": "Чойлья",
+      "resourceId": "tungsten-ore",
+      "coords": [
+        -16.4,
+        -67.7
+      ],
+      "originSourceIndex": 63,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 3793,
+      "provinceName": "Ла-Пас",
+      "namedRegion": "Амазония",
+      "mapPoint": [
+        1563.9,
+        1806.32
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-64",
+      "name": "Пайн-Крик (Милл-Сити)",
+      "resourceId": "tungsten-ore",
+      "coords": [
+        37.3,
+        -118.7
+      ],
+      "originSourceIndex": 64,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1300,
+      "provinceName": "Бишоп",
+      "namedRegion": "Тихоокеанское побережье",
+      "mapPoint": [
+        765.37,
+        917.05
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-65",
+      "name": "Малайя, Ява и Суматра",
+      "resourceId": "rubber",
+      "coords": [
+        3.1,
+        101.7
+      ],
+      "originSourceIndex": 65,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 3705,
+      "provinceName": "Куала-Лумпур",
+      "namedRegion": "Малайя",
+      "mapPoint": [
+        4208.2,
+        1691.57
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-66",
+      "name": "Плантации Индокитая",
+      "resourceId": "rubber",
+      "coords": [
+        10.8,
+        106.6
+      ],
+      "originSourceIndex": 66,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 3370,
+      "provinceName": "Тёлон",
+      "namedRegion": "Индокитай",
+      "mapPoint": [
+        4282.35,
+        1569.06
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-67",
+      "name": "Плантации Firestone",
+      "resourceId": "rubber",
+      "coords": [
+        6.3,
+        -10.3
+      ],
+      "originSourceIndex": 67,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 3562,
+      "provinceName": "Монровия",
+      "namedRegion": "Западная Африка",
+      "mapPoint": [
+        2460.96,
+        1638.42
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-68",
+      "name": "Бассейн реки Конго",
+      "resourceId": "rubber",
+      "coords": [
+        -4.3,
+        15.3
+      ],
+      "originSourceIndex": 68,
+      "note": "Ресурсный район соответствует хозяйственной географии периода; количество и бонус — игровые.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 3898,
+      "provinceName": "Леопольдвиль",
+      "namedRegion": "Бассейн Конго",
+      "mapPoint": [
+        2861.08,
+        1806.07
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "historic-69",
+      "name": "Клиффсайд · Амарилло",
+      "resourceId": "helium",
+      "coords": [
+        35.2,
+        -101.8
+      ],
+      "originSourceIndex": 69,
+      "note": "Действующий с 1929 года гелиевый узел. Речь о промышленном источнике эпохи, а не об отсутствии гелия где-либо ещё.",
+      "sources": [
+        "helium"
+      ],
+      "provinceId": 1465,
+      "provinceName": "Амарилло",
+      "namedRegion": "Техас и Юго-Запад",
+      "mapPoint": [
+        1032.05,
+        957.99
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "maikop",
+      "name": "Майкопские нефтепромыслы",
+      "resourceId": "oil",
+      "coords": [
+        44.6,
+        40.1
+      ],
+      "note": "Дополнительный ресурсный район для самостоятельной расстановки.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1586,
+      "provinceName": "Майкоп",
+      "namedRegion": "Кавказ",
+      "mapPoint": [
+        3244.28,
+        976.29
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "balikpapan",
+      "name": "Нефтяной район Баликпапана",
+      "resourceId": "oil",
+      "coords": [
+        -1.25,
+        116.83
+      ],
+      "note": "Дополнительный ресурсный район для самостоятельной расстановки.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 3760,
+      "provinceName": "Самаринда",
+      "namedRegion": "Борнео",
+      "mapPoint": [
+        4441.4,
+        1762.29
+      ],
+      "snapPixels": 4.31
+    },
+    {
+      "id": "mackenzie",
+      "name": "Бокситы Маккензи · Демерара",
+      "resourceId": "bauxite",
+      "coords": [
+        6.0,
+        -58.3
+      ],
+      "note": "Дополнительный ресурсный район для самостоятельной расстановки.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 3100,
+      "provinceName": "Линден",
+      "namedRegion": "Гвиана",
+      "mapPoint": [
+        1709.66,
+        1449.45
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "coahuila",
+      "name": "Угольные копи Коауилы",
+      "resourceId": "coal",
+      "coords": [
+        27.85,
+        -101.1
+      ],
+      "note": "Дополнительный ресурсный район для самостоятельной расстановки.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1893,
+      "provinceName": "Нуэва-Росита",
+      "namedRegion": "Северная Мексика",
+      "mapPoint": [
+        1043.52,
+        1086.98
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "mercado",
+      "name": "Железные руды Серро-де-Меркадо",
+      "resourceId": "iron-ore",
+      "coords": [
+        24.07,
+        -104.67
+      ],
+      "note": "Дополнительный ресурсный район для самостоятельной расстановки.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 2154,
+      "provinceName": "Виктория-де-Дуранго",
+      "namedRegion": "Северная Мексика",
+      "mapPoint": [
+        987.47,
+        1150.57
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "arkansas",
+      "name": "Бокситы Арканзаса",
+      "resourceId": "bauxite",
+      "coords": [
+        34.56,
+        -92.51
+      ],
+      "note": "Дополнительный ресурсный район для самостоятельной расстановки.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1501,
+      "provinceName": "Литл-Рок",
+      "namedRegion": "Американский Юг",
+      "mapPoint": [
+        1176.75,
+        969.5
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "ufaley",
+      "name": "Никелевый район Верхнего Уфалея",
+      "resourceId": "alloy-ore",
+      "coords": [
+        56.06,
+        60.23
+      ],
+      "note": "Дополнительный ресурсный район для самостоятельной расстановки.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 673,
+      "provinceName": "Первоуральск",
+      "namedRegion": "Урал",
+      "mapPoint": [
+        3566.99,
+        742.55
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "donetsk-manganese",
+      "name": "Никопольские марганцевые руды",
+      "resourceId": "alloy-ore",
+      "coords": [
+        47.57,
+        34.4
+      ],
+      "note": "Дополнительный ресурсный район для самостоятельной расстановки.",
+      "sources": [
+        "mineral1936"
+      ],
+      "provinceId": 1331,
+      "provinceName": "Кривой Рог",
+      "namedRegion": "Поднепровье",
+      "mapPoint": [
+        3157.52,
+        918.7
+      ],
+      "snapPixels": 0
+    }
+  ],
+  "industries": [
+    {
+      "id": "essen",
+      "name": "Эссен · Рур",
+      "coords": [
+        51.46,
+        7.01
+      ],
+      "specialty": "steel",
+      "capacity": 12,
+      "sources": [
+        "ruhr"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1095,
+      "provinceName": "Эссен",
+      "namedRegion": "Северная Германия",
+      "mapPoint": [
+        2732,
+        844
+      ],
+      "snapPixels": 0.79,
+      "bindingNote": "Привязано к одноимённой провинции: пиксельная карта схематична."
+    },
+    {
+      "id": "duisburg",
+      "name": "Дуйсбург · Рейнские заводы",
+      "coords": [
+        51.43,
+        6.76
+      ],
+      "specialty": "steel",
+      "capacity": 10,
+      "sources": [
+        "ruhr"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1095,
+      "provinceName": "Эссен",
+      "namedRegion": "Северная Германия",
+      "mapPoint": [
+        2725.42,
+        841.28
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "saar",
+      "name": "Саарбрюккен · Саар",
+      "coords": [
+        49.24,
+        7.0
+      ],
+      "specialty": "steel",
+      "capacity": 6,
+      "sources": [
+        "ruhr"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1256,
+      "provinceName": "Мец",
+      "namedRegion": "Северная Франция",
+      "mapPoint": [
+        2728.45,
+        886.37
+      ],
+      "snapPixels": 0.77
+    },
+    {
+      "id": "sheffield",
+      "name": "Шеффилд",
+      "coords": [
+        53.38,
+        -1.47
+      ],
+      "specialty": "tools",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 886,
+      "provinceName": "Шеффилд",
+      "namedRegion": "Британские острова",
+      "mapPoint": [
+        2595.99,
+        796.62
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "birmingham",
+      "name": "Бирмингем · Мидлендс",
+      "coords": [
+        52.48,
+        -1.9
+      ],
+      "specialty": "machines",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 944,
+      "provinceName": "Бирмингем",
+      "namedRegion": "Британские острова",
+      "mapPoint": [
+        2589.43,
+        814.89
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "glasgow",
+      "name": "Глазго · Клайд",
+      "coords": [
+        55.86,
+        -4.25
+      ],
+      "specialty": "machines",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 738,
+      "provinceName": "Глазго",
+      "namedRegion": "Британские острова",
+      "mapPoint": [
+        2557.66,
+        744.86
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "manchester",
+      "name": "Манчестер",
+      "coords": [
+        53.48,
+        -2.24
+      ],
+      "specialty": "textile",
+      "capacity": 10,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 867,
+      "provinceName": "Манчестер",
+      "namedRegion": "Британские острова",
+      "mapPoint": [
+        2585.19,
+        794.69
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "lille",
+      "name": "Лилль",
+      "coords": [
+        50.63,
+        3.06
+      ],
+      "specialty": "textile",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1128,
+      "provinceName": "Лилль",
+      "namedRegion": "Северная Франция",
+      "mapPoint": [
+        2666.74,
+        857.98
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "longwy",
+      "name": "Лонгви · Лотарингия",
+      "coords": [
+        49.52,
+        5.76
+      ],
+      "specialty": "steel",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1251,
+      "provinceName": "Вердан",
+      "namedRegion": "Северная Франция",
+      "mapPoint": [
+        2709.72,
+        881.77
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "paris",
+      "name": "Парижский промышленный пояс",
+      "coords": [
+        48.85,
+        2.35
+      ],
+      "specialty": "machines",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1285,
+      "provinceName": "Париж",
+      "namedRegion": "Северная Франция",
+      "mapPoint": [
+        2656.44,
+        896.11
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "lyon",
+      "name": "Лион",
+      "coords": [
+        45.76,
+        4.84
+      ],
+      "specialty": "textile",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1502,
+      "provinceName": "Лион",
+      "namedRegion": "Южная Франция",
+      "mapPoint": [
+        2696.42,
+        955.8
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "creusot",
+      "name": "Ле-Крёзо",
+      "coords": [
+        46.8,
+        4.44
+      ],
+      "specialty": "steel",
+      "capacity": 6,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1453,
+      "provinceName": "Шалон на Сони",
+      "namedRegion": "Южная Франция",
+      "mapPoint": [
+        2689.14,
+        937.37
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "turin",
+      "name": "Турин",
+      "coords": [
+        45.07,
+        7.69
+      ],
+      "specialty": "machines",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1552,
+      "provinceName": "Турин",
+      "namedRegion": "Северная Италия",
+      "mapPoint": [
+        2736.08,
+        964.33
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "milan",
+      "name": "Милан",
+      "coords": [
+        45.46,
+        9.19
+      ],
+      "specialty": "machines",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1485,
+      "provinceName": "Милан",
+      "namedRegion": "Северная Италия",
+      "mapPoint": [
+        2759.66,
+        956.58
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "genoa",
+      "name": "Генуя",
+      "coords": [
+        44.41,
+        8.93
+      ],
+      "specialty": "steel",
+      "capacity": 6,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1584,
+      "provinceName": "Генуя",
+      "namedRegion": "Северная Италия",
+      "mapPoint": [
+        2755.25,
+        974.16
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "bilbao",
+      "name": "Бильбао",
+      "coords": [
+        43.26,
+        -2.93
+      ],
+      "specialty": "steel",
+      "capacity": 6,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1701,
+      "provinceName": "Бильбао",
+      "namedRegion": "Иберия",
+      "mapPoint": [
+        2574.05,
+        1002.61
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "barcelona",
+      "name": "Барселона",
+      "coords": [
+        41.39,
+        2.17
+      ],
+      "specialty": "textile",
+      "capacity": 7,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1778,
+      "provinceName": "Барселона",
+      "namedRegion": "Иберия",
+      "mapPoint": [
+        2654.86,
+        1036.12
+      ],
+      "snapPixels": 1.41
+    },
+    {
+      "id": "ostrava",
+      "name": "Острава · Витковице",
+      "coords": [
+        49.83,
+        18.28
+      ],
+      "specialty": "steel",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1226,
+      "provinceName": "Острава",
+      "namedRegion": "Богемия и Моравия",
+      "mapPoint": [
+        2910.12,
+        877.02
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "plzen",
+      "name": "Пльзень · Шкода",
+      "coords": [
+        49.75,
+        13.38
+      ],
+      "specialty": "machines",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1210,
+      "provinceName": "Пльзень",
+      "namedRegion": "Богемия и Моравия",
+      "mapPoint": [
+        2830.29,
+        876.67
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "katowice",
+      "name": "Катовице · Верхняя Силезия",
+      "coords": [
+        50.26,
+        19.02
+      ],
+      "specialty": "steel",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1205,
+      "provinceName": "Катовице",
+      "namedRegion": "Польская равнина",
+      "mapPoint": [
+        2922.27,
+        868.59
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "lodz",
+      "name": "Лодзь",
+      "coords": [
+        51.76,
+        19.46
+      ],
+      "specialty": "textile",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 989,
+      "provinceName": "Лодзь",
+      "namedRegion": "Польская равнина",
+      "mapPoint": [
+        2928.46,
+        834.21
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "liege",
+      "name": "Льеж",
+      "coords": [
+        50.63,
+        5.57
+      ],
+      "specialty": "steel",
+      "capacity": 7,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1159,
+      "provinceName": "Льеж",
+      "namedRegion": "Нидерланды и Фландрия",
+      "mapPoint": [
+        2706.66,
+        858.27
+      ],
+      "snapPixels": 0.72
+    },
+    {
+      "id": "gothenburg",
+      "name": "Гётеборг",
+      "coords": [
+        57.71,
+        11.97
+      ],
+      "specialty": "machines",
+      "capacity": 5,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 563,
+      "provinceName": "Гётеборг",
+      "namedRegion": "Скандинавия",
+      "mapPoint": [
+        2805.42,
+        705.74
+      ],
+      "snapPixels": 0.63
+    },
+    {
+      "id": "rjukan",
+      "name": "Рьюкан · гидроэнергетика",
+      "coords": [
+        59.88,
+        8.59
+      ],
+      "specialty": "hydro",
+      "capacity": 10,
+      "sources": [
+        "hydro"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 509,
+      "provinceName": "Шиен",
+      "namedRegion": "Скандинавия",
+      "mapPoint": [
+        2750.57,
+        654.86
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "moscow",
+      "name": "Москва",
+      "coords": [
+        55.75,
+        37.62
+      ],
+      "specialty": "machines",
+      "capacity": 10,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 720,
+      "provinceName": "Москва",
+      "namedRegion": "Центральная Россия",
+      "mapPoint": [
+        3207.54,
+        748.83
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "leningrad",
+      "name": "Ленинград",
+      "coords": [
+        59.94,
+        30.31
+      ],
+      "specialty": "machines",
+      "capacity": 10,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 499,
+      "provinceName": "Ленинград",
+      "namedRegion": "Ингрия и Приильменье",
+      "mapPoint": [
+        3093.78,
+        654.21
+      ],
+      "snapPixels": 0.82
+    },
+    {
+      "id": "gorky",
+      "name": "Горький",
+      "coords": [
+        56.33,
+        44.0
+      ],
+      "specialty": "machines",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 661,
+      "provinceName": "Горький",
+      "namedRegion": "Поволжье",
+      "mapPoint": [
+        3306.0,
+        735.78
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "tula",
+      "name": "Тула",
+      "coords": [
+        54.2,
+        37.62
+      ],
+      "specialty": "tools",
+      "capacity": 7,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 821,
+      "provinceName": "Тула",
+      "namedRegion": "Центральная Россия",
+      "mapPoint": [
+        3207.47,
+        783.07
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "kharkov",
+      "name": "Харьков",
+      "coords": [
+        49.99,
+        36.23
+      ],
+      "specialty": "machines",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1185,
+      "provinceName": "Харьков",
+      "namedRegion": "Донбасс и Приазовье",
+      "mapPoint": [
+        3185.79,
+        869.77
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "stalingrad",
+      "name": "Сталинград",
+      "coords": [
+        48.71,
+        44.51
+      ],
+      "specialty": "machines",
+      "capacity": 7,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1299,
+      "provinceName": "Сталинград",
+      "namedRegion": "Дон и Кубань",
+      "mapPoint": [
+        3312.14,
+        895.73
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "sverdlovsk",
+      "name": "Свердловск",
+      "coords": [
+        56.84,
+        60.61
+      ],
+      "specialty": "machines",
+      "capacity": 7,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 615,
+      "provinceName": "Свердловск",
+      "namedRegion": "Урал",
+      "mapPoint": [
+        3567,
+        712
+      ],
+      "snapPixels": 0,
+      "bindingNote": "Привязано к одноимённой провинции: пиксельная карта схематична."
+    },
+    {
+      "id": "chelyabinsk",
+      "name": "Челябинск",
+      "coords": [
+        55.16,
+        61.4
+      ],
+      "specialty": "machines",
+      "capacity": 7,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 751,
+      "provinceName": "Челябинск",
+      "namedRegion": "Урал",
+      "mapPoint": [
+        3584.85,
+        762.22
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "magnitka",
+      "name": "Магнитогорск",
+      "coords": [
+        53.41,
+        58.98
+      ],
+      "specialty": "steel",
+      "capacity": 12,
+      "sources": [
+        "magnitka"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 823,
+      "provinceName": "Магнитогорск",
+      "namedRegion": "Урал",
+      "mapPoint": [
+        3539.66,
+        800.15
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "stalinsk",
+      "name": "Сталинск · Кузнецкий комбинат",
+      "coords": [
+        53.76,
+        87.11
+      ],
+      "specialty": "steel",
+      "capacity": 10,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 841,
+      "provinceName": "Сталинск",
+      "namedRegion": "Восточная Сибирь",
+      "mapPoint": [
+        3980.43,
+        791.14
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "dnipro",
+      "name": "Днепропетровск",
+      "coords": [
+        48.46,
+        35.05
+      ],
+      "specialty": "steel",
+      "capacity": 10,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1277,
+      "provinceName": "Днепропетровск",
+      "namedRegion": "Поднепровье",
+      "mapPoint": [
+        3168.01,
+        900.83
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "zaporizhzhia",
+      "name": "Запорожье · Днепрогэс",
+      "coords": [
+        47.84,
+        35.14
+      ],
+      "specialty": "hydro-aluminium",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1368,
+      "provinceName": "Запорожье",
+      "namedRegion": "Донбасс и Приазовье",
+      "mapPoint": [
+        3169.29,
+        913.31
+      ],
+      "snapPixels": 0.77
+    },
+    {
+      "id": "baku",
+      "name": "Баку",
+      "coords": [
+        40.41,
+        49.87
+      ],
+      "specialty": "refinery",
+      "capacity": 12,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1872,
+      "provinceName": "Баку",
+      "namedRegion": "Кавказ",
+      "mapPoint": [
+        3395.05,
+        1056.99
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "grozny",
+      "name": "Грозный",
+      "coords": [
+        43.32,
+        45.69
+      ],
+      "specialty": "refinery",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1661,
+      "provinceName": "Грозный",
+      "namedRegion": "Кавказ",
+      "mapPoint": [
+        3328.5,
+        1001.67
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "ploesti",
+      "name": "Плоешти",
+      "coords": [
+        44.94,
+        26.03
+      ],
+      "specialty": "refinery",
+      "capacity": 10,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1547,
+      "provinceName": "Плоешти",
+      "namedRegion": "Карпаты и Нижний Дунай",
+      "mapPoint": [
+        3029.44,
+        971.12
+      ],
+      "snapPixels": 0.58
+    },
+    {
+      "id": "pittsburgh",
+      "name": "Питтсбург",
+      "coords": [
+        40.44,
+        -80.0
+      ],
+      "specialty": "steel",
+      "capacity": 14,
+      "sources": [
+        "pittsburgh"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1114,
+      "provinceName": "Питтсбург",
+      "namedRegion": "Великие озёра",
+      "mapPoint": [
+        1370.55,
+        862.16
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "detroit",
+      "name": "Детройт · Ривер-Руж",
+      "coords": [
+        42.33,
+        -83.05
+      ],
+      "specialty": "machines",
+      "capacity": 14,
+      "sources": [
+        "ford"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 967,
+      "provinceName": "Детройт",
+      "namedRegion": "Великие озёра",
+      "mapPoint": [
+        1321,
+        817
+      ],
+      "snapPixels": 0.6,
+      "bindingNote": "Привязано к одноимённой провинции: пиксельная карта схематична."
+    },
+    {
+      "id": "chicago",
+      "name": "Чикаго",
+      "coords": [
+        41.88,
+        -87.63
+      ],
+      "specialty": "machines",
+      "capacity": 10,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1026,
+      "provinceName": "Чикаго",
+      "namedRegion": "Великие озёра",
+      "mapPoint": [
+        1250.96,
+        835.22
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "cleveland",
+      "name": "Кливленд",
+      "coords": [
+        41.5,
+        -81.69
+      ],
+      "specialty": "steel",
+      "capacity": 10,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1049,
+      "provinceName": "Кливленд",
+      "namedRegion": "Великие озёра",
+      "mapPoint": [
+        1343.88,
+        842.42
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "gary",
+      "name": "Гэри",
+      "coords": [
+        41.59,
+        -87.35
+      ],
+      "specialty": "steel",
+      "capacity": 10,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1072,
+      "provinceName": "Гэри",
+      "namedRegion": "Великие озёра",
+      "mapPoint": [
+        1255.35,
+        840.75
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "bethlehem",
+      "name": "Бетлехем",
+      "coords": [
+        40.63,
+        -75.37
+      ],
+      "specialty": "steel",
+      "capacity": 10,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1158,
+      "provinceName": "Филадельфия",
+      "namedRegion": "Новая Англия и Атлантика",
+      "mapPoint": [
+        1443.84,
+        857.08
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "birmingham-us",
+      "name": "Бирмингем · Алабама",
+      "coords": [
+        33.52,
+        -86.8
+      ],
+      "specialty": "steel",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1622,
+      "provinceName": "Бирмингем",
+      "namedRegion": "Американский Юг",
+      "mapPoint": [
+        1264.47,
+        989.29
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "los-angeles",
+      "name": "Лос-Анджелес",
+      "coords": [
+        34.05,
+        -118.24
+      ],
+      "specialty": "aircraft",
+      "capacity": 6,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1554,
+      "provinceName": "Лос-Анджелес",
+      "namedRegion": "Тихоокеанское побережье",
+      "mapPoint": [
+        772.5,
+        975.64
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "seattle",
+      "name": "Сиэтл",
+      "coords": [
+        47.61,
+        -122.33
+      ],
+      "specialty": "aircraft",
+      "capacity": 6,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 650,
+      "provinceName": "Сиэтл",
+      "namedRegion": "Тихоокеанское побережье",
+      "mapPoint": [
+        711.16,
+        721.27
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "houston",
+      "name": "Хьюстон",
+      "coords": [
+        29.76,
+        -95.37
+      ],
+      "specialty": "refinery",
+      "capacity": 12,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1643,
+      "provinceName": "Хьюстон",
+      "namedRegion": "Техас и Юго-Запад",
+      "mapPoint": [
+        1132.82,
+        1055.03
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "hamilton",
+      "name": "Гамильтон · Онтарио",
+      "coords": [
+        43.25,
+        -79.87
+      ],
+      "specialty": "steel",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 963,
+      "provinceName": "Гамильтон",
+      "namedRegion": "Великие озёра",
+      "mapPoint": [
+        1372.69,
+        808.57
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "montreal",
+      "name": "Монреаль",
+      "coords": [
+        45.5,
+        -73.57
+      ],
+      "specialty": "machines",
+      "capacity": 6,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 760,
+      "provinceName": "Монреаль",
+      "namedRegion": "Квебек и Лабрадор",
+      "mapPoint": [
+        1471.23,
+        763.38
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "shawinigan",
+      "name": "Шавиниган",
+      "coords": [
+        46.57,
+        -72.75
+      ],
+      "specialty": "hydro-aluminium",
+      "capacity": 6,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 669,
+      "provinceName": "Труа-Ривьер",
+      "namedRegion": "Квебек и Лабрадор",
+      "mapPoint": [
+        1483.94,
+        742.22
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "tokyo",
+      "name": "Токио · Кэйхин",
+      "coords": [
+        35.68,
+        139.69
+      ],
+      "specialty": "machines",
+      "capacity": 10,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 2227,
+      "provinceName": "Токио",
+      "namedRegion": "Японские острова",
+      "mapPoint": [
+        4798.68,
+        1143.58
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "osaka",
+      "name": "Осака · Кансай",
+      "coords": [
+        34.69,
+        135.5
+      ],
+      "specialty": "machines",
+      "capacity": 10,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 2300,
+      "provinceName": "Осака",
+      "namedRegion": "Японские острова",
+      "mapPoint": [
+        4734.84,
+        1162.42
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "nagoya",
+      "name": "Нагоя",
+      "coords": [
+        35.18,
+        136.91
+      ],
+      "specialty": "aircraft",
+      "capacity": 6,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 2279,
+      "provinceName": "Нагоя",
+      "namedRegion": "Японские острова",
+      "mapPoint": [
+        4756.25,
+        1153.05
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "yawata",
+      "name": "Явата",
+      "coords": [
+        33.85,
+        130.81
+      ],
+      "specialty": "steel",
+      "capacity": 12,
+      "sources": [
+        "japan"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 2359,
+      "provinceName": "Фукуока",
+      "namedRegion": "Японские острова",
+      "mapPoint": [
+        4661.44,
+        1176.79
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "nagasaki",
+      "name": "Нагасаки",
+      "coords": [
+        32.75,
+        129.88
+      ],
+      "specialty": "machines",
+      "capacity": 7,
+      "sources": [
+        "japan"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 2394,
+      "provinceName": "Нагасаки",
+      "namedRegion": "Японские острова",
+      "mapPoint": [
+        4646.8,
+        1196.13
+      ],
+      "snapPixels": 1.21
+    },
+    {
+      "id": "anshan",
+      "name": "Аньшань",
+      "coords": [
+        41.12,
+        122.99
+      ],
+      "specialty": "steel",
+      "capacity": 10,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1821,
+      "provinceName": "Аньшань",
+      "namedRegion": "Маньчжурия",
+      "mapPoint": [
+        4538.62,
+        1041.86
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "mukden",
+      "name": "Мукден",
+      "coords": [
+        41.8,
+        123.43
+      ],
+      "specialty": "machines",
+      "capacity": 7,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1729,
+      "provinceName": "Мукден",
+      "namedRegion": "Маньчжурия",
+      "mapPoint": [
+        4545.75,
+        1028.94
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "shanghai",
+      "name": "Шанхай",
+      "coords": [
+        31.23,
+        121.47
+      ],
+      "specialty": "textile",
+      "capacity": 10,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 2504,
+      "provinceName": "Шанхай",
+      "namedRegion": "Южный Китай",
+      "mapPoint": [
+        4513.42,
+        1220.43
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "wuhan",
+      "name": "Ухань · Ханьян",
+      "coords": [
+        30.59,
+        114.3
+      ],
+      "specialty": "steel",
+      "capacity": 7,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 2509,
+      "provinceName": "Ухань",
+      "namedRegion": "Южный Китай",
+      "mapPoint": [
+        4404.51,
+        1234.11
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "tianjin",
+      "name": "Тяньцзинь",
+      "coords": [
+        39.13,
+        117.2
+      ],
+      "specialty": "textile",
+      "capacity": 6,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 1911,
+      "provinceName": "Тяньцзинь",
+      "namedRegion": "Северный Китай",
+      "mapPoint": [
+        4446.66,
+        1079.55
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "jamshedpur",
+      "name": "Джамшедпур · Тата",
+      "coords": [
+        22.8,
+        86.2
+      ],
+      "specialty": "steel",
+      "capacity": 12,
+      "sources": [
+        "tata"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 2861,
+      "provinceName": "Джамшедпур",
+      "namedRegion": "Бенгалия и Ассам",
+      "mapPoint": [
+        3961.88,
+        1369.98
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "bombay",
+      "name": "Бомбей",
+      "coords": [
+        19.08,
+        72.88
+      ],
+      "specialty": "textile",
+      "capacity": 10,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 3042,
+      "provinceName": "Бомбей",
+      "namedRegion": "Раджпутана и Центральная Индия",
+      "mapPoint": [
+        3757.45,
+        1435.22
+      ],
+      "snapPixels": 0.91
+    },
+    {
+      "id": "ahmedabad",
+      "name": "Ахмадабад",
+      "coords": [
+        23.02,
+        72.57
+      ],
+      "specialty": "textile",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 2914,
+      "provinceName": "Ахмадабад",
+      "namedRegion": "Раджпутана и Центральная Индия",
+      "mapPoint": [
+        3753.67,
+        1366.4
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "calcutta",
+      "name": "Калькутта",
+      "coords": [
+        22.57,
+        88.36
+      ],
+      "specialty": "textile",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 2879,
+      "provinceName": "Калькутта",
+      "namedRegion": "Бенгалия и Ассам",
+      "mapPoint": [
+        3996.25,
+        1373.92
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "rangoon",
+      "name": "Рангун",
+      "coords": [
+        16.87,
+        96.2
+      ],
+      "specialty": "food",
+      "capacity": 6,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 3124,
+      "provinceName": "Рангун",
+      "namedRegion": "Бирма",
+      "mapPoint": [
+        4120.28,
+        1467.49
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "abadan",
+      "name": "Абадан",
+      "coords": [
+        30.35,
+        48.29
+      ],
+      "specialty": "refinery",
+      "capacity": 12,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 2531,
+      "provinceName": "Корамшар",
+      "namedRegion": "Иранское нагорье",
+      "mapPoint": [
+        3373.46,
+        1238.83
+      ],
+      "snapPixels": 0.99
+    },
+    {
+      "id": "palembang",
+      "name": "Палембанг",
+      "coords": [
+        -2.99,
+        104.76
+      ],
+      "specialty": "refinery",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 3855,
+      "provinceName": "Палембанг",
+      "namedRegion": "Суматра",
+      "mapPoint": [
+        4253.73,
+        1787.73
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "balikpapan",
+      "name": "Баликпапан",
+      "coords": [
+        -1.25,
+        116.83
+      ],
+      "specialty": "refinery",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 3760,
+      "provinceName": "Самаринда",
+      "namedRegion": "Борнео",
+      "mapPoint": [
+        4441.4,
+        1762.29
+      ],
+      "snapPixels": 4.31
+    },
+    {
+      "id": "pretoria",
+      "name": "Претория · ISCOR",
+      "coords": [
+        -25.75,
+        28.19
+      ],
+      "specialty": "steel",
+      "capacity": 6,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 4390,
+      "provinceName": "Претория",
+      "namedRegion": "Южная Африка",
+      "mapPoint": [
+        3061.6,
+        2154.13
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "johannesburg",
+      "name": "Йоханнесбург",
+      "coords": [
+        -26.2,
+        28.04
+      ],
+      "specialty": "machines",
+      "capacity": 5,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 4401,
+      "provinceName": "Йоханнесбург",
+      "namedRegion": "Южная Африка",
+      "mapPoint": [
+        3059.24,
+        2161.81
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "alexandria",
+      "name": "Александрия",
+      "coords": [
+        31.2,
+        29.92
+      ],
+      "specialty": "textile",
+      "capacity": 5,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 2524,
+      "provinceName": "Александрия",
+      "namedRegion": "Египет и долина Нила",
+      "mapPoint": [
+        3084.73,
+        1224.8
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "sao-paulo",
+      "name": "Сан-Паулу",
+      "coords": [
+        -23.55,
+        -46.63
+      ],
+      "specialty": "textile",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 4093,
+      "provinceName": "Сан-Паулу",
+      "namedRegion": "Южная Бразилия",
+      "mapPoint": [
+        1891.78,
+        1922.89
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "rio",
+      "name": "Рио-де-Жанейро",
+      "coords": [
+        -22.91,
+        -43.17
+      ],
+      "specialty": "machines",
+      "capacity": 5,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 4070,
+      "provinceName": "Рио-де-Жанейро",
+      "namedRegion": "Бразильское нагорье",
+      "mapPoint": [
+        1945.47,
+        1912.2
+      ],
+      "snapPixels": 1.48
+    },
+    {
+      "id": "buenos-aires",
+      "name": "Буэнос-Айрес",
+      "coords": [
+        -34.6,
+        -58.38
+      ],
+      "specialty": "food",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 4370,
+      "provinceName": "Буэнос-Айрес",
+      "namedRegion": "Пампа и Ла-Плата",
+      "mapPoint": [
+        1708.77,
+        2113.93
+      ],
+      "snapPixels": 2.72
+    },
+    {
+      "id": "rosario",
+      "name": "Росарио",
+      "coords": [
+        -32.95,
+        -60.65
+      ],
+      "specialty": "food",
+      "capacity": 6,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 4300,
+      "provinceName": "Росарио",
+      "namedRegion": "Пампа и Ла-Плата",
+      "mapPoint": [
+        1673.13,
+        2085.09
+      ],
+      "snapPixels": 0.88
+    },
+    {
+      "id": "monterrey",
+      "name": "Монтеррей · Фундидора",
+      "coords": [
+        25.69,
+        -100.32
+      ],
+      "specialty": "steel",
+      "capacity": 7,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 2151,
+      "provinceName": "Монтеррей",
+      "namedRegion": "Северная Мексика",
+      "mapPoint": [
+        1055.66,
+        1123.85
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "montevideo",
+      "name": "Монтевидео",
+      "coords": [
+        -34.9,
+        -56.16
+      ],
+      "specialty": "food",
+      "capacity": 5,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 4367,
+      "provinceName": "Монтевидео",
+      "namedRegion": "Ла-Плата и Междуречье",
+      "mapPoint": [
+        1743.62,
+        2118.44
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "newcastle",
+      "name": "Ньюкасл · Новый Южный Уэльс",
+      "coords": [
+        -32.93,
+        151.78
+      ],
+      "specialty": "steel",
+      "capacity": 8,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 4452,
+      "provinceName": "Ньюкасл",
+      "namedRegion": "Восточная Австралия",
+      "mapPoint": [
+        4986.66,
+        2275.3
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "port-kembla",
+      "name": "Порт-Кембла",
+      "coords": [
+        -34.48,
+        150.9
+      ],
+      "specialty": "steel",
+      "capacity": 6,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 4467,
+      "provinceName": "Сидней",
+      "namedRegion": "Восточная Австралия",
+      "mapPoint": [
+        4972.81,
+        2302.05
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "melbourne",
+      "name": "Мельбурн",
+      "coords": [
+        -37.81,
+        144.96
+      ],
+      "specialty": "machines",
+      "capacity": 6,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 4485,
+      "provinceName": "Мельбурн",
+      "namedRegion": "Восточная Австралия",
+      "mapPoint": [
+        4880.62,
+        2362.38
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "auckland",
+      "name": "Окленд",
+      "coords": [
+        -36.85,
+        174.76
+      ],
+      "specialty": "food",
+      "capacity": 4,
+      "sources": [
+        "mineral1936"
+      ],
+      "note": "Условный промышленный комплекс эпохи. Рецепты и мощности — игровые, не исторические объёмы выпуска.",
+      "provinceId": 4472,
+      "provinceName": "Окленд",
+      "namedRegion": "Новая Зеландия",
+      "mapPoint": [
+        5347.02,
+        2321.82
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "boston",
+      "name": "Бостон · текстиль",
+      "coords": [
+        42.36,
+        -71.06
+      ],
+      "specialty": "textile",
+      "capacity": 6,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 992,
+      "provinceName": "Бостон",
+      "namedRegion": "Новая Англия и Атлантика",
+      "mapPoint": [
+        1511.9,
+        822.38
+      ],
+      "snapPixels": 0.97
+    },
+    {
+      "id": "new-york",
+      "name": "Нью-Йорк · мастерские",
+      "coords": [
+        40.71,
+        -74.01
+      ],
+      "specialty": "machines",
+      "capacity": 9,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 1086,
+      "provinceName": "Нью-Йорк",
+      "namedRegion": "Новая Англия и Атлантика",
+      "mapPoint": [
+        1465,
+        845
+      ],
+      "snapPixels": 0,
+      "bindingNote": "Привязано к одноимённой провинции: пиксельная карта схематична."
+    },
+    {
+      "id": "philadelphia",
+      "name": "Филадельфия · машиностроение",
+      "coords": [
+        39.95,
+        -75.16
+      ],
+      "specialty": "machines",
+      "capacity": 8,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 1158,
+      "provinceName": "Филадельфия",
+      "namedRegion": "Новая Англия и Атлантика",
+      "mapPoint": [
+        1438,
+        865
+      ],
+      "snapPixels": 0,
+      "bindingNote": "Привязано к одноимённой провинции: пиксельная карта схематична."
+    },
+    {
+      "id": "baltimore",
+      "name": "Балтимор · металлургия",
+      "coords": [
+        39.29,
+        -76.61
+      ],
+      "specialty": "steel",
+      "capacity": 8,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 1238,
+      "provinceName": "Балтимор",
+      "namedRegion": "Новая Англия и Атлантика",
+      "mapPoint": [
+        1424.24,
+        882.71
+      ],
+      "snapPixels": 0.75
+    },
+    {
+      "id": "st-louis",
+      "name": "Сент-Луис · машиностроение",
+      "coords": [
+        38.63,
+        -90.2
+      ],
+      "specialty": "machines",
+      "capacity": 6,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 1183,
+      "provinceName": "Сент-Луис",
+      "namedRegion": "Великие озёра",
+      "mapPoint": [
+        1210.83,
+        896.44
+      ],
+      "snapPixels": 0.94
+    },
+    {
+      "id": "cincinnati",
+      "name": "Цинциннати · мастерские",
+      "coords": [
+        39.1,
+        -84.51
+      ],
+      "specialty": "machines",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 1235,
+      "provinceName": "Цинциннати",
+      "namedRegion": "Великие озёра",
+      "mapPoint": [
+        1307,
+        883
+      ],
+      "snapPixels": 0,
+      "bindingNote": "Привязано к одноимённой провинции: пиксельная карта схематична."
+    },
+    {
+      "id": "milwaukee",
+      "name": "Милуоки · машиностроение",
+      "coords": [
+        43.04,
+        -87.91
+      ],
+      "specialty": "machines",
+      "capacity": 6,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 890,
+      "provinceName": "Милуоки",
+      "namedRegion": "Великие озёра",
+      "mapPoint": [
+        1246.9,
+        813.03
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "minneapolis",
+      "name": "Миннеаполис · мельницы",
+      "coords": [
+        44.98,
+        -93.27
+      ],
+      "specialty": "food",
+      "capacity": 8,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 753,
+      "provinceName": "Миннеаполис",
+      "namedRegion": "Великие озёра",
+      "mapPoint": [
+        1163.55,
+        774.33
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "kansas",
+      "name": "Канзас-Сити · пищевые предприятия",
+      "coords": [
+        39.1,
+        -94.58
+      ],
+      "specialty": "food",
+      "capacity": 6,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 1278,
+      "provinceName": "Канзас-Сити",
+      "namedRegion": "Великие равнины",
+      "mapPoint": [
+        1132,
+        908
+      ],
+      "snapPixels": 0,
+      "bindingNote": "Привязано к одноимённой провинции: пиксельная карта схематична."
+    },
+    {
+      "id": "omaha",
+      "name": "Омаха · переработка зерна",
+      "coords": [
+        41.26,
+        -95.94
+      ],
+      "specialty": "food",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 991,
+      "provinceName": "Омаха",
+      "namedRegion": "Великие равнины",
+      "mapPoint": [
+        1122.07,
+        845.94
+      ],
+      "snapPixels": 1.06
+    },
+    {
+      "id": "denver",
+      "name": "Денвер · мастерские",
+      "coords": [
+        39.74,
+        -104.99
+      ],
+      "specialty": "machines",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 1145,
+      "provinceName": "Денвер",
+      "namedRegion": "Скалистые горы",
+      "mapPoint": [
+        980.37,
+        874.24
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "san-francisco",
+      "name": "Сан-Франциско · судовые мастерские",
+      "coords": [
+        37.77,
+        -122.42
+      ],
+      "specialty": "machines",
+      "capacity": 6,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 1222,
+      "provinceName": "Сан-Франциско",
+      "namedRegion": "Тихоокеанское побережье",
+      "mapPoint": [
+        706.98,
+        907.84
+      ],
+      "snapPixels": 0.99
+    },
+    {
+      "id": "portland",
+      "name": "Портленд · лесопилки",
+      "coords": [
+        45.52,
+        -122.68
+      ],
+      "specialty": "sawmill",
+      "capacity": 6,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 757,
+      "provinceName": "Портленд",
+      "namedRegion": "Тихоокеанское побережье",
+      "mapPoint": [
+        704.62,
+        762.19
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "vancouver",
+      "name": "Ванкувер · лесопилки",
+      "coords": [
+        49.28,
+        -123.12
+      ],
+      "specialty": "sawmill",
+      "capacity": 7,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 494,
+      "provinceName": "Ванкувер",
+      "namedRegion": "Канадские Кордильеры",
+      "mapPoint": [
+        713,
+        670
+      ],
+      "snapPixels": 0,
+      "bindingNote": "Ванкувер в Канаде; одноимённая провинция на стороне США не используется."
+    },
+    {
+      "id": "winnipeg",
+      "name": "Виннипег · мельницы",
+      "coords": [
+        49.9,
+        -97.14
+      ],
+      "specialty": "food",
+      "capacity": 6,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 485,
+      "provinceName": "Виннипег",
+      "namedRegion": "Канадские прерии",
+      "mapPoint": [
+        1102.13,
+        674.83
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "edmonton",
+      "name": "Эдмонтон · пищевые предприятия",
+      "coords": [
+        53.55,
+        -113.49
+      ],
+      "specialty": "food",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 369,
+      "provinceName": "Эдмонтон",
+      "namedRegion": "Канадские Кордильеры",
+      "mapPoint": [
+        851.17,
+        599.94
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "quebec",
+      "name": "Квебек · лесопилки",
+      "coords": [
+        46.81,
+        -71.21
+      ],
+      "specialty": "sawmill",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 631,
+      "provinceName": "Квебек",
+      "namedRegion": "Квебек и Лабрадор",
+      "mapPoint": [
+        1507.84,
+        737.27
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "halifax",
+      "name": "Галифакс · судовые мастерские",
+      "coords": [
+        44.65,
+        -63.57
+      ],
+      "specialty": "machines",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 815,
+      "provinceName": "Галифакс",
+      "namedRegion": "Квебек и Лабрадор",
+      "mapPoint": [
+        1628.45,
+        778.17
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "mexico-city",
+      "name": "Мехико · текстиль",
+      "coords": [
+        19.43,
+        -99.13
+      ],
+      "specialty": "textile",
+      "capacity": 6,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2499,
+      "provinceName": "Мехико",
+      "namedRegion": "Центральная Мексика",
+      "mapPoint": [
+        1073.5,
+        1228.99
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "puebla",
+      "name": "Пуэбла · текстильные фабрики",
+      "coords": [
+        19.04,
+        -98.21
+      ],
+      "specialty": "textile",
+      "capacity": 6,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2556,
+      "provinceName": "Пуэбла-де-Сарагоса",
+      "namedRegion": "Центральная Мексика",
+      "mapPoint": [
+        1087.71,
+        1235.73
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "orizaba",
+      "name": "Орисаба · текстиль",
+      "coords": [
+        18.85,
+        -97.1
+      ],
+      "specialty": "textile",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2550,
+      "provinceName": "Веракрус",
+      "namedRegion": "Центральная Мексика",
+      "mapPoint": [
+        1104.93,
+        1239.21
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "guadalajara",
+      "name": "Гвадалахара · пищевые предприятия",
+      "coords": [
+        20.67,
+        -103.35
+      ],
+      "specialty": "food",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2369,
+      "provinceName": "Гвадалахара",
+      "namedRegion": "Центральная Мексика",
+      "mapPoint": [
+        1007.9,
+        1207.72
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "havana",
+      "name": "Гавана · пищевая переработка",
+      "coords": [
+        23.11,
+        -82.37
+      ],
+      "specialty": "food",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2320,
+      "provinceName": "Гавана",
+      "namedRegion": "Большие Антилы и Багамы",
+      "mapPoint": [
+        1333.85,
+        1169.34
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "san-jose",
+      "name": "Сан-Хосе · пищевые предприятия",
+      "coords": [
+        9.93,
+        -84.08
+      ],
+      "specialty": "food",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2982,
+      "provinceName": "Сан-Хосе",
+      "namedRegion": "Центральная Америка",
+      "mapPoint": [
+        1303.07,
+        1384.79
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "san-salvador",
+      "name": "Сан-Сальвадор · текстиль",
+      "coords": [
+        13.69,
+        -89.22
+      ],
+      "specialty": "textile",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2800,
+      "provinceName": "Сан-Сальвадор",
+      "namedRegion": "Центральная Америка",
+      "mapPoint": [
+        1226.03,
+        1325.81
+      ],
+      "snapPixels": 0.81
+    },
+    {
+      "id": "guatemala",
+      "name": "Гватемала · пищевые предприятия",
+      "coords": [
+        14.63,
+        -90.51
+      ],
+      "specialty": "food",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2797,
+      "provinceName": "Гватемала",
+      "namedRegion": "Центральная Америка",
+      "mapPoint": [
+        1199,
+        1315
+      ],
+      "snapPixels": 0,
+      "bindingNote": "Привязано к одноимённой провинции: пиксельная карта схематична."
+    },
+    {
+      "id": "santiago-cl",
+      "name": "Сантьяго · текстиль",
+      "coords": [
+        -33.45,
+        -70.67
+      ],
+      "specialty": "textile",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4342,
+      "provinceName": "Сантьяго",
+      "namedRegion": "Центральное Чили",
+      "mapPoint": [
+        1517.21,
+        2092.44
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "valparaiso",
+      "name": "Вальпараисо · судовые мастерские",
+      "coords": [
+        -33.05,
+        -71.61
+      ],
+      "specialty": "machines",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4320,
+      "provinceName": "Вальпараисо",
+      "namedRegion": "Центральное Чили",
+      "mapPoint": [
+        1502.48,
+        2085.35
+      ],
+      "snapPixels": 1.56
+    },
+    {
+      "id": "concepcion",
+      "name": "Консепсьон · текстиль",
+      "coords": [
+        -36.83,
+        -73.05
+      ],
+      "specialty": "textile",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4389,
+      "provinceName": "Консепсьон",
+      "namedRegion": "Центральное Чили",
+      "mapPoint": [
+        1480.04,
+        2151.99
+      ],
+      "snapPixels": 1.4
+    },
+    {
+      "id": "lima",
+      "name": "Лима · текстильные фабрики",
+      "coords": [
+        -12.05,
+        -77.04
+      ],
+      "specialty": "textile",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3784,
+      "provinceName": "Лима",
+      "namedRegion": "Центральные Анды",
+      "mapPoint": [
+        1418.04,
+        1735.88
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "arequipa",
+      "name": "Арекипа · мельницы",
+      "coords": [
+        -16.4,
+        -71.54
+      ],
+      "specialty": "food",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3871,
+      "provinceName": "Арекипа",
+      "namedRegion": "Центральные Анды",
+      "mapPoint": [
+        1503.35,
+        1806.5
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "guayaquil",
+      "name": "Гуаякиль · пищевая переработка",
+      "coords": [
+        -2.17,
+        -79.92
+      ],
+      "specialty": "food",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3369,
+      "provinceName": "Гуаякиль",
+      "namedRegion": "Центральные Анды",
+      "mapPoint": [
+        1371.33,
+        1577.96
+      ],
+      "snapPixels": 2.37
+    },
+    {
+      "id": "bogota",
+      "name": "Богота · текстиль",
+      "coords": [
+        4.71,
+        -74.07
+      ],
+      "specialty": "textile",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3118,
+      "provinceName": "Богота",
+      "namedRegion": "Северные Анды",
+      "mapPoint": [
+        1462.81,
+        1467.54
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "medellin",
+      "name": "Медельин · текстильные фабрики",
+      "coords": [
+        6.25,
+        -75.57
+      ],
+      "specialty": "textile",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3031,
+      "provinceName": "Медельин",
+      "namedRegion": "Северные Анды",
+      "mapPoint": [
+        1439.65,
+        1443.36
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "caracas",
+      "name": "Каракас · пищевая переработка",
+      "coords": [
+        10.48,
+        -66.9
+      ],
+      "specialty": "food",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2963,
+      "provinceName": "Каракас",
+      "namedRegion": "Карибское побережье и Ориноко",
+      "mapPoint": [
+        1580,
+        1374
+      ],
+      "snapPixels": 0,
+      "bindingNote": "Привязано к одноимённой провинции: пиксельная карта схематична."
+    },
+    {
+      "id": "curacao",
+      "name": "Кюрасао · нефтепереработка",
+      "coords": [
+        12.12,
+        -68.94
+      ],
+      "specialty": "refinery",
+      "capacity": 7,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2869,
+      "provinceName": "Малые Антильские острова — запад",
+      "namedRegion": "Карибское побережье и Ориноко",
+      "mapPoint": [
+        1534.91,
+        1334.28
+      ],
+      "snapPixels": 10.36
+    },
+    {
+      "id": "recife",
+      "name": "Ресифи · текстиль",
+      "coords": [
+        -8.05,
+        -34.88
+      ],
+      "specialty": "textile",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3664,
+      "provinceName": "Ресифи",
+      "namedRegion": "Северо-Восточная Бразилия",
+      "mapPoint": [
+        2073.52,
+        1671.12
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "salvador-br",
+      "name": "Салвадор · текстиль",
+      "coords": [
+        -12.98,
+        -38.5
+      ],
+      "specialty": "textile",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3800,
+      "provinceName": "Салвадор",
+      "namedRegion": "Северо-Восточная Бразилия",
+      "mapPoint": [
+        2017.85,
+        1750.5
+      ],
+      "snapPixels": 2.62
+    },
+    {
+      "id": "porto-alegre",
+      "name": "Порту-Алегри · пищевая переработка",
+      "coords": [
+        -30.03,
+        -51.23
+      ],
+      "specialty": "food",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4269,
+      "provinceName": "Порту-Алегри",
+      "namedRegion": "Южная Бразилия",
+      "mapPoint": [
+        1819.5,
+        2032.84
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "manaus",
+      "name": "Манаус · лесопилки",
+      "coords": [
+        -3.12,
+        -60.02
+      ],
+      "specialty": "sawmill",
+      "capacity": 2,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3336,
+      "provinceName": "Манаус",
+      "namedRegion": "Амазония",
+      "mapPoint": [
+        1681.87,
+        1595.83
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "cordoba-ar",
+      "name": "Кордова · мастерские",
+      "coords": [
+        -31.42,
+        -64.19
+      ],
+      "specialty": "machines",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4272,
+      "provinceName": "Кордова",
+      "namedRegion": "Пампа и Ла-Плата",
+      "mapPoint": [
+        1617.75,
+        2058.97
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "asuncion",
+      "name": "Асунсьон · лесопилки",
+      "coords": [
+        -25.26,
+        -57.58
+      ],
+      "specialty": "sawmill",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4072,
+      "provinceName": "Асунсьон",
+      "namedRegion": "Ла-Плата и Междуречье",
+      "mapPoint": [
+        1703,
+        1926
+      ],
+      "snapPixels": 0,
+      "bindingNote": "Привязано к одноимённой провинции: пиксельная карта схематична."
+    },
+    {
+      "id": "casablanca",
+      "name": "Касабланка · мельницы",
+      "coords": [
+        33.57,
+        -7.59
+      ],
+      "specialty": "food",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2365,
+      "provinceName": "Касабланка",
+      "namedRegion": "Магриб",
+      "mapPoint": [
+        2502.06,
+        1183.63
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "oran",
+      "name": "Оран · пищевая переработка",
+      "coords": [
+        35.7,
+        -0.64
+      ],
+      "specialty": "food",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2219,
+      "provinceName": "Оран",
+      "namedRegion": "Магриб",
+      "mapPoint": [
+        2608.39,
+        1143.72
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "algiers",
+      "name": "Алжир · пищевые предприятия",
+      "coords": [
+        36.75,
+        3.06
+      ],
+      "specialty": "food",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2149,
+      "provinceName": "Алжир",
+      "namedRegion": "Магриб",
+      "mapPoint": [
+        2665,
+        1124
+      ],
+      "snapPixels": 0,
+      "bindingNote": "Привязано к одноимённой провинции: пиксельная карта схематична."
+    },
+    {
+      "id": "tunis",
+      "name": "Тунис · текстиль",
+      "coords": [
+        36.81,
+        10.18
+      ],
+      "specialty": "textile",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2123,
+      "provinceName": "Тунис",
+      "namedRegion": "Магриб",
+      "mapPoint": [
+        2777.44,
+        1123.97
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "tripoli",
+      "name": "Триполи · мельницы",
+      "coords": [
+        32.89,
+        13.19
+      ],
+      "specialty": "food",
+      "capacity": 2,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2405,
+      "provinceName": "Триполи",
+      "namedRegion": "Магриб",
+      "mapPoint": [
+        2822.3,
+        1197.82
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "cairo",
+      "name": "Каир · текстильные фабрики",
+      "coords": [
+        30.04,
+        31.24
+      ],
+      "specialty": "textile",
+      "capacity": 6,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2582,
+      "provinceName": "Каир",
+      "namedRegion": "Египет и долина Нила",
+      "mapPoint": [
+        3105.31,
+        1244.91
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "mahalla",
+      "name": "Эль-Махалла · Миср",
+      "coords": [
+        30.97,
+        31.16
+      ],
+      "specialty": "textile",
+      "capacity": 6,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2540,
+      "provinceName": "Эль-Мансура",
+      "namedRegion": "Египет и долина Нила",
+      "mapPoint": [
+        3103.46,
+        1228.79
+      ],
+      "snapPixels": 0.96
+    },
+    {
+      "id": "khartoum",
+      "name": "Хартум · мельницы",
+      "coords": [
+        15.5,
+        32.56
+      ],
+      "specialty": "food",
+      "capacity": 2,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3151,
+      "provinceName": "Хартум",
+      "namedRegion": "Судан и верховья Нила",
+      "mapPoint": [
+        3130.6,
+        1489.27
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "dakar",
+      "name": "Дакар · пищевая переработка",
+      "coords": [
+        14.69,
+        -17.45
+      ],
+      "specialty": "food",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3207,
+      "provinceName": "Дакар",
+      "namedRegion": "Западная Африка",
+      "mapPoint": [
+        2350.72,
+        1501.79
+      ],
+      "snapPixels": 1.81
+    },
+    {
+      "id": "abidjan",
+      "name": "Абиджан · лесопилки",
+      "coords": [
+        5.35,
+        -4.01
+      ],
+      "specialty": "sawmill",
+      "capacity": 2,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3608,
+      "provinceName": "Абиджан",
+      "namedRegion": "Западная Африка",
+      "mapPoint": [
+        2558.39,
+        1655.0
+      ],
+      "snapPixels": 4.02
+    },
+    {
+      "id": "lagos",
+      "name": "Лагос · пищевые предприятия",
+      "coords": [
+        6.45,
+        3.4
+      ],
+      "specialty": "food",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3587,
+      "provinceName": "Лагос",
+      "namedRegion": "Нигерия и низовья Нигера",
+      "mapPoint": [
+        2672.17,
+        1635.24
+      ],
+      "snapPixels": 1.25
+    },
+    {
+      "id": "douala",
+      "name": "Дуала · лесопилки",
+      "coords": [
+        4.05,
+        9.7
+      ],
+      "specialty": "sawmill",
+      "capacity": 2,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3648,
+      "provinceName": "Дуала",
+      "namedRegion": "Камерун и Гвинея",
+      "mapPoint": [
+        2770.63,
+        1673.06
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "leopoldville",
+      "name": "Леопольдвиль · пищевая переработка",
+      "coords": [
+        -4.32,
+        15.31
+      ],
+      "specialty": "food",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3898,
+      "provinceName": "Леопольдвиль",
+      "namedRegion": "Бассейн Конго",
+      "mapPoint": [
+        2861.24,
+        1806.39
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "ndola",
+      "name": "Ндола · мельницы",
+      "coords": [
+        -12.97,
+        28.63
+      ],
+      "specialty": "food",
+      "capacity": 2,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4116,
+      "provinceName": "Китве-Нкана",
+      "namedRegion": "Ангола и Замбези",
+      "mapPoint": [
+        3066.66,
+        1944.33
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "bulawayo",
+      "name": "Булавайо · мастерские железной дороги",
+      "coords": [
+        -20.15,
+        28.58
+      ],
+      "specialty": "machines",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4309,
+      "provinceName": "Булавайо",
+      "namedRegion": "Родезия и Мозамбик",
+      "mapPoint": [
+        3067.51,
+        2060.28
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "salisbury",
+      "name": "Солсбери · пищевая переработка",
+      "coords": [
+        -17.83,
+        31.05
+      ],
+      "specialty": "food",
+      "capacity": 2,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4254,
+      "provinceName": "Солсбери",
+      "namedRegion": "Родезия и Мозамбик",
+      "mapPoint": [
+        3105.26,
+        2022.88
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "beira",
+      "name": "Бейра · лесопилки",
+      "coords": [
+        -19.84,
+        34.84
+      ],
+      "specialty": "sawmill",
+      "capacity": 2,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4271,
+      "provinceName": "Бейра",
+      "namedRegion": "Родезия и Мозамбик",
+      "mapPoint": [
+        3161.92,
+        2059.28
+      ],
+      "snapPixels": 0.96
+    },
+    {
+      "id": "maputo",
+      "name": "Лоренсу-Маркиш · мастерские порта",
+      "coords": [
+        -25.97,
+        32.58
+      ],
+      "specialty": "machines",
+      "capacity": 2,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4393,
+      "provinceName": "Лоренсу-Маркиш",
+      "namedRegion": "Родезия и Мозамбик",
+      "mapPoint": [
+        3134.91,
+        2159.15
+      ],
+      "snapPixels": 6.53
+    },
+    {
+      "id": "nairobi",
+      "name": "Найроби · мельницы",
+      "coords": [
+        -1.29,
+        36.82
+      ],
+      "specialty": "food",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3780,
+      "provinceName": "Найроби",
+      "namedRegion": "Восточная Африка",
+      "mapPoint": [
+        3194.01,
+        1759.82
+      ],
+      "snapPixels": 1.0
+    },
+    {
+      "id": "mombasa",
+      "name": "Момбаса · портовые мастерские",
+      "coords": [
+        -4.04,
+        39.67
+      ],
+      "specialty": "machines",
+      "capacity": 2,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3882,
+      "provinceName": "Момбаса",
+      "namedRegion": "Восточная Африка",
+      "mapPoint": [
+        3237.03,
+        1803.37
+      ],
+      "snapPixels": 1.1
+    },
+    {
+      "id": "addis",
+      "name": "Аддис-Абеба · мельницы",
+      "coords": [
+        9.03,
+        38.75
+      ],
+      "specialty": "food",
+      "capacity": 2,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3430,
+      "provinceName": "Аддис-Абеба",
+      "namedRegion": "Африканский Рог",
+      "mapPoint": [
+        3225.62,
+        1594.27
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "capetown",
+      "name": "Кейптаун · пищевые предприятия",
+      "coords": [
+        -33.92,
+        18.42
+      ],
+      "specialty": "food",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4441,
+      "provinceName": "Кейптаун",
+      "namedRegion": "Южная Африка",
+      "mapPoint": [
+        2907.97,
+        2300.29
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "durban",
+      "name": "Дурбан · пищевая переработка",
+      "coords": [
+        -29.86,
+        31.02
+      ],
+      "specialty": "food",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4433,
+      "provinceName": "Питермарицбург",
+      "namedRegion": "Южная Африка",
+      "mapPoint": [
+        3115.1,
+        2225.19
+      ],
+      "snapPixels": 11.0
+    },
+    {
+      "id": "port-elizabeth",
+      "name": "Порт-Элизабет · сборочные мастерские",
+      "coords": [
+        -33.96,
+        25.6
+      ],
+      "specialty": "machines",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4457,
+      "provinceName": "Порт-Элизабет",
+      "namedRegion": "Южная Африка",
+      "mapPoint": [
+        3021.36,
+        2297.09
+      ],
+      "snapPixels": 3.11
+    },
+    {
+      "id": "tananarive",
+      "name": "Тананариве · мельницы",
+      "coords": [
+        -18.88,
+        47.51
+      ],
+      "specialty": "food",
+      "capacity": 2,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4226,
+      "provinceName": "Тананариве",
+      "namedRegion": "Мадагаскар и Коморы",
+      "mapPoint": [
+        3350,
+        2027
+      ],
+      "snapPixels": 0,
+      "bindingNote": "Привязано к одноимённой провинции: пиксельная карта схематична."
+    },
+    {
+      "id": "istanbul",
+      "name": "Стамбул · текстиль",
+      "coords": [
+        41.01,
+        28.98
+      ],
+      "specialty": "textile",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 1849,
+      "provinceName": "Стамбул",
+      "namedRegion": "Западная Анатолия",
+      "mapPoint": [
+        3074.88,
+        1046.59
+      ],
+      "snapPixels": 1.26
+    },
+    {
+      "id": "kayseri",
+      "name": "Кайсери · текстильный комбинат",
+      "coords": [
+        38.72,
+        35.48
+      ],
+      "specialty": "textile",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 1976,
+      "provinceName": "Кайсери",
+      "namedRegion": "Западная Анатолия",
+      "mapPoint": [
+        3173.16,
+        1088.37
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "aleppo",
+      "name": "Алеппо · текстиль",
+      "coords": [
+        36.2,
+        37.16
+      ],
+      "specialty": "textile",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2146,
+      "provinceName": "Алеппо",
+      "namedRegion": "Левант",
+      "mapPoint": [
+        3198.31,
+        1132.9
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "baghdad",
+      "name": "Багдад · мельницы",
+      "coords": [
+        33.31,
+        44.37
+      ],
+      "specialty": "food",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2371,
+      "provinceName": "Багдад",
+      "namedRegion": "Месопотамия",
+      "mapPoint": [
+        3312.6,
+        1185.24
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "tehran",
+      "name": "Тегеран · текстиль",
+      "coords": [
+        35.69,
+        51.39
+      ],
+      "specialty": "textile",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2200,
+      "provinceName": "Тегеран",
+      "namedRegion": "Иранское нагорье",
+      "mapPoint": [
+        3428.35,
+        1141.42
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "isfahan",
+      "name": "Исфахан · текстиль",
+      "coords": [
+        32.65,
+        51.68
+      ],
+      "specialty": "textile",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2361,
+      "provinceName": "Исфахан",
+      "namedRegion": "Иранское нагорье",
+      "mapPoint": [
+        3430.5,
+        1197.78
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "tashkent",
+      "name": "Ташкент · текстиль",
+      "coords": [
+        41.3,
+        69.24
+      ],
+      "specialty": "textile",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 1776,
+      "provinceName": "Ташкент",
+      "namedRegion": "Туркестан и Каракумы",
+      "mapPoint": [
+        3700.06,
+        1039.45
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "fergana",
+      "name": "Фергана · текстиль",
+      "coords": [
+        40.38,
+        71.78
+      ],
+      "specialty": "textile",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 1883,
+      "provinceName": "Фергана",
+      "namedRegion": "Туркестан и Каракумы",
+      "mapPoint": [
+        3739.19,
+        1056.3
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "omsk",
+      "name": "Омск · пищевые предприятия",
+      "coords": [
+        54.99,
+        73.37
+      ],
+      "specialty": "food",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 732,
+      "provinceName": "Омск",
+      "namedRegion": "Западная Сибирь",
+      "mapPoint": [
+        3767.33,
+        764.65
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "novosibirsk",
+      "name": "Новосибирск · мастерские",
+      "coords": [
+        55.03,
+        82.92
+      ],
+      "specialty": "machines",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 739,
+      "provinceName": "Новосибирск",
+      "namedRegion": "Западная Сибирь",
+      "mapPoint": [
+        3915.79,
+        763.97
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "irkutsk",
+      "name": "Иркутск · лесопилки",
+      "coords": [
+        52.29,
+        104.28
+      ],
+      "specialty": "sawmill",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 783,
+      "provinceName": "Иркутск",
+      "namedRegion": "Восточная Сибирь",
+      "mapPoint": [
+        4247.84,
+        821.2
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "khabarovsk",
+      "name": "Хабаровск · мастерские",
+      "coords": [
+        48.48,
+        135.07
+      ],
+      "specialty": "machines",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 1319,
+      "provinceName": "Хабаровск",
+      "namedRegion": "Приамурье и Приморье",
+      "mapPoint": [
+        4731.24,
+        903.09
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "vladivostok",
+      "name": "Владивосток · судовые мастерские",
+      "coords": [
+        43.12,
+        131.89
+      ],
+      "specialty": "machines",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 1685,
+      "provinceName": "Владивосток",
+      "namedRegion": "Приамурье и Приморье",
+      "mapPoint": [
+        4678.43,
+        1004.44
+      ],
+      "snapPixels": 0.72
+    },
+    {
+      "id": "karachi",
+      "name": "Карачи · пищевая переработка",
+      "coords": [
+        24.86,
+        67.01
+      ],
+      "specialty": "food",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2775,
+      "provinceName": "Карачи",
+      "namedRegion": "Белуджистан",
+      "mapPoint": [
+        3666.04,
+        1335.31
+      ],
+      "snapPixels": 2.98
+    },
+    {
+      "id": "kanpur",
+      "name": "Канпур · текстиль",
+      "coords": [
+        26.45,
+        80.33
+      ],
+      "specialty": "textile",
+      "capacity": 6,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2762,
+      "provinceName": "Канпур",
+      "namedRegion": "Раджпутана и Центральная Индия",
+      "mapPoint": [
+        3871.5,
+        1305.72
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "madras",
+      "name": "Мадрас · текстиль",
+      "coords": [
+        13.08,
+        80.27
+      ],
+      "specialty": "textile",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3267,
+      "provinceName": "Мадрас",
+      "namedRegion": "Декан и Южная Индия",
+      "mapPoint": [
+        3869.25,
+        1535.73
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "coimbatore",
+      "name": "Коимбатур · текстиль",
+      "coords": [
+        11.02,
+        76.96
+      ],
+      "specialty": "textile",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3299,
+      "provinceName": "Коимбатур",
+      "namedRegion": "Декан и Южная Индия",
+      "mapPoint": [
+        3816.87,
+        1570.03
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "colombo",
+      "name": "Коломбо · портовые мастерские",
+      "coords": [
+        6.93,
+        79.86
+      ],
+      "specialty": "machines",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3574,
+      "provinceName": "Коломбо",
+      "namedRegion": "Цейлон и Мальдивы",
+      "mapPoint": [
+        3869.02,
+        1635.65
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "bangkok",
+      "name": "Бангкок · рисовые мельницы",
+      "coords": [
+        13.76,
+        100.5
+      ],
+      "specialty": "food",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3257,
+      "provinceName": "Бангкок",
+      "namedRegion": "Сиам",
+      "mapPoint": [
+        4187.9,
+        1519.09
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "saigon",
+      "name": "Сайгон · пищевая переработка",
+      "coords": [
+        10.78,
+        106.7
+      ],
+      "specialty": "food",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3389,
+      "provinceName": "Сайгон",
+      "namedRegion": "Индокитай",
+      "mapPoint": [
+        4283.89,
+        1569.36
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "haiphong",
+      "name": "Хайфон · портовые мастерские",
+      "coords": [
+        20.84,
+        106.69
+      ],
+      "specialty": "machines",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2967,
+      "provinceName": "Хайфон",
+      "namedRegion": "Индокитай",
+      "mapPoint": [
+        4286.81,
+        1399.42
+      ],
+      "snapPixels": 1.85
+    },
+    {
+      "id": "penang",
+      "name": "Пинанг · пищевая переработка",
+      "coords": [
+        5.41,
+        100.34
+      ],
+      "specialty": "food",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3645,
+      "provinceName": "Джорджтаун",
+      "namedRegion": "Малайя",
+      "mapPoint": [
+        4186.81,
+        1654.94
+      ],
+      "snapPixels": 1.19
+    },
+    {
+      "id": "singapore",
+      "name": "Сингапур · судовые мастерские",
+      "coords": [
+        1.29,
+        103.85
+      ],
+      "specialty": "machines",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3757,
+      "provinceName": "Джохор-Бару",
+      "namedRegion": "Малайя",
+      "mapPoint": [
+        4241.08,
+        1720.69
+      ],
+      "snapPixels": 0.7
+    },
+    {
+      "id": "batavia",
+      "name": "Батавия · пищевые предприятия",
+      "coords": [
+        -6.21,
+        106.85
+      ],
+      "specialty": "food",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3958,
+      "provinceName": "Батавия",
+      "namedRegion": "Ява",
+      "mapPoint": [
+        4276,
+        1839
+      ],
+      "snapPixels": 0,
+      "bindingNote": "Привязано к одноимённой провинции: пиксельная карта схематична."
+    },
+    {
+      "id": "surabaya",
+      "name": "Сурабая · судовые мастерские",
+      "coords": [
+        -7.25,
+        112.75
+      ],
+      "specialty": "machines",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3972,
+      "provinceName": "Сурабая",
+      "namedRegion": "Ява",
+      "mapPoint": [
+        4373.75,
+        1850.27
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "semarang",
+      "name": "Семаранг · пищевая переработка",
+      "coords": [
+        -6.97,
+        110.42
+      ],
+      "specialty": "food",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3969,
+      "provinceName": "Семаранг",
+      "namedRegion": "Ява",
+      "mapPoint": [
+        4338.22,
+        1845.83
+      ],
+      "snapPixels": 1.19
+    },
+    {
+      "id": "manila",
+      "name": "Манила · текстиль",
+      "coords": [
+        14.6,
+        120.98
+      ],
+      "specialty": "textile",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3243,
+      "provinceName": "Манила",
+      "namedRegion": "Филиппины",
+      "mapPoint": [
+        4513.08,
+        1510.91
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "cebu",
+      "name": "Себу · пищевая переработка",
+      "coords": [
+        10.32,
+        123.89
+      ],
+      "specialty": "food",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 3409,
+      "provinceName": "Себу",
+      "namedRegion": "Филиппины",
+      "mapPoint": [
+        4553.1,
+        1574.07
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "hongkong",
+      "name": "Гонконг · судовые мастерские",
+      "coords": [
+        22.3,
+        114.17
+      ],
+      "specialty": "machines",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2948,
+      "provinceName": "Шэньчжэнь",
+      "namedRegion": "Южный Китай",
+      "mapPoint": [
+        4403.74,
+        1378.36
+      ],
+      "snapPixels": 3.79
+    },
+    {
+      "id": "canton",
+      "name": "Кантон · текстиль",
+      "coords": [
+        23.13,
+        113.26
+      ],
+      "specialty": "textile",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2910,
+      "provinceName": "Кантон",
+      "namedRegion": "Южный Китай",
+      "mapPoint": [
+        4389.62,
+        1364.1
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "tsingtao",
+      "name": "Циндао · текстиль",
+      "coords": [
+        36.07,
+        120.38
+      ],
+      "specialty": "textile",
+      "capacity": 5,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2158,
+      "provinceName": "Циндао",
+      "namedRegion": "Северный Китай",
+      "mapPoint": [
+        4497.43,
+        1134.27
+      ],
+      "snapPixels": 1.39
+    },
+    {
+      "id": "taiyuan",
+      "name": "Тайюань · металлургия",
+      "coords": [
+        37.87,
+        112.55
+      ],
+      "specialty": "steel",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2049,
+      "provinceName": "Тайюань",
+      "namedRegion": "Северный Китай",
+      "mapPoint": [
+        4375.19,
+        1103.83
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "harbin",
+      "name": "Харбин · мастерские железной дороги",
+      "coords": [
+        45.8,
+        126.54
+      ],
+      "specialty": "machines",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 1482,
+      "provinceName": "Харбин",
+      "namedRegion": "Маньчжурия",
+      "mapPoint": [
+        4595.37,
+        951.78
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "seoul",
+      "name": "Кэйдзё · текстиль",
+      "coords": [
+        37.57,
+        126.98
+      ],
+      "specialty": "textile",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2060,
+      "provinceName": "Сеул",
+      "namedRegion": "Корея",
+      "mapPoint": [
+        4602.31,
+        1107.3
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "busan",
+      "name": "Фусан · пищевая переработка",
+      "coords": [
+        35.18,
+        129.08
+      ],
+      "specialty": "food",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2253,
+      "provinceName": "Пусан",
+      "namedRegion": "Корея",
+      "mapPoint": [
+        4634.5,
+        1152.0
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "taipei",
+      "name": "Тайхоку · пищевая переработка",
+      "coords": [
+        25.03,
+        121.57
+      ],
+      "specialty": "food",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2832,
+      "provinceName": "Тайбэй",
+      "namedRegion": "Формоза",
+      "mapPoint": [
+        4518.62,
+        1333.52
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "adelaide",
+      "name": "Аделаида · мастерские",
+      "coords": [
+        -34.93,
+        138.6
+      ],
+      "specialty": "machines",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4462,
+      "provinceName": "Аделаида",
+      "namedRegion": "Восточная Австралия",
+      "mapPoint": [
+        4782.73,
+        2317.42
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "brisbane",
+      "name": "Брисбен · пищевые предприятия",
+      "coords": [
+        -27.47,
+        153.03
+      ],
+      "specialty": "food",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4411,
+      "provinceName": "Брисбен",
+      "namedRegion": "Восточная Австралия",
+      "mapPoint": [
+        5007.19,
+        2184.77
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "perth",
+      "name": "Перт · мастерские",
+      "coords": [
+        -31.95,
+        115.86
+      ],
+      "specialty": "machines",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4444,
+      "provinceName": "Перт",
+      "namedRegion": "Западная Австралия",
+      "mapPoint": [
+        4428.77,
+        2261.68
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "launceston",
+      "name": "Лонсестон · текстиль",
+      "coords": [
+        -41.44,
+        147.14
+      ],
+      "specialty": "textile",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4516,
+      "provinceName": "Хобарт",
+      "namedRegion": "Тасмания",
+      "mapPoint": [
+        4913.74,
+        2423.33
+      ],
+      "snapPixels": 5.67
+    },
+    {
+      "id": "hobart",
+      "name": "Хобарт · лесопилки",
+      "coords": [
+        -42.88,
+        147.33
+      ],
+      "specialty": "sawmill",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4516,
+      "provinceName": "Хобарт",
+      "namedRegion": "Тасмания",
+      "mapPoint": [
+        4906,
+        2438
+      ],
+      "snapPixels": 0,
+      "bindingNote": "Привязано к одноимённой провинции: пиксельная карта схематична."
+    },
+    {
+      "id": "christchurch",
+      "name": "Крайстчерч · мельницы",
+      "coords": [
+        -43.53,
+        172.64
+      ],
+      "specialty": "food",
+      "capacity": 4,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4508,
+      "provinceName": "Крайстчерч",
+      "namedRegion": "Новая Зеландия",
+      "mapPoint": [
+        5313.0,
+        2441.04
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "wellington",
+      "name": "Веллингтон · мастерские",
+      "coords": [
+        -41.29,
+        174.78
+      ],
+      "specialty": "machines",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4498,
+      "provinceName": "Веллингтон",
+      "namedRegion": "Новая Зеландия",
+      "mapPoint": [
+        5348.09,
+        2397.95
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "suva",
+      "name": "Сува · судовые мастерские",
+      "coords": [
+        -18.14,
+        178.44
+      ],
+      "specialty": "machines",
+      "capacity": 1,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 4258,
+      "provinceName": "Сува",
+      "namedRegion": "Меланезия",
+      "mapPoint": [
+        5404.61,
+        2028.06
+      ],
+      "snapPixels": 0.61
+    },
+    {
+      "id": "honolulu",
+      "name": "Гонолулу · портовые мастерские",
+      "coords": [
+        21.31,
+        -157.86
+      ],
+      "specialty": "machines",
+      "capacity": 3,
+      "sources": [
+        "yearbook"
+      ],
+      "note": "Условный региональный узел середины 1930-х: совокупность фабрик, мельниц или мастерских. Это игровое обобщение экономической географии, не утверждение о мощности конкретного завода.",
+      "provinceId": 2995,
+      "provinceName": "Оаху",
+      "namedRegion": "Гавайи",
+      "mapPoint": [
+        155.05,
+        1369.89
+      ],
+      "snapPixels": 16.38
+    }
+  ],
+  "depositBonusPercent": 100,
+  "industrialBonusPercent": 50,
+  "industrialInputSavingPercent": 10,
+  "notes": [
+    "Самостоятельная расстановка: исходные маркеры не копируются безусловно. Поздние и непроверенные узлы исключены; часть местоположений уточнена.",
+    "Географический ориентир — середина 1930-х, включая предприятия, запущенные в течение 1936 года.",
+    "Каждый промышленный центр получает отдельный локальный бонус инфраструктуры и конкретные производства с расходами по базовым чертежам.",
+    "Числа выпуска и бонусов — игровые коэффициенты, не реконструкция мировой экономики или запасов сырья.",
+    "Ссылка на общий минералогический справочник поддерживает контекст эпохи; не означает отдельной архивной проверки каждого малого объекта.",
+    "Добавлены региональные центры на всех обитаемых материках; небольшие узлы — пищевые предприятия, текстиль, лесопилки и мастерские, без вымышленных гигантских металлургических комбинатов."
+  ]
+}

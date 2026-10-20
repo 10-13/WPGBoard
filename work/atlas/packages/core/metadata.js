@@ -14,7 +14,7 @@
     function treeNodes(nodes, depth = 0, count = { value: 0 }) {
       if (!Array.isArray(nodes) || depth > 32) throw new Error('Нужен массив узлов дерева глубиной до 32.'); const ids = new Set();
       return nodes.map(raw => {
-        if (!object(raw) || typeof raw.id !== 'string' || !raw.id || raw.id.length > 2048 || ids.has(raw.id) || ++count.value > 10000) throw new Error('Узлам нужны уникальные ID; максимум 10000 узлов.'); ids.add(raw.id);
+        if (!object(raw) || typeof raw.id !== 'string' || !raw.id || raw.id.length > 2048 || ids.has(raw.id) || ++count.value > 100000) throw new Error('Узлам нужны уникальные ID; максимум 100000 узлов.'); ids.add(raw.id);
         const node = clone(raw); node.title = node.title === undefined ? node.id : node.title;
         if (typeof node.title !== 'string' || (node.unit !== undefined && typeof node.unit !== 'string')) throw new Error('Заголовок и единицы узла должны быть строками.');
         if (Object.hasOwn(node, 'children')) { if (Object.hasOwn(node, 'value')) throw new Error('Папка не может одновременно быть результатом.'); node.type = 'folder'; node.children = treeNodes(node.children, depth + 1, count); }

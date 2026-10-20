@@ -22,8 +22,10 @@
     const render = (node, container, path) => {
       const nextPath = [...path, node.id], key = JSON.stringify(nextPath);
       if (node.type === 'folder') {
-        const group = createDataGroup(node.title, { id: node.id, open: expanded.has(key) ? expanded.get(key) : path.length < 3, onToggle: open => expanded.set(key, open) });
-        for (const child of node.children) render(child, group.body, nextPath); container.append(group.element);
+        let mounted = false;
+        const mount = () => { if (mounted) return; mounted = true; for (const child of node.children) render(child, group.body, nextPath); };
+        const group = createDataGroup(node.title, { id: node.id, open: expanded.has(key) ? expanded.get(key) : node.defaultOpen ?? path.length < 3, onToggle: open => { expanded.set(key, open); if (open) mount(); } });
+        if (group.element.open) mount(); container.append(group.element);
       } else container.append(createDataRow(node.title, formatValue(node), { id: node.id }));
     };
     for (const node of nodes) render(node, tree, []); parent.append(tree); return tree;

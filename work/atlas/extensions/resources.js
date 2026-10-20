@@ -8,7 +8,8 @@
   function drawResourceMarkers(context, regions, tiles) {
     for (const [key, tile] of Object.entries(tiles || {})) {
       const region = regions.get(Number(key)); if (!region) continue;
-      const entries = Object.values(tile.entries || {}).filter(e => e.source === 'resources'), hasProduction = entries.some(e => e.kind === 'production'), hasPoint = entries.some(e => e.kind === 'resource-point');
+      // Provincial baseline is background output, not a discrete factory.
+      const entries = Object.values(tile.entries || {}).filter(e => e.source === 'resources'), hasProduction = entries.some(e => e.kind === 'production' && e.stats['resource.role'] !== 'baseline'), hasPoint = entries.some(e => e.kind === 'resource-point');
       const [cx, cy] = region.anchor;
       if (hasProduction) {
         const x = cx - (hasPoint ? 9 : 0), y = cy; context.fillStyle = '#101c22'; context.fillRect(x - 7, y - 4, 15, 11); context.fillRect(x - 6, y - 9, 5, 6);
@@ -99,7 +100,7 @@
               actions.append(button('Изменить', () => edit(id, entry.kind, entry), { className: 'small' }), button('Метаданные', () => openData('metadata:open', { regionId: id }), { className: 'small' }), button('Удалить', protect(() => model.remove(id, entry.id)), { className: 'small' })); card.append(actions); pane.append(group.element);
             }
             if (!model.list(id).length) pane.append(el('p', 'muted', 'Объектов пока нет. Ресурсная точка усиливает подходящие производства, своего выпуска у неё нет.'));
-            pane.append(el('p', 'muted small', 'На карте: золотой завод — производство, бирюзовый ромб — ресурсная точка.'));
+            pane.append(el('p', 'muted small', 'На карте: золотой завод — предприятие, бирюзовый ромб — ресурсная точка. Фоновый выпуск — без значка.'));
           };
           const update = e => { selected = e.id; draw(); }; tab.onRegionClick(update);
           ui.input.on('selection:change', e => { if (!e.fromClick) update(e); }, { signal: scope.signal }); state.on('change', draw, { signal: scope.signal }); state.on('map:loaded', draw, { signal: scope.signal }); draw();

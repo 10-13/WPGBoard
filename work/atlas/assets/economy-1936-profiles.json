@@ -1,0 +1,837 @@
+{
+  "version": 1,
+  "units": "ед./ход",
+  "areaScaling": {
+    "referencePixels": 400,
+    "exponent": 0.5,
+    "minimum": 0.05,
+    "maximum": 4
+  },
+  "profiles": {
+    "ice": {
+      "description": "Полярная суша: лёд как источник воды; без вымышленной металлургии.",
+      "resources": {
+        "water": 0.4
+      }
+    },
+    "tundra": {
+      "description": "Северные редколесья и ограниченное водоснабжение.",
+      "resources": {
+        "timber": 0.35,
+        "water": 1.5
+      }
+    },
+    "taiga": {
+      "description": "Лесное хозяйство, водные ресурсы и небольшое земледелие.",
+      "resources": {
+        "timber": 7,
+        "water": 4,
+        "grain": 0.8
+      }
+    },
+    "temperate": {
+      "description": "Земледелие и лесное хозяйство умеренного пояса.",
+      "resources": {
+        "grain": 5,
+        "timber": 3,
+        "water": 4
+      }
+    },
+    "plains": {
+      "description": "Зерновой сельскохозяйственный пояс.",
+      "resources": {
+        "grain": 9,
+        "timber": 1,
+        "water": 4
+      }
+    },
+    "industrial-coal": {
+      "description": "Общая топливно-сырьевая база старых углепромышленных районов.",
+      "resources": {
+        "coal": 4,
+        "iron-ore": 1.5,
+        "grain": 2.5,
+        "water": 4
+      }
+    },
+    "industrial-mixed": {
+      "description": "Смешанная сырьевая и аграрная база промышленного района.",
+      "resources": {
+        "coal": 1.5,
+        "iron-ore": 1,
+        "grain": 4,
+        "timber": 2,
+        "water": 4
+      }
+    },
+    "mountain-forest": {
+      "description": "Горные леса и небольшая рудная база; без привязки к конкретному руднику.",
+      "resources": {
+        "timber": 3,
+        "iron-ore": 1,
+        "water": 4
+      }
+    },
+    "mountain-dry": {
+      "description": "Сухие горные области: ограниченное земледелие, руда и водосбор.",
+      "resources": {
+        "iron-ore": 0.6,
+        "grain": 1,
+        "water": 1
+      }
+    },
+    "mediterranean": {
+      "description": "Средиземноморское земледелие и лесное хозяйство.",
+      "resources": {
+        "grain": 4,
+        "timber": 1.2,
+        "water": 2
+      }
+    },
+    "steppe": {
+      "description": "Степное земледелие; ограниченная лесная база.",
+      "resources": {
+        "grain": 6,
+        "water": 2
+      }
+    },
+    "desert": {
+      "description": "Пустынные районы: небольшой условный водосбор оазисов.",
+      "resources": {
+        "water": 0.25
+      }
+    },
+    "dry-crops": {
+      "description": "Сухое земледелие и хлопководство при орошении.",
+      "resources": {
+        "grain": 2,
+        "cotton": 2.5,
+        "water": 1.5
+      }
+    },
+    "monsoon": {
+      "description": "Рисово-зерновое хозяйство муссонной Азии, лес и водоснабжение.",
+      "resources": {
+        "grain": 7,
+        "timber": 2,
+        "water": 5
+      }
+    },
+    "cotton": {
+      "description": "Хлопководческий и зерновой пояс.",
+      "resources": {
+        "cotton": 6,
+        "grain": 4,
+        "water": 3
+      }
+    },
+    "tropical-forest": {
+      "description": "Тропические леса, сельское хозяйство и водные ресурсы.",
+      "resources": {
+        "timber": 7,
+        "grain": 2,
+        "water": 5
+      }
+    },
+    "rubber": {
+      "description": "Плантационный каучук, тропическая древесина и сельское хозяйство.",
+      "resources": {
+        "rubber": 4,
+        "timber": 3,
+        "grain": 3,
+        "water": 5
+      }
+    },
+    "island-tropical": {
+      "description": "Малые тропические острова: земледелие, лес и сбор дождевой воды.",
+      "resources": {
+        "grain": 1.5,
+        "timber": 0.8,
+        "water": 1
+      }
+    },
+    "savanna": {
+      "description": "Саванное земледелие, хлопок и ограниченное лесное хозяйство.",
+      "resources": {
+        "grain": 3,
+        "cotton": 1.5,
+        "timber": 1,
+        "water": 2
+      }
+    },
+    "alloy-belt": {
+      "description": "Южноафриканская рудная и угольная база с земледелием.",
+      "resources": {
+        "alloy-ore": 1.5,
+        "coal": 2,
+        "grain": 2,
+        "water": 2
+      }
+    },
+    "metalliferous": {
+      "description": "Уральская рудная и лесная база; редкие руды сосредоточены в отдельных точках.",
+      "resources": {
+        "iron-ore": 3,
+        "coal": 1,
+        "timber": 3,
+        "water": 3
+      }
+    }
+  },
+  "regions": {
+    "geo-001": {
+      "name": "Алтай и Семиречье",
+      "profile": "steppe"
+    },
+    "geo-002": {
+      "name": "Альпы",
+      "profile": "mountain-forest"
+    },
+    "geo-003": {
+      "name": "Аляска и Алеуты",
+      "profile": "tundra"
+    },
+    "geo-004": {
+      "name": "Амазония",
+      "profile": "tropical-forest"
+    },
+    "geo-005": {
+      "name": "Американский Юг",
+      "profile": "cotton"
+    },
+    "geo-006": {
+      "name": "Ангола и Замбези",
+      "profile": "savanna"
+    },
+    "geo-007": {
+      "name": "Антарктида",
+      "profile": "ice"
+    },
+    "geo-008": {
+      "name": "Аравия",
+      "profile": "desert"
+    },
+    "geo-009": {
+      "name": "Атакама",
+      "profile": "desert"
+    },
+    "geo-010": {
+      "name": "Атлантическая Канада",
+      "profile": "taiga"
+    },
+    "geo-011": {
+      "name": "Атлантические острова",
+      "profile": "island-tropical"
+    },
+    "geo-012": {
+      "name": "Афганистан",
+      "profile": "mountain-dry"
+    },
+    "geo-013": {
+      "name": "Африканский Рог",
+      "profile": "savanna"
+    },
+    "geo-014": {
+      "name": "Балканы",
+      "profile": "mediterranean"
+    },
+    "geo-015": {
+      "name": "Бассейн Конго",
+      "profile": "tropical-forest"
+    },
+    "geo-016": {
+      "name": "Белоруссия и Полесье",
+      "profile": "temperate"
+    },
+    "geo-017": {
+      "name": "Белуджистан",
+      "profile": "desert"
+    },
+    "geo-018": {
+      "name": "Бенгалия и Ассам",
+      "profile": "monsoon"
+    },
+    "geo-019": {
+      "name": "Бирма",
+      "profile": "monsoon"
+    },
+    "geo-020": {
+      "name": "Богемия и Моравия",
+      "profile": "industrial-coal"
+    },
+    "geo-021": {
+      "name": "Большие Антилы и Багамы",
+      "profile": "island-tropical"
+    },
+    "geo-022": {
+      "name": "Борнео",
+      "profile": "rubber"
+    },
+    "geo-023": {
+      "name": "Бразильское нагорье",
+      "profile": "tropical-forest"
+    },
+    "geo-024": {
+      "name": "Британские острова",
+      "profile": "industrial-coal"
+    },
+    "geo-025": {
+      "name": "Великие озёра",
+      "profile": "industrial-mixed"
+    },
+    "geo-026": {
+      "name": "Великие равнины",
+      "profile": "plains"
+    },
+    "geo-027": {
+      "name": "Внутренняя Монголия",
+      "profile": "steppe"
+    },
+    "geo-028": {
+      "name": "Восточная Австралия",
+      "profile": "industrial-mixed"
+    },
+    "geo-029": {
+      "name": "Восточная Анатолия",
+      "profile": "mountain-dry"
+    },
+    "geo-030": {
+      "name": "Восточная Африка",
+      "profile": "savanna"
+    },
+    "geo-031": {
+      "name": "Восточная Пруссия",
+      "profile": "temperate"
+    },
+    "geo-032": {
+      "name": "Восточная Сибирь",
+      "profile": "taiga"
+    },
+    "geo-033": {
+      "name": "Гавайи",
+      "profile": "island-tropical"
+    },
+    "geo-034": {
+      "name": "Галиция и Волынь",
+      "profile": "temperate"
+    },
+    "geo-035": {
+      "name": "Ганьсу и Цинхай",
+      "profile": "mountain-dry"
+    },
+    "geo-036": {
+      "name": "Гвиана",
+      "profile": "tropical-forest"
+    },
+    "geo-037": {
+      "name": "Гималаи и Кашмир",
+      "profile": "mountain-dry"
+    },
+    "geo-038": {
+      "name": "Гренландия",
+      "profile": "ice"
+    },
+    "geo-039": {
+      "name": "Дания и Фареры",
+      "profile": "temperate"
+    },
+    "geo-040": {
+      "name": "Декан и Южная Индия",
+      "profile": "cotton"
+    },
+    "geo-041": {
+      "name": "Дон и Кубань",
+      "profile": "plains"
+    },
+    "geo-042": {
+      "name": "Донбасс и Приазовье",
+      "profile": "industrial-coal"
+    },
+    "geo-043": {
+      "name": "Египет и долина Нила",
+      "profile": "cotton"
+    },
+    "geo-044": {
+      "name": "Забайкалье",
+      "profile": "taiga"
+    },
+    "geo-045": {
+      "name": "Западная Австралия",
+      "profile": "steppe"
+    },
+    "geo-046": {
+      "name": "Западная Анатолия",
+      "profile": "mediterranean"
+    },
+    "geo-047": {
+      "name": "Западная Африка",
+      "profile": "savanna"
+    },
+    "geo-048": {
+      "name": "Западная Сибирь",
+      "profile": "taiga"
+    },
+    "geo-049": {
+      "name": "Иберия",
+      "profile": "mediterranean"
+    },
+    "geo-050": {
+      "name": "Ингрия и Приильменье",
+      "profile": "temperate"
+    },
+    "geo-051": {
+      "name": "Индо-Гангская равнина",
+      "profile": "monsoon"
+    },
+    "geo-052": {
+      "name": "Индокитай",
+      "profile": "monsoon"
+    },
+    "geo-053": {
+      "name": "Иранское нагорье",
+      "profile": "dry-crops"
+    },
+    "geo-054": {
+      "name": "Ирландия",
+      "profile": "temperate"
+    },
+    "geo-055": {
+      "name": "Исландия",
+      "profile": "tundra"
+    },
+    "geo-056": {
+      "name": "Кавказ",
+      "profile": "mountain-forest"
+    },
+    "geo-057": {
+      "name": "Казахская степь",
+      "profile": "steppe"
+    },
+    "geo-058": {
+      "name": "Калахари",
+      "profile": "desert"
+    },
+    "geo-059": {
+      "name": "Камерун и Гвинея",
+      "profile": "tropical-forest"
+    },
+    "geo-060": {
+      "name": "Камчатка и Чукотка",
+      "profile": "tundra"
+    },
+    "geo-061": {
+      "name": "Канадская Арктика",
+      "profile": "ice"
+    },
+    "geo-062": {
+      "name": "Канадские Кордильеры",
+      "profile": "mountain-forest"
+    },
+    "geo-063": {
+      "name": "Канадские прерии",
+      "profile": "plains"
+    },
+    "geo-064": {
+      "name": "Карелия и Кольский полуостров",
+      "profile": "taiga"
+    },
+    "geo-065": {
+      "name": "Карибское побережье и Ориноко",
+      "profile": "savanna"
+    },
+    "geo-066": {
+      "name": "Карпаты",
+      "profile": "mountain-forest"
+    },
+    "geo-067": {
+      "name": "Карпаты и Нижний Дунай",
+      "profile": "mountain-forest"
+    },
+    "geo-068": {
+      "name": "Квебек и Лабрадор",
+      "profile": "taiga"
+    },
+    "geo-069": {
+      "name": "Кипр",
+      "profile": "mediterranean"
+    },
+    "geo-070": {
+      "name": "Корея",
+      "profile": "industrial-mixed"
+    },
+    "geo-071": {
+      "name": "Корсика и Сардиния",
+      "profile": "mediterranean"
+    },
+    "geo-072": {
+      "name": "Крым",
+      "profile": "mediterranean"
+    },
+    "geo-073": {
+      "name": "Куйо и Аргентинские Анды",
+      "profile": "mountain-dry"
+    },
+    "geo-074": {
+      "name": "Ла-Плата и Междуречье",
+      "profile": "plains"
+    },
+    "geo-075": {
+      "name": "Лапландия",
+      "profile": "taiga"
+    },
+    "geo-076": {
+      "name": "Левант",
+      "profile": "mediterranean"
+    },
+    "geo-077": {
+      "name": "Магриб",
+      "profile": "mediterranean"
+    },
+    "geo-078": {
+      "name": "Мадагаскар и Коморы",
+      "profile": "tropical-forest"
+    },
+    "geo-079": {
+      "name": "Малайя",
+      "profile": "rubber"
+    },
+    "geo-080": {
+      "name": "Малые Антилы",
+      "profile": "island-tropical"
+    },
+    "geo-081": {
+      "name": "Маньчжурия",
+      "profile": "industrial-coal"
+    },
+    "geo-082": {
+      "name": "Маскаренские и Сейшельские острова",
+      "profile": "island-tropical"
+    },
+    "geo-083": {
+      "name": "Маскаренские острова",
+      "profile": "island-tropical"
+    },
+    "geo-084": {
+      "name": "Меланезия",
+      "profile": "island-tropical"
+    },
+    "geo-085": {
+      "name": "Месопотамия",
+      "profile": "dry-crops"
+    },
+    "geo-086": {
+      "name": "Микронезия",
+      "profile": "island-tropical"
+    },
+    "geo-087": {
+      "name": "Молуккские и Зондские острова",
+      "profile": "island-tropical"
+    },
+    "geo-088": {
+      "name": "Монголия",
+      "profile": "steppe"
+    },
+    "geo-089": {
+      "name": "Нигерия и низовья Нигера",
+      "profile": "savanna"
+    },
+    "geo-090": {
+      "name": "Нидерланды и Фландрия",
+      "profile": "temperate"
+    },
+    "geo-091": {
+      "name": "Новая Англия и Атлантика",
+      "profile": "industrial-mixed"
+    },
+    "geo-092": {
+      "name": "Новая Гвинея",
+      "profile": "tropical-forest"
+    },
+    "geo-093": {
+      "name": "Новая Зеландия",
+      "profile": "temperate"
+    },
+    "geo-094": {
+      "name": "Острова Индийского океана",
+      "profile": "island-tropical"
+    },
+    "geo-095": {
+      "name": "Острова Южной Атлантики",
+      "profile": "tundra"
+    },
+    "geo-096": {
+      "name": "Пампа и Ла-Плата",
+      "profile": "plains"
+    },
+    "geo-097": {
+      "name": "Паннония",
+      "profile": "plains"
+    },
+    "geo-098": {
+      "name": "Патагония",
+      "profile": "mountain-dry"
+    },
+    "geo-099": {
+      "name": "Пенджаб и Синд",
+      "profile": "cotton"
+    },
+    "geo-100": {
+      "name": "Поволжье",
+      "profile": "plains"
+    },
+    "geo-101": {
+      "name": "Поднепровье",
+      "profile": "plains"
+    },
+    "geo-102": {
+      "name": "Полинезия",
+      "profile": "island-tropical"
+    },
+    "geo-103": {
+      "name": "Польская равнина",
+      "profile": "plains"
+    },
+    "geo-104": {
+      "name": "Померания",
+      "profile": "temperate"
+    },
+    "geo-105": {
+      "name": "Приамурье и Приморье",
+      "profile": "taiga"
+    },
+    "geo-106": {
+      "name": "Прибалтика",
+      "profile": "temperate"
+    },
+    "geo-107": {
+      "name": "Раджпутана и Центральная Индия",
+      "profile": "cotton"
+    },
+    "geo-108": {
+      "name": "Родезия и Мозамбик",
+      "profile": "savanna"
+    },
+    "geo-109": {
+      "name": "Русская Арктика",
+      "profile": "ice"
+    },
+    "geo-110": {
+      "name": "Русский Север",
+      "profile": "taiga"
+    },
+    "geo-111": {
+      "name": "Сахалин и Курилы",
+      "profile": "taiga"
+    },
+    "geo-112": {
+      "name": "Сахара",
+      "profile": "desert"
+    },
+    "geo-113": {
+      "name": "Сахель",
+      "profile": "savanna"
+    },
+    "geo-114": {
+      "name": "Северная Австралия",
+      "profile": "savanna"
+    },
+    "geo-115": {
+      "name": "Северная Атлантика",
+      "profile": "tundra"
+    },
+    "geo-116": {
+      "name": "Северная Германия",
+      "profile": "industrial-coal"
+    },
+    "geo-117": {
+      "name": "Северная Италия",
+      "profile": "industrial-mixed"
+    },
+    "geo-118": {
+      "name": "Северная Мексика",
+      "profile": "dry-crops"
+    },
+    "geo-119": {
+      "name": "Северная Франция",
+      "profile": "industrial-mixed"
+    },
+    "geo-120": {
+      "name": "Северные Анды",
+      "profile": "mountain-forest"
+    },
+    "geo-121": {
+      "name": "Северный Китай",
+      "profile": "industrial-coal"
+    },
+    "geo-122": {
+      "name": "Северо-Восточная Бразилия",
+      "profile": "savanna"
+    },
+    "geo-123": {
+      "name": "Сиам",
+      "profile": "monsoon"
+    },
+    "geo-124": {
+      "name": "Силезия",
+      "profile": "industrial-coal"
+    },
+    "geo-125": {
+      "name": "Синьцзян",
+      "profile": "dry-crops"
+    },
+    "geo-126": {
+      "name": "Скалистые горы",
+      "profile": "mountain-forest"
+    },
+    "geo-127": {
+      "name": "Скандинавия",
+      "profile": "taiga"
+    },
+    "geo-128": {
+      "name": "Судан и верховья Нила",
+      "profile": "dry-crops"
+    },
+    "geo-129": {
+      "name": "Суматра",
+      "profile": "rubber"
+    },
+    "geo-130": {
+      "name": "Тасмания",
+      "profile": "temperate"
+    },
+    "geo-131": {
+      "name": "Техас и Юго-Запад",
+      "profile": "cotton"
+    },
+    "geo-132": {
+      "name": "Тибет",
+      "profile": "mountain-dry"
+    },
+    "geo-133": {
+      "name": "Тихоокеанское побережье",
+      "profile": "temperate"
+    },
+    "geo-134": {
+      "name": "Туркестан и Каракумы",
+      "profile": "cotton"
+    },
+    "geo-135": {
+      "name": "Тянь-Шань и Памир",
+      "profile": "mountain-dry"
+    },
+    "geo-136": {
+      "name": "Урал",
+      "profile": "metalliferous"
+    },
+    "geo-137": {
+      "name": "Филиппины",
+      "profile": "rubber"
+    },
+    "geo-138": {
+      "name": "Формоза",
+      "profile": "monsoon"
+    },
+    "geo-139": {
+      "name": "Хоккайдо",
+      "profile": "industrial-mixed"
+    },
+    "geo-140": {
+      "name": "Цейлон и Мальдивы",
+      "profile": "rubber"
+    },
+    "geo-141": {
+      "name": "Целебес",
+      "profile": "tropical-forest"
+    },
+    "geo-142": {
+      "name": "Центральная Америка",
+      "profile": "tropical-forest"
+    },
+    "geo-143": {
+      "name": "Центральная Италия",
+      "profile": "mediterranean"
+    },
+    "geo-144": {
+      "name": "Центральная Мексика",
+      "profile": "savanna"
+    },
+    "geo-145": {
+      "name": "Центральная Россия",
+      "profile": "temperate"
+    },
+    "geo-146": {
+      "name": "Центральное Чили",
+      "profile": "mediterranean"
+    },
+    "geo-147": {
+      "name": "Центральные Анды",
+      "profile": "mountain-forest"
+    },
+    "geo-148": {
+      "name": "Черноземье",
+      "profile": "plains"
+    },
+    "geo-149": {
+      "name": "Шотландия",
+      "profile": "industrial-coal"
+    },
+    "geo-150": {
+      "name": "Шпицберген",
+      "profile": "ice"
+    },
+    "geo-151": {
+      "name": "Южная Африка",
+      "profile": "industrial-coal"
+    },
+    "geo-152": {
+      "name": "Южная Бразилия",
+      "profile": "savanna"
+    },
+    "geo-153": {
+      "name": "Южная Германия",
+      "profile": "industrial-mixed"
+    },
+    "geo-154": {
+      "name": "Южная Италия и Сицилия",
+      "profile": "mediterranean"
+    },
+    "geo-155": {
+      "name": "Южная Франция",
+      "profile": "mediterranean"
+    },
+    "geo-156": {
+      "name": "Южный Китай",
+      "profile": "monsoon"
+    },
+    "geo-157": {
+      "name": "Юкатан и Южная Мексика",
+      "profile": "tropical-forest"
+    },
+    "geo-158": {
+      "name": "Юкон и Северо-Запад",
+      "profile": "tundra"
+    },
+    "geo-159": {
+      "name": "Юньнань и Сычуань",
+      "profile": "mountain-forest"
+    },
+    "geo-160": {
+      "name": "Ява",
+      "profile": "monsoon"
+    },
+    "geo-161": {
+      "name": "Якутия",
+      "profile": "tundra"
+    },
+    "geo-162": {
+      "name": "Японские острова",
+      "profile": "industrial-mixed"
+    }
+  },
+  "notes": [
+    "Количество — условные игровые единицы, не тонны или статистическая оценка выпуска 1936 года.",
+    "Каждой исходной провинции назначается положительный выпуск. Полярные и совсем малые тайлы могут давать только воду.",
+    "Масштаб выпуска: квадратный корень из площади тайла относительно 400 px², с нижней границей 0.05 и верхней 4. Не трактовать площадь пикселей как реальную площадь.",
+    "Редкие руды, нефть и гелий добавлены адресно в исторических ресурсных точках. Базовые профили описывают общую хозяйственную специализацию региона."
+  ]
+}

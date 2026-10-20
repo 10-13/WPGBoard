@@ -1,0 +1,1466 @@
+{
+  "version": 1,
+  "sourceFile": "ресурсы.html",
+  "sourceSha256": "0d2a381985714685d15bf7532d06fe063454271bf9be9610d910390edc158157",
+  "bonus": {
+    "type": "province-percent",
+    "value": 100
+  },
+  "points": [
+    {
+      "id": "import-01",
+      "sourceIndex": 1,
+      "resourceId": "coal",
+      "type": "coal",
+      "name": "Рурский бассейн",
+      "region": "Западная Германия",
+      "coords": [
+        51.5,
+        7.2
+      ],
+      "desc": "Крупнейшее сердце немецкой металлургии и коксохима.",
+      "provinceId": 1063,
+      "provinceName": "Дортмунд",
+      "namedRegion": "Северная Германия",
+      "mapPoint": [
+        2732.42,
+        839.85
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-02",
+      "sourceIndex": 2,
+      "resourceId": "coal",
+      "type": "coal",
+      "name": "Верхняя Силезия",
+      "region": "Польша / Германия",
+      "coords": [
+        50.3,
+        18.9
+      ],
+      "desc": "Богатейший приграничный бассейн коксующегося угля.",
+      "provinceId": 1168,
+      "provinceName": "Бойтен",
+      "namedRegion": "Польская равнина",
+      "mapPoint": [
+        2920.38,
+        867.79
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-03",
+      "sourceIndex": 3,
+      "resourceId": "coal",
+      "type": "coal",
+      "name": "Саарский бассейн",
+      "region": "Франко-немецкая граница",
+      "coords": [
+        49.3,
+        6.9
+      ],
+      "desc": "Высококонцентрированный бассейн на границе держав.",
+      "provinceId": 1256,
+      "provinceName": "Мец",
+      "namedRegion": "Северная Франция",
+      "mapPoint": [
+        2727.77,
+        886.69
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-04",
+      "sourceIndex": 4,
+      "resourceId": "coal",
+      "type": "coal",
+      "name": "Валлония и Север Франции",
+      "region": "Бельгия / Франция",
+      "coords": [
+        50.5,
+        3.5
+      ],
+      "desc": "Угольный пояс Европы, питающий французские заводы.",
+      "provinceId": 1128,
+      "provinceName": "Лилль",
+      "namedRegion": "Северная Франция",
+      "mapPoint": [
+        2673.77,
+        860.87
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-05",
+      "sourceIndex": 5,
+      "resourceId": "coal",
+      "type": "coal",
+      "name": "Йоркшир и Уэльс",
+      "region": "Великобритания",
+      "coords": [
+        53.5,
+        -1.5
+      ],
+      "desc": "Валлийский антрацит — идеальное топливо для парового флота.",
+      "provinceId": 886,
+      "provinceName": "Шеффилд",
+      "namedRegion": "Британские острова",
+      "mapPoint": [
+        2595.62,
+        794.22
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-06",
+      "sourceIndex": 6,
+      "resourceId": "coal",
+      "type": "coal",
+      "name": "Астурия",
+      "region": "Север Испании",
+      "coords": [
+        43.3,
+        -5.8
+      ],
+      "desc": "Единственный крупный угольный источник Иберии.",
+      "provinceId": 1688,
+      "provinceName": "Хихон",
+      "namedRegion": "Иберия",
+      "mapPoint": [
+        2529.72,
+        1001.34
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-07",
+      "sourceIndex": 7,
+      "resourceId": "coal",
+      "type": "coal",
+      "name": "Чехия (Острава-Карвина)",
+      "region": "Чехословакия",
+      "coords": [
+        49.8,
+        18.3
+      ],
+      "desc": "Питает заводы Пльзеня и заводы 'Шкода'.",
+      "provinceId": 1226,
+      "provinceName": "Острава",
+      "namedRegion": "Богемия и Моравия",
+      "mapPoint": [
+        2910.42,
+        877.61
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-08",
+      "sourceIndex": 8,
+      "resourceId": "coal",
+      "type": "coal",
+      "name": "Донбасс",
+      "region": "Украина / Юг России",
+      "coords": [
+        48.0,
+        37.8
+      ],
+      "desc": "Абсолютный энергетический доминант Причерноморья.",
+      "provinceId": 1347,
+      "provinceName": "Сталино",
+      "namedRegion": "Донбасс и Приазовье",
+      "mapPoint": [
+        3209.77,
+        909.87
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-09",
+      "sourceIndex": 9,
+      "resourceId": "coal",
+      "type": "coal",
+      "name": "Кузбасс",
+      "region": "Сибирь (СССР)",
+      "coords": [
+        54.5,
+        86.5
+      ],
+      "desc": "Колоссальный тыловой угольный гигант мирового масштаба.",
+      "provinceId": 803,
+      "provinceName": "Прокопьевск",
+      "namedRegion": "Восточная Сибирь",
+      "mapPoint": [
+        3971.48,
+        775.31
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-10",
+      "sourceIndex": 10,
+      "resourceId": "coal",
+      "type": "coal",
+      "name": "Подмосковный бассейн",
+      "region": "Россия (Тула/Калуга)",
+      "coords": [
+        54.2,
+        37.6
+      ],
+      "desc": "Бурый уголь низкого качества для столичных электростанций.",
+      "provinceId": 821,
+      "provinceName": "Тула",
+      "namedRegion": "Центральная Россия",
+      "mapPoint": [
+        3207.16,
+        783.07
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-11",
+      "sourceIndex": 11,
+      "resourceId": "coal",
+      "type": "coal",
+      "name": "Аппалачский бассейн",
+      "region": "США (Пенсильвания)",
+      "coords": [
+        38.5,
+        -80.5
+      ],
+      "desc": "Мировой гигант. Энергия для Детройта и Питтсбурга.",
+      "provinceId": 1272,
+      "provinceName": "Хантингтон",
+      "namedRegion": "Новая Англия и Атлантика",
+      "mapPoint": [
+        1362.9,
+        898.29
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-12",
+      "sourceIndex": 12,
+      "resourceId": "coal",
+      "type": "coal",
+      "name": "Иллинойсский бассейн",
+      "region": "США (Чикаго)",
+      "coords": [
+        39.5,
+        -89.0
+      ],
+      "desc": "Прямое снабжение индустриального кластера Чикаго.",
+      "provinceId": 1198,
+      "provinceName": "Белвилл",
+      "namedRegion": "Великие озёра",
+      "mapPoint": [
+        1229.46,
+        880.22
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-13",
+      "sourceIndex": 13,
+      "resourceId": "coal",
+      "type": "coal",
+      "name": "Трансвааль (Витбанк)",
+      "region": "Южная Африка",
+      "coords": [
+        -25.8,
+        29.2
+      ],
+      "desc": "Бункерное топливо для судов в обход мыса Доброй Надежды.",
+      "provinceId": 4390,
+      "provinceName": "Претория",
+      "namedRegion": "Южная Африка",
+      "mapPoint": [
+        3077.23,
+        2155.31
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-14",
+      "sourceIndex": 14,
+      "resourceId": "coal",
+      "type": "coal",
+      "name": "Маньчжурия (Фушунь)",
+      "region": "Северо-Восточный Китай",
+      "coords": [
+        41.8,
+        123.9
+      ],
+      "desc": "Гигантские открытые угольные разрезы Восточной Азии.",
+      "provinceId": 1729,
+      "provinceName": "Мукден",
+      "namedRegion": "Маньчжурия",
+      "mapPoint": [
+        4553.31,
+        1028.84
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-15",
+      "sourceIndex": 15,
+      "resourceId": "coal",
+      "type": "coal",
+      "name": "Дамодар / Бихар",
+      "region": "Индия",
+      "coords": [
+        23.6,
+        87.0
+      ],
+      "desc": "Индийский Рур — основа бенгальской тяжелой индустрии.",
+      "provinceId": 2862,
+      "provinceName": "Асансол",
+      "namedRegion": "Бенгалия и Ассам",
+      "mapPoint": [
+        3974.16,
+        1356.01
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-16",
+      "sourceIndex": 16,
+      "resourceId": "coal",
+      "type": "coal",
+      "name": "Новый Южный Уэльс (Сидней)",
+      "region": "Австралия",
+      "coords": [
+        -33.0,
+        151.5
+      ],
+      "desc": "Топливная база тихоокеанских маршрутов.",
+      "provinceId": 4452,
+      "provinceName": "Ньюкасл",
+      "namedRegion": "Восточная Австралия",
+      "mapPoint": [
+        4982.32,
+        2276.59
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-17",
+      "sourceIndex": 17,
+      "resourceId": "oil",
+      "type": "oil",
+      "name": "Плоешти",
+      "region": "Румыния",
+      "coords": [
+        44.9,
+        26.0
+      ],
+      "desc": "Главный нефтяной оазис континентальной Европы. Приз первой войны.",
+      "provinceId": 1603,
+      "provinceName": "Бухарест",
+      "namedRegion": "Карпаты и Нижний Дунай",
+      "mapPoint": [
+        3028.95,
+        971.89
+      ],
+      "snapPixels": 0.96
+    },
+    {
+      "id": "import-18",
+      "sourceIndex": 18,
+      "resourceId": "oil",
+      "type": "oil",
+      "name": "Баку",
+      "region": "Азербайджан",
+      "coords": [
+        40.4,
+        49.8
+      ],
+      "desc": "Нефтяной колосс. Исторически >70% всей добычи СССР.",
+      "provinceId": 1872,
+      "provinceName": "Баку",
+      "namedRegion": "Кавказ",
+      "mapPoint": [
+        3393.88,
+        1057.2
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-19",
+      "sourceIndex": 19,
+      "resourceId": "oil",
+      "type": "oil",
+      "name": "Грозный и Майкоп",
+      "region": "Северный Кавказ",
+      "coords": [
+        43.3,
+        45.7
+      ],
+      "desc": "Лучший высокооктановый авиационный бензин континента.",
+      "provinceId": 1661,
+      "provinceName": "Грозный",
+      "namedRegion": "Кавказ",
+      "mapPoint": [
+        3328.65,
+        1002.05
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-20",
+      "sourceIndex": 20,
+      "resourceId": "oil",
+      "type": "oil",
+      "name": "Хузестан (Абадан)",
+      "region": "Иран",
+      "coords": [
+        31.3,
+        48.7
+      ],
+      "desc": "Крупнейший в мире нефтеперерабатывающий завод эпохи.",
+      "provinceId": 2475,
+      "provinceName": "Ахваз",
+      "namedRegion": "Иранское нагорье",
+      "mapPoint": [
+        3380.23,
+        1222.31
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-21",
+      "sourceIndex": 21,
+      "resourceId": "oil",
+      "type": "oil",
+      "name": "Киркук и Мосул",
+      "region": "Ирак",
+      "coords": [
+        35.5,
+        44.4
+      ],
+      "desc": "Ближневосточные месторождения с трубой к Средиземному морю.",
+      "provinceId": 2168,
+      "provinceName": "Сулеймания",
+      "namedRegion": "Месопотамия",
+      "mapPoint": [
+        3311.37,
+        1146.91
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-22",
+      "sourceIndex": 22,
+      "resourceId": "oil",
+      "type": "oil",
+      "name": "Даммам / Аль-Хаса",
+      "region": "Саудовская Аравия",
+      "coords": [
+        26.4,
+        50.1
+      ],
+      "desc": "Зарождающийся гигант Персидского залива (скважина №7).",
+      "provinceId": 2773,
+      "provinceName": "Даммам",
+      "namedRegion": "Аравия",
+      "mapPoint": [
+        3399.49,
+        1308.27
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-23",
+      "sourceIndex": 23,
+      "resourceId": "oil",
+      "type": "oil",
+      "name": "Восточный Техас",
+      "region": "США",
+      "coords": [
+        31.5,
+        -95.0
+      ],
+      "desc": "Мировой гегемон нефтедобычи 1930-40-х годов.",
+      "provinceId": 1643,
+      "provinceName": "Хьюстон",
+      "namedRegion": "Техас и Юго-Запад",
+      "mapPoint": [
+        1138.55,
+        1024.64
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-24",
+      "sourceIndex": 24,
+      "resourceId": "oil",
+      "type": "oil",
+      "name": "Бассейн Лос-Анджелеса",
+      "region": "США (Калифорния)",
+      "coords": [
+        35.3,
+        -119.0
+      ],
+      "desc": "Тихоокеанская нефтяная база прямо на морском побережье.",
+      "provinceId": 1329,
+      "provinceName": "Фресно",
+      "namedRegion": "Тихоокеанское побережье",
+      "mapPoint": [
+        760.58,
+        953.16
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-25",
+      "sourceIndex": 25,
+      "resourceId": "oil",
+      "type": "oil",
+      "name": "Тампико / Поса-Рика",
+      "region": "Мексика",
+      "coords": [
+        22.3,
+        -97.8
+      ],
+      "desc": "Прибрежные месторождения Мексиканского залива.",
+      "provinceId": 2367,
+      "provinceName": "Тампико",
+      "namedRegion": "Центральная Мексика",
+      "mapPoint": [
+        1094.67,
+        1181.38
+      ],
+      "snapPixels": 2.7
+    },
+    {
+      "id": "import-26",
+      "sourceIndex": 26,
+      "resourceId": "oil",
+      "type": "oil",
+      "name": "Озеро Маракайбо",
+      "region": "Венесуэла",
+      "coords": [
+        10.3,
+        -71.6
+      ],
+      "desc": "Главный мировой экспортер нефти через Атлантику.",
+      "provinceId": 2926,
+      "provinceName": "Маракайбо",
+      "namedRegion": "Карибское побережье и Ориноко",
+      "mapPoint": [
+        1501.8,
+        1378.74
+      ],
+      "snapPixels": 3.92
+    },
+    {
+      "id": "import-27",
+      "sourceIndex": 27,
+      "resourceId": "oil",
+      "type": "oil",
+      "name": "Суматра и Борнео",
+      "region": "Индонезия",
+      "coords": [
+        -2.9,
+        104.7
+      ],
+      "desc": "Легкая качественная нефть Палембанга и Баликпапана.",
+      "provinceId": 3855,
+      "provinceName": "Палембанг",
+      "namedRegion": "Суматра",
+      "mapPoint": [
+        4252.84,
+        1786.32
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-28",
+      "sourceIndex": 28,
+      "resourceId": "iron-ore",
+      "type": "steel",
+      "name": "Лотарингия",
+      "region": "Франция (северная граница)",
+      "coords": [
+        49.2,
+        6.1
+      ],
+      "desc": "Бассейн минеттовой руды. Требует коксующийся уголь Рура.",
+      "provinceId": 1256,
+      "provinceName": "Мец",
+      "namedRegion": "Северная Франция",
+      "mapPoint": [
+        2715.23,
+        888.86
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-29",
+      "sourceIndex": 29,
+      "resourceId": "iron-ore",
+      "type": "steel",
+      "name": "Французские Альпы",
+      "region": "Юго-Восток Франции",
+      "coords": [
+        45.2,
+        6.0
+      ],
+      "desc": "Горнорудные разработки альпийского региона.",
+      "provinceId": 1533,
+      "provinceName": "Шамбери",
+      "namedRegion": "Южная Франция",
+      "mapPoint": [
+        2711.29,
+        960.96
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-30",
+      "sourceIndex": 30,
+      "resourceId": "iron-ore",
+      "type": "steel",
+      "name": "Кливленд / Нортгемптон",
+      "region": "Англия",
+      "coords": [
+        54.5,
+        -1.2
+      ],
+      "desc": "Основа сталелитейной мощи Британской империи.",
+      "provinceId": 838,
+      "provinceName": "Кингстон-апон-Халл",
+      "namedRegion": "Британские острова",
+      "mapPoint": [
+        2600.29,
+        774.19
+      ],
+      "snapPixels": 0.86
+    },
+    {
+      "id": "import-31",
+      "sourceIndex": 31,
+      "resourceId": "iron-ore",
+      "type": "steel",
+      "name": "Уэнза",
+      "region": "Алжир",
+      "coords": [
+        35.9,
+        8.2
+      ],
+      "desc": "Богатая средиземноморская руда для морского вывоза.",
+      "provinceId": 2192,
+      "provinceName": "Тебесса",
+      "namedRegion": "Магриб",
+      "mapPoint": [
+        2747.36,
+        1139.57
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-32",
+      "sourceIndex": 32,
+      "resourceId": "iron-ore",
+      "type": "steel",
+      "name": "Кируна и Елливаре",
+      "region": "Швеция (Лапландия)",
+      "coords": [
+        67.8,
+        20.2
+      ],
+      "desc": "Сверхчистый магнетит (60-70% железа). Морской экспорт через Нарвик.",
+      "provinceId": 239,
+      "provinceName": "Лулео",
+      "namedRegion": "Лапландия",
+      "mapPoint": [
+        2937.78,
+        464.93
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-33",
+      "sourceIndex": 33,
+      "resourceId": "iron-ore",
+      "type": "steel",
+      "name": "Кривой Рог (Кривбасс)",
+      "region": "Украина",
+      "coords": [
+        47.9,
+        33.4
+      ],
+      "desc": "Гигант железной руды. Дает сверх-синергию в паре с Донбассом.",
+      "provinceId": 1331,
+      "provinceName": "Кривой Рог",
+      "namedRegion": "Поднепровье",
+      "mapPoint": [
+        3142.99,
+        913.22
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-34",
+      "sourceIndex": 34,
+      "resourceId": "iron-ore",
+      "type": "steel",
+      "name": "Магнитная гора",
+      "region": "Южный Урал (СССР)",
+      "coords": [
+        53.4,
+        59.0
+      ],
+      "desc": "Гора чистого железа. Тандем с Кузбассом глубоко в тылу.",
+      "provinceId": 823,
+      "provinceName": "Магнитогорск",
+      "namedRegion": "Урал",
+      "mapPoint": [
+        3539.97,
+        800.37
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-35",
+      "sourceIndex": 35,
+      "resourceId": "iron-ore",
+      "type": "steel",
+      "name": "Хребет Месаби",
+      "region": "США (Озеро Верхнее / Чикаго)",
+      "coords": [
+        47.5,
+        -92.5
+      ],
+      "desc": "Крупнейшая открытая добыча руды на Земле. Питает Великие Озера.",
+      "provinceId": 613,
+      "provinceName": "Дулут",
+      "namedRegion": "Великие озёра",
+      "mapPoint": [
+        1175.48,
+        723.83
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-36",
+      "sourceIndex": 36,
+      "resourceId": "iron-ore",
+      "type": "steel",
+      "name": "Бирмингем",
+      "region": "США (Теннесси/Алабама)",
+      "coords": [
+        33.5,
+        -86.8
+      ],
+      "desc": "Уникальная долина, где руда, уголь и флюс лежат рядом.",
+      "provinceId": 1622,
+      "provinceName": "Бирмингем",
+      "namedRegion": "Американский Юг",
+      "mapPoint": [
+        1264.47,
+        989.65
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-37",
+      "sourceIndex": 37,
+      "resourceId": "iron-ore",
+      "type": "steel",
+      "name": "Игл-Маунтин",
+      "region": "США (Калифорния)",
+      "coords": [
+        33.9,
+        -115.5
+      ],
+      "desc": "Тихоокеанский источник руды для верфей Западного побережья.",
+      "provinceId": 1526,
+      "provinceName": "Сан-Бернардино",
+      "namedRegion": "Тихоокеанское побережье",
+      "mapPoint": [
+        815.57,
+        978.79
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-38",
+      "sourceIndex": 38,
+      "resourceId": "iron-ore",
+      "type": "steel",
+      "name": "Аньшань",
+      "region": "Маньчжурия",
+      "coords": [
+        41.1,
+        122.9
+      ],
+      "desc": "Центр тяжелой металлургии в континентальной Азии.",
+      "provinceId": 1821,
+      "provinceName": "Аньшань",
+      "namedRegion": "Маньчжурия",
+      "mapPoint": [
+        4537.17,
+        1042.25
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-39",
+      "sourceIndex": 39,
+      "resourceId": "iron-ore",
+      "type": "steel",
+      "name": "Сингхбхум (Бихар)",
+      "region": "Индия",
+      "coords": [
+        22.8,
+        86.2
+      ],
+      "desc": "Металлургический гигант Джамшедпур (заводы Тата).",
+      "provinceId": 2861,
+      "provinceName": "Джамшедпур",
+      "namedRegion": "Бенгалия и Ассам",
+      "mapPoint": [
+        3961.88,
+        1369.98
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-40",
+      "sourceIndex": 40,
+      "resourceId": "iron-ore",
+      "type": "steel",
+      "name": "Марампа",
+      "region": "Сьерра-Леоне (Африка)",
+      "coords": [
+        8.7,
+        -12.5
+      ],
+      "desc": "Высококачественные гематиты на побережье Западной Африки.",
+      "provinceId": 3446,
+      "provinceName": "Макени",
+      "namedRegion": "Западная Африка",
+      "mapPoint": [
+        2425.55,
+        1597.1
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-41",
+      "sourceIndex": 41,
+      "resourceId": "bauxite",
+      "type": "aluminum",
+      "name": "Горы Баконь / Гант",
+      "region": "Венгрия",
+      "coords": [
+        47.4,
+        18.4
+      ],
+      "desc": "Алюминиевое сердце Европы. Без него Люфтваффе не взлетят.",
+      "provinceId": 1408,
+      "provinceName": "Секешфехервар",
+      "namedRegion": "Паннония",
+      "mapPoint": [
+        2909.97,
+        923.85
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-42",
+      "sourceIndex": 42,
+      "resourceId": "bauxite",
+      "type": "aluminum",
+      "name": "Ле-Бо (Прованс)",
+      "region": "Южная Франция",
+      "coords": [
+        43.7,
+        4.8
+      ],
+      "desc": "Историческая родина бокситов. Чистейшая руда Средиземноморья.",
+      "provinceId": 1634,
+      "provinceName": "Авиньон",
+      "namedRegion": "Южная Франция",
+      "mapPoint": [
+        2694.23,
+        990.32
+      ],
+      "snapPixels": 0.83
+    },
+    {
+      "id": "import-43",
+      "sourceIndex": 43,
+      "resourceId": "bauxite",
+      "type": "aluminum",
+      "name": "Абруццо и Истрия",
+      "region": "Северная Италия",
+      "coords": [
+        45.0,
+        14.0
+      ],
+      "desc": "Средиземноморские бокситовые разработки.",
+      "provinceId": 1561,
+      "provinceName": "Пула",
+      "namedRegion": "Балканы",
+      "mapPoint": [
+        2836.39,
+        966.81
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-44",
+      "sourceIndex": 44,
+      "resourceId": "bauxite",
+      "type": "aluminum",
+      "name": "Никшич",
+      "region": "Черногория / Балканы",
+      "coords": [
+        42.8,
+        18.9
+      ],
+      "desc": "Балканский пояс бокситов прямо у Адриатики.",
+      "provinceId": 1708,
+      "provinceName": "Подгорица",
+      "namedRegion": "Балканы",
+      "mapPoint": [
+        2914.7,
+        1010.88
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-45",
+      "sourceIndex": 45,
+      "resourceId": "bauxite",
+      "type": "aluminum",
+      "name": "Парнас / Ампфиса",
+      "region": "Греция",
+      "coords": [
+        38.5,
+        22.5
+      ],
+      "desc": "Богатейшие греческие рудники на побережье Коринфского залива.",
+      "provinceId": 1996,
+      "provinceName": "Халкида",
+      "namedRegion": "Балканы",
+      "mapPoint": [
+        2968.55,
+        1091.22
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-46",
+      "sourceIndex": 46,
+      "resourceId": "bauxite",
+      "type": "aluminum",
+      "name": "Североуральск («Красная Шапочка»)",
+      "region": "Северный Урал (СССР)",
+      "coords": [
+        60.1,
+        59.9
+      ],
+      "desc": "Основа советского авиастроения в тылу.",
+      "provinceId": 472,
+      "provinceName": "Нижний Тагил",
+      "namedRegion": "Урал",
+      "mapPoint": [
+        3564.36,
+        650.97
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-47",
+      "sourceIndex": 47,
+      "resourceId": "bauxite",
+      "type": "aluminum",
+      "name": "Паранама и Маккензи",
+      "region": "Суринам / Британская Гвиана",
+      "coords": [
+        5.5,
+        -55.2
+      ],
+      "desc": "Мировой джекпот. Давал до 70% алюминия для авиации Союзников.",
+      "provinceId": 3115,
+      "provinceName": "Сарамакка — окрестности",
+      "namedRegion": "Гвиана",
+      "mapPoint": [
+        1758.9,
+        1455.62
+      ],
+      "snapPixels": 1.09
+    },
+    {
+      "id": "import-48",
+      "sourceIndex": 48,
+      "resourceId": "bauxite",
+      "type": "aluminum",
+      "name": "Остров Бинтан",
+      "region": "Сингапур / Суматра",
+      "coords": [
+        1.0,
+        104.5
+      ],
+      "desc": "Главный азиатский источник бокситов для авиазаводов.",
+      "provinceId": 3777,
+      "provinceName": "Танджунг-Пинанг",
+      "namedRegion": "Суматра",
+      "mapPoint": [
+        4251.0,
+        1725.44
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-49",
+      "sourceIndex": 49,
+      "resourceId": "bauxite",
+      "type": "aluminum",
+      "name": "Ямайка",
+      "region": "Карибы",
+      "coords": [
+        18.1,
+        -77.3
+      ],
+      "desc": "Гигантские скрытые залежи. Требует цикла геологоразведки!",
+      "provinceId": 2611,
+      "provinceName": "Кингстон",
+      "namedRegion": "Большие Антилы и Багамы",
+      "mapPoint": [
+        1412.78,
+        1250.47
+      ],
+      "snapPixels": 0.57
+    },
+    {
+      "id": "import-50",
+      "sourceIndex": 50,
+      "resourceId": "bauxite",
+      "type": "aluminum",
+      "name": "Бокситогорск (Тихвин)",
+      "region": "Ленинградская область",
+      "coords": [
+        59.5,
+        35.0
+      ],
+      "desc": "Ограниченное месторождение низкого качества близ границы.",
+      "provinceId": 466,
+      "provinceName": "Тихвин",
+      "namedRegion": "Ингрия и Приильменье",
+      "mapPoint": [
+        3166.13,
+        664.45
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-51",
+      "sourceIndex": 51,
+      "resourceId": "alloy-ore",
+      "type": "alloys",
+      "name": "Петсамо (Печенга)",
+      "region": "Север Финляндии",
+      "coords": [
+        69.4,
+        30.6
+      ],
+      "desc": "Единственный никелевый рудник континентальной Европы.",
+      "provinceId": 223,
+      "provinceName": "Мурманск",
+      "namedRegion": "Карелия и Кольский полуостров",
+      "mapPoint": [
+        3101.97,
+        416.52
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-52",
+      "sourceIndex": 52,
+      "resourceId": "alloy-ore",
+      "type": "alloys",
+      "name": "Гулеман (Анатолия)",
+      "region": "Турция",
+      "coords": [
+        38.5,
+        39.8
+      ],
+      "desc": "Мировой хром. Предмет ожесточенного дипломатического шантажа.",
+      "provinceId": 1977,
+      "provinceName": "Элязыг",
+      "namedRegion": "Восточная Анатолия",
+      "mapPoint": [
+        3237.54,
+        1092.04
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-53",
+      "sourceIndex": 53,
+      "resourceId": "alloy-ore",
+      "type": "alloys",
+      "name": "Радуша (Скопье)",
+      "region": "Македония / Балканы",
+      "coords": [
+        42.1,
+        21.2
+      ],
+      "desc": "Единственный внутренний хром Европы до захвата Турции.",
+      "provinceId": 1783,
+      "provinceName": "Тетово",
+      "namedRegion": "Балканы",
+      "mapPoint": [
+        2950.77,
+        1024.2
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-54",
+      "sourceIndex": 54,
+      "resourceId": "alloy-ore",
+      "type": "alloys",
+      "name": "Орск и Ижевск",
+      "region": "Южный Урал",
+      "coords": [
+        56.8,
+        53.2
+      ],
+      "desc": "Советский комплекс никеля и легирующих сталей в тылу.",
+      "provinceId": 634,
+      "provinceName": "Ижевск",
+      "namedRegion": "Поволжье",
+      "mapPoint": [
+        3454.33,
+        725.3
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-55",
+      "sourceIndex": 55,
+      "resourceId": "alloy-ore",
+      "type": "alloys",
+      "name": "Бассейн Садбери",
+      "region": "Канада (Онтарио)",
+      "coords": [
+        46.5,
+        -81.0
+      ],
+      "desc": "Абсолютный мировой монополист никеля (80-90% поставок Союзников).",
+      "provinceId": 655,
+      "provinceName": "Грейтер-Садбери",
+      "namedRegion": "Великие озёра",
+      "mapPoint": [
+        1355.11,
+        744.8
+      ],
+      "snapPixels": 0.8
+    },
+    {
+      "id": "import-56",
+      "sourceIndex": 56,
+      "resourceId": "alloy-ore",
+      "type": "alloys",
+      "name": "Никаро и Моа",
+      "region": "Куба",
+      "coords": [
+        20.7,
+        -75.5
+      ],
+      "desc": "Богатейшие карибские латеритные руды хрома и никеля.",
+      "provinceId": 2450,
+      "provinceName": "Сантьяго-де-Куба",
+      "namedRegion": "Большие Антилы и Багамы",
+      "mapPoint": [
+        1440.9,
+        1206.06
+      ],
+      "snapPixels": 2.94
+    },
+    {
+      "id": "import-57",
+      "sourceIndex": 57,
+      "resourceId": "alloy-ore",
+      "type": "alloys",
+      "name": "Бушвельдский комплекс",
+      "region": "ЮАР / Ботсвана",
+      "coords": [
+        -25.0,
+        27.5
+      ],
+      "desc": "Мировой хромовый гигант Британской империи.",
+      "provinceId": 4356,
+      "provinceName": "Питерсбург",
+      "namedRegion": "Южная Африка",
+      "mapPoint": [
+        3050.92,
+        2141.18
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-58",
+      "sourceIndex": 58,
+      "resourceId": "alloy-ore",
+      "type": "alloys",
+      "name": "Новая Каледония",
+      "region": "Тихий океан",
+      "coords": [
+        -21.5,
+        165.5
+      ],
+      "desc": "Французский изолированный никелевый рай.",
+      "provinceId": 4338,
+      "provinceName": "Нумеа",
+      "namedRegion": "Меланезия",
+      "mapPoint": [
+        5201.47,
+        2083.75
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-59",
+      "sourceIndex": 59,
+      "resourceId": "alloy-ore",
+      "type": "alloys",
+      "name": "Масинлок (Лусон)",
+      "region": "Филиппины",
+      "coords": [
+        15.5,
+        120.0
+      ],
+      "desc": "Крупнейший в мире одиночный рудник хромитов на Тихом океане.",
+      "provinceId": 3163,
+      "provinceName": "Багио",
+      "namedRegion": "Филиппины",
+      "mapPoint": [
+        4498.32,
+        1496.75
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-60",
+      "sourceIndex": 60,
+      "resourceId": "tungsten-ore",
+      "type": "tungsten",
+      "name": "Панашкейра и Галисия",
+      "region": "Португалия / Испания",
+      "coords": [
+        40.1,
+        -7.7
+      ],
+      "desc": "Единственный вольфрам Европы. Арена тайных войн спецслужб.",
+      "provinceId": 1848,
+      "provinceName": "Каштелу-Бранку",
+      "namedRegion": "Иберия",
+      "mapPoint": [
+        2499.18,
+        1063.36
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-61",
+      "sourceIndex": 61,
+      "resourceId": "tungsten-ore",
+      "type": "tungsten",
+      "name": "Даюй (Цзянси)",
+      "region": "Южный Китай",
+      "coords": [
+        25.5,
+        114.5
+      ],
+      "desc": "Мировая сокровищница вольфрама (>50% запасов Земли).",
+      "provinceId": 2760,
+      "provinceName": "Ганьчжоу",
+      "namedRegion": "Южный Китай",
+      "mapPoint": [
+        4409.36,
+        1323.2
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-62",
+      "sourceIndex": 62,
+      "resourceId": "tungsten-ore",
+      "type": "tungsten",
+      "name": "Сандон",
+      "region": "Корея",
+      "coords": [
+        37.1,
+        128.8
+      ],
+      "desc": "Колоссальные залежи шеелита под японским контролем.",
+      "provinceId": 2118,
+      "provinceName": "Пхохан",
+      "namedRegion": "Корея",
+      "mapPoint": [
+        4630.69,
+        1116.54
+      ],
+      "snapPixels": 0.83
+    },
+    {
+      "id": "import-63",
+      "sourceIndex": 63,
+      "resourceId": "tungsten-ore",
+      "type": "tungsten",
+      "name": "Чойлья",
+      "region": "Боливия (Анды)",
+      "coords": [
+        -16.4,
+        -67.7
+      ],
+      "desc": "Американское вольфрамовое эльдорадо на высоте 4000м.",
+      "provinceId": 3793,
+      "provinceName": "Ла-Пас",
+      "namedRegion": "Амазония",
+      "mapPoint": [
+        1563.9,
+        1806.32
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-64",
+      "sourceIndex": 64,
+      "resourceId": "tungsten-ore",
+      "type": "tungsten",
+      "name": "Пайн-Крик (Милл-Сити)",
+      "region": "США (Невада / Калифорния)",
+      "coords": [
+        37.3,
+        -118.7
+      ],
+      "desc": "Главный внутренний стратегический карьер США.",
+      "provinceId": 1300,
+      "provinceName": "Бишоп",
+      "namedRegion": "Тихоокеанское побережье",
+      "mapPoint": [
+        765.37,
+        917.05
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-65",
+      "sourceIndex": 65,
+      "resourceId": "rubber",
+      "type": "rubber",
+      "name": "Малайя, Ява и Суматра",
+      "region": "Юго-Восточная Азия",
+      "coords": [
+        3.1,
+        101.7
+      ],
+      "desc": "Эпицентр мирового каучука (более 90% всей мировой гевеи).",
+      "provinceId": 3705,
+      "provinceName": "Куала-Лумпур",
+      "namedRegion": "Малайя",
+      "mapPoint": [
+        4208.2,
+        1691.57
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-66",
+      "sourceIndex": 66,
+      "resourceId": "rubber",
+      "type": "rubber",
+      "name": "Плантации Индокитая",
+      "region": "Вьетнам / Таиланд",
+      "coords": [
+        10.8,
+        106.6
+      ],
+      "desc": "Французские плантации шинного гиганта Michelin.",
+      "provinceId": 3370,
+      "provinceName": "Тёлон",
+      "namedRegion": "Индокитай",
+      "mapPoint": [
+        4282.35,
+        1569.06
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-67",
+      "sourceIndex": 67,
+      "resourceId": "rubber",
+      "type": "rubber",
+      "name": "Плантации Firestone",
+      "region": "Либерия (Западная Африка)",
+      "coords": [
+        6.3,
+        -10.3
+      ],
+      "desc": "Главная опора шинной индустрии США в Атлантике.",
+      "provinceId": 3562,
+      "provinceName": "Монровия",
+      "namedRegion": "Западная Африка",
+      "mapPoint": [
+        2460.96,
+        1638.42
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-68",
+      "sourceIndex": 68,
+      "resourceId": "rubber",
+      "type": "rubber",
+      "name": "Бассейн реки Конго",
+      "region": "Бельгийское Конго",
+      "coords": [
+        -4.3,
+        15.3
+      ],
+      "desc": "Африканский центр сбора дикого и плантационного каучука.",
+      "provinceId": 3898,
+      "provinceName": "Леопольдвиль",
+      "namedRegion": "Бассейн Конго",
+      "mapPoint": [
+        2861.08,
+        1806.07
+      ],
+      "snapPixels": 0
+    },
+    {
+      "id": "import-69",
+      "sourceIndex": 69,
+      "resourceId": "helium",
+      "type": "helium",
+      "name": "Клиффсайд (Амарилло)",
+      "region": "США (ТЕХАС)",
+      "coords": [
+        35.2,
+        -101.8
+      ],
+      "desc": "ЕДИНСТВЕННЫЙ источник гелия на Земле. Родина тяжелых цеппелинов.",
+      "provinceId": 1465,
+      "provinceName": "Амарилло",
+      "namedRegion": "Техас и Юго-Запад",
+      "mapPoint": [
+        1032.05,
+        957.99
+      ],
+      "snapPixels": 0
+    }
+  ],
+  "notes": [
+    "Все 69 исходных маркеров сохранены по одному; широкие бассейны не размножаются на несколько провинций.",
+    "Названия, координаты и исходные описания сохранены. Это перенос исходного списка, а не его историческая верификация.",
+    "Сталь (руда) преобразована в железную руду, алюминий — в бокситы, вольфрам — в вольфрамовую руду.",
+    "Чисел бонусов в исходнике нет: принято +100% добычи указанного ресурса в провинции. Собственного выпуска у точки нет."
+  ]
+}

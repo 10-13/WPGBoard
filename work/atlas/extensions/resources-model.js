@@ -108,11 +108,18 @@
       const rows = [...bonusRecords.values()].filter(b => b.key === c.key);
       return folder(c.key, resourceName(c), [leaf('gain', 'Прибавка к максимальному выпуску', c.maximumProduction - c.base, c.unit), ...Object.entries(BONUSES).filter(([type]) => rows.some(b => b.type === type)).map(([type, spec]) => folder(type, spec.label, rows.filter(b => b.type === type).map(b => leaf(b.id, b.title + ' · провинция #' + b.regionId + (spec.efficiency && b.inputResource !== '*' ? ' · сырьё: ' + b.inputResource : ''), b.value, spec.percent ? '%' : spec.efficiency ? b.inputUnit === '*' ? 'ед. сырья' : b.inputUnit : c.unit))))]);
     });
+    const facilityRows = allocation.map(p => folder(JSON.stringify([p.regionId, p.id]), p.title + ' · #' + p.regionId, [leaf('priority', 'Приоритет', p.priority), leaf('load', 'Загрузка', p.load * 100, '%'), leaf('output', 'Фактический выпуск', p.actualOutput, p.unit), ...p.consumption.map(input => leaf('input:' + input.key, 'Расход: ' + input.resource, input.actualAmount, input.unit))]));
+    // Keep every enterprise and its allocation order; large reports open in pages.
+    const facilityTree = folder('facilities', 'Загрузка предприятий · по приоритету', facilityRows);
+    if (facilityRows.length > 200) {
+      facilityTree.defaultOpen = false; facilityTree.children = [];
+      for (let start = 0; start < facilityRows.length; start += 100) facilityTree.children.push({ ...folder('page:' + start, 'Предприятия ' + (start + 1) + '–' + Math.min(start + 100, facilityRows.length), facilityRows.slice(start, start + 100)), defaultOpen: false });
+    }
     const children = [
       ...resources.filter(c => c.net > 0).map(c => leaf(c.key, c.resource, c.net, c.unit)),
       folder('gross', 'Грязное производство', [
         ...resources.filter(c => c.maximumProduction > 0 || c.base > 0).map(c => leaf(c.key, resourceName(c), c.gross, c.unit)),
-        folder('facilities', 'Загрузка предприятий · по приоритету', allocation.map(p => folder(JSON.stringify([p.regionId, p.id]), p.title + ' · #' + p.regionId, [leaf('priority', 'Приоритет', p.priority), leaf('load', 'Загрузка', p.load * 100, '%'), leaf('output', 'Фактический выпуск', p.actualOutput, p.unit), ...p.consumption.map(input => leaf('input:' + input.key, 'Расход: ' + input.resource, input.actualAmount, input.unit))])))
+        facilityTree
       ]),
       folder('potential', 'Потенциал', resources.map(c => folder(c.key, resourceName(c), [leaf('production', 'Общее максимальное производство', c.maximumProduction, c.unit), leaf('consumption', 'Общее максимальное потребление', c.maximumConsumption, c.unit)]))),
       folder('bonuses', 'Бонусы', [folder('base', 'Базовое производство', resources.filter(c => c.maximumProduction > 0 || c.base > 0).map(c => leaf(c.key, resourceName(c), c.base, c.unit))), folder('applied', 'Бонусы', bonusGroups)])

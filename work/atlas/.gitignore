@@ -8,3 +8,5 @@ __pycache__/
 
 # Local preview copy of the geography deliverable.
 dist/atlas-1936.html
+dist/atlas-1936-import.html
+dist/atlas-1936-economy.html

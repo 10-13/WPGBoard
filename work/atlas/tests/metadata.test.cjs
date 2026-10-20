@@ -58,3 +58,10 @@ test('invalid result trees fail in isolation and do not suppress the remaining c
   const b = state.statistics.register('bad.folder', { collect: () => ({ children: [{ id: 'both', value: 1, children: [] }] }) });
   const r = state.statistics.collect([1]); assert.equal(r.errors.length, 2); assert.equal(r.tree.length, 2); assert.equal(r.value(['basic.geometry', 'area']), 2); a.dispose(); b.dispose();
 });
+test('world-sized reports exceed ten thousand nodes while retaining a finite safety limit', () => {
+  const { state } = fixture();
+  const registration = state.statistics.register('large', { collect: () => ({ children: Array.from({ length: 12000 }, (_, i) => ({ id: String(i), value: i })) }) });
+  let report = state.statistics.collect([1]); assert.deepEqual(report.errors, []); assert.equal(report.value(['large', '11999']), 11999); registration.dispose();
+  const oversized = state.statistics.register('oversized', { collect: () => ({ children: Array.from({ length: 100001 }, (_, i) => ({ id: String(i), value: i })) }) });
+  report = state.statistics.collect([1]); assert.match(report.errors[0].message, /100000/); assert.equal(report.get('oversized'), null); oversized.dispose();
+});

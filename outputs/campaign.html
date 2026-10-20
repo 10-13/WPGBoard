@@ -219,7 +219,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     function treeNodes(nodes, depth = 0, count = { value: 0 }) {
       if (!Array.isArray(nodes) || depth > 32) throw new Error('Нужен массив узлов дерева глубиной до 32.'); const ids = new Set();
       return nodes.map(raw => {
-        if (!object(raw) || typeof raw.id !== 'string' || !raw.id || raw.id.length > 2048 || ids.has(raw.id) || ++count.value > 10000) throw new Error('Узлам нужны уникальные ID; максимум 10000 узлов.'); ids.add(raw.id);
+        if (!object(raw) || typeof raw.id !== 'string' || !raw.id || raw.id.length > 2048 || ids.has(raw.id) || ++count.value > 100000) throw new Error('Узлам нужны уникальные ID; максимум 100000 узлов.'); ids.add(raw.id);
         const node = clone(raw); node.title = node.title === undefined ? node.id : node.title;
         if (typeof node.title !== 'string' || (node.unit !== undefined && typeof node.unit !== 'string')) throw new Error('Заголовок и единицы узла должны быть строками.');
         if (Object.hasOwn(node, 'children')) { if (Object.hasOwn(node, 'value')) throw new Error('Папка не может одновременно быть результатом.'); node.type = 'folder'; node.children = treeNodes(node.children, depth + 1, count); }
@@ -1380,8 +1380,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     const render = (node, container, path) => {
       const nextPath = [...path, node.id], key = JSON.stringify(nextPath);
       if (node.type === 'folder') {
-        const group = createDataGroup(node.title, { id: node.id, open: expanded.has(key) ? expanded.get(key) : path.length < 3, onToggle: open => expanded.set(key, open) });
-        for (const child of node.children) render(child, group.body, nextPath); container.append(group.element);
+        let mounted = false;
+        const mount = () => { if (mounted) return; mounted = true; for (const child of node.children) render(child, group.body, nextPath); };
+        const group = createDataGroup(node.title, { id: node.id, open: expanded.has(key) ? expanded.get(key) : node.defaultOpen ?? path.length < 3, onToggle: open => { expanded.set(key, open); if (open) mount(); } });
+        if (group.element.open) mount(); container.append(group.element);
       } else container.append(createDataRow(node.title, formatValue(node), { id: node.id }));
     };
     for (const node of nodes) render(node, tree, []); parent.append(tree); return tree;
@@ -2536,11 +2538,18 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       const rows = [...bonusRecords.values()].filter(b => b.key === c.key);
       return folder(c.key, resourceName(c), [leaf('gain', 'Прибавка к максимальному выпуску', c.maximumProduction - c.base, c.unit), ...Object.entries(BONUSES).filter(([type]) => rows.some(b => b.type === type)).map(([type, spec]) => folder(type, spec.label, rows.filter(b => b.type === type).map(b => leaf(b.id, b.title + ' · провинция #' + b.regionId + (spec.efficiency && b.inputResource !== '*' ? ' · сырьё: ' + b.inputResource : ''), b.value, spec.percent ? '%' : spec.efficiency ? b.inputUnit === '*' ? 'ед. сырья' : b.inputUnit : c.unit))))]);
     });
+    const facilityRows = allocation.map(p => folder(JSON.stringify([p.regionId, p.id]), p.title + ' · #' + p.regionId, [leaf('priority', 'Приоритет', p.priority), leaf('load', 'Загрузка', p.load * 100, '%'), leaf('output', 'Фактический выпуск', p.actualOutput, p.unit), ...p.consumption.map(input => leaf('input:' + input.key, 'Расход: ' + input.resource, input.actualAmount, input.unit))]));
+    // Keep every enterprise and its allocation order; large reports open in pages.
+    const facilityTree = folder('facilities', 'Загрузка предприятий · по приоритету', facilityRows);
+    if (facilityRows.length > 200) {
+      facilityTree.defaultOpen = false; facilityTree.children = [];
+      for (let start = 0; start < facilityRows.length; start += 100) facilityTree.children.push({ ...folder('page:' + start, 'Предприятия ' + (start + 1) + '–' + Math.min(start + 100, facilityRows.length), facilityRows.slice(start, start + 100)), defaultOpen: false });
+    }
     const children = [
       ...resources.filter(c => c.net > 0).map(c => leaf(c.key, c.resource, c.net, c.unit)),
       folder('gross', 'Грязное производство', [
         ...resources.filter(c => c.maximumProduction > 0 || c.base > 0).map(c => leaf(c.key, resourceName(c), c.gross, c.unit)),
-        folder('facilities', 'Загрузка предприятий · по приоритету', allocation.map(p => folder(JSON.stringify([p.regionId, p.id]), p.title + ' · #' + p.regionId, [leaf('priority', 'Приоритет', p.priority), leaf('load', 'Загрузка', p.load * 100, '%'), leaf('output', 'Фактический выпуск', p.actualOutput, p.unit), ...p.consumption.map(input => leaf('input:' + input.key, 'Расход: ' + input.resource, input.actualAmount, input.unit))])))
+        facilityTree
       ]),
       folder('potential', 'Потенциал', resources.map(c => folder(c.key, resourceName(c), [leaf('production', 'Общее максимальное производство', c.maximumProduction, c.unit), leaf('consumption', 'Общее максимальное потребление', c.maximumConsumption, c.unit)]))),
       folder('bonuses', 'Бонусы', [folder('base', 'Базовое производство', resources.filter(c => c.maximumProduction > 0 || c.base > 0).map(c => leaf(c.key, resourceName(c), c.base, c.unit))), folder('applied', 'Бонусы', bonusGroups)])
@@ -2913,7 +2922,8 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   function drawResourceMarkers(context, regions, tiles) {
     for (const [key, tile] of Object.entries(tiles || {})) {
       const region = regions.get(Number(key)); if (!region) continue;
-      const entries = Object.values(tile.entries || {}).filter(e => e.source === 'resources'), hasProduction = entries.some(e => e.kind === 'production'), hasPoint = entries.some(e => e.kind === 'resource-point');
+      // Provincial baseline is background output, not a discrete factory.
+      const entries = Object.values(tile.entries || {}).filter(e => e.source === 'resources'), hasProduction = entries.some(e => e.kind === 'production' && e.stats['resource.role'] !== 'baseline'), hasPoint = entries.some(e => e.kind === 'resource-point');
       const [cx, cy] = region.anchor;
       if (hasProduction) {
         const x = cx - (hasPoint ? 9 : 0), y = cy; context.fillStyle = '#101c22'; context.fillRect(x - 7, y - 4, 15, 11); context.fillRect(x - 6, y - 9, 5, 6);
@@ -3004,7 +3014,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
               actions.append(button('Изменить', () => edit(id, entry.kind, entry), { className: 'small' }), button('Метаданные', () => openData('metadata:open', { regionId: id }), { className: 'small' }), button('Удалить', protect(() => model.remove(id, entry.id)), { className: 'small' })); card.append(actions); pane.append(group.element);
             }
             if (!model.list(id).length) pane.append(el('p', 'muted', 'Объектов пока нет. Ресурсная точка усиливает подходящие производства, своего выпуска у неё нет.'));
-            pane.append(el('p', 'muted small', 'На карте: золотой завод — производство, бирюзовый ромб — ресурсная точка.'));
+            pane.append(el('p', 'muted small', 'На карте: золотой завод — предприятие, бирюзовый ромб — ресурсная точка. Фоновый выпуск — без значка.'));
           };
           const update = e => { selected = e.id; draw(); }; tab.onRegionClick(update);
           ui.input.on('selection:change', e => { if (!e.fromClick) update(e); }, { signal: scope.signal }); state.on('change', draw, { signal: scope.signal }); state.on('map:loaded', draw, { signal: scope.signal }); draw();
