@@ -415,6 +415,7 @@
       ui.on('statistics:open', (e) => openStatistics(e.regionIds, e.title), { signal });
       ui.on('statistics:add-regions', (e) => addRegions(e.regionIds), { signal });
       ui.on('statistics:remove-regions', (e) => removeRegions(e.regionIds), { signal });
+      ctx.provide({ openMetadata, openStatistics, addRegions, removeRegions });
       ctx.windowMenu({ id: 'entries', label: 'Метаданные тайла', handler: () => openMetadata() });
       ctx.windowMenu({
         id: 'statistics',

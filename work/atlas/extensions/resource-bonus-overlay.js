@@ -308,10 +308,12 @@
                 group.body.append(el('p', 'metadata-description', point.description));
               selected.body.append(group.element);
             }
-            if (id && ctx.ui.extensions.isEnabled('metadata'))
+            if (id && ctx.ui.extensions.isEnabled('resources:metadata'))
               selected.body.append(
                 button('Метаданные провинции', () =>
-                  ctx.ui.emit('metadata:open', { regionId: id }),
+                  ctx.ui.extensions
+                    .getAPI('resources:metadata')
+                    ?.openData('metadata:open', { regionId: id }),
                 ),
               );
             pane.append(selected.element);
@@ -330,6 +332,7 @@
             { signal: scope.signal },
           );
           this.on('change', draw, { signal: scope.signal });
+          ctx.ui.extensions.on('change', draw, { signal: scope.signal });
           draw();
         },
       });

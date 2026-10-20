@@ -16,13 +16,39 @@
     id: 'resources',
     name: 'Ресурсы и производства',
     description: 'Рецепты, снабжение по приоритету, чистый выпуск и баффы.',
+    children: [
+      {
+        id: 'catalog',
+        name: 'Каталог и чертежи',
+        description: 'Ресурсы, цвета, рецепты и дерево стоимости.',
+        start(ctx) {
+          new root.AtlasExtensions.ResourceCatalogUI(ctx, ctx.require('resources').catalog);
+        },
+      },
+      {
+        id: 'metadata',
+        name: 'Связь с метаданными',
+        requires: ['metadata'],
+        description: 'Открытие метаданных и статистики из объектов ресурсов.',
+        start(ctx) {
+          ctx.provide({
+            openData(event, payload) {
+              const metadata = ctx.require('metadata');
+              if (event === 'metadata:open') metadata.openMetadata(payload.regionId);
+              else if (event === 'statistics:open')
+                metadata.openStatistics(payload.regionIds, payload.title);
+            },
+          });
+        },
+      },
+    ],
     start(ctx) {
       const { state, ui, signal } = ctx,
         model = new ResourceModel(state),
         catalog = new root.AtlasExtensions.ResourceCatalog(state);
       model.registerStatistics(signal);
       catalog.registerActions(signal);
-      new root.AtlasExtensions.ResourceCatalogUI(ctx, catalog);
+      ctx.provide({ model, catalog });
       let selected = ui.viewport.selectedId;
       new root.AtlasExtensions.ResourceOverlay(ctx);
       new root.AtlasExtensions.ResourceBonusOverlay(ctx);
@@ -36,11 +62,14 @@
           }
         };
       const openData = (event, payload) => {
-        if (!ui.extensions.isEnabled('metadata')) {
-          ui.notify('Включите модуль «Метаданные и статистика».');
+        const bridge = ui.extensions.getAPI('resources:metadata');
+        if (!bridge) {
+          ui.notify(
+            'Включите «Метаданные и статистика» и подрасширение ресурсов «Связь с метаданными».',
+          );
           return;
         }
-        ui.emit(event, payload);
+        bridge.openData(event, payload);
       };
       const markers = ctx.overlay({ id: 'markers', title: 'Ресурсы и производства', order: 20 });
       const drawMarkers = () => {
@@ -331,13 +360,15 @@
                 button('+ Ресурсная точка', () => edit(id, 'resource-point')),
               );
               pane.append(tools);
-              pane.append(
-                button(
-                  'Статистика провинции',
-                  () => openData('statistics:open', { regionIds: [id], title: 'Провинция #' + id }),
-                  { className: 'wide small' },
-                ),
-              );
+              if (ui.extensions.isEnabled('resources:metadata'))
+                pane.append(
+                  button(
+                    'Статистика провинции',
+                    () =>
+                      openData('statistics:open', { regionIds: [id], title: 'Провинция #' + id }),
+                    { className: 'wide small' },
+                  ),
+                );
               for (const entry of model.list(id)) {
                 const key = id + ':' + entry.id,
                   group = createDataGroup(entry.title, {
@@ -391,15 +422,18 @@
                 const actions = el('div', 'form-actions');
                 actions.append(
                   button('Изменить', () => edit(id, entry.kind, entry), { className: 'small' }),
-                  button('Метаданные', () => openData('metadata:open', { regionId: id }), {
-                    className: 'small',
-                  }),
                   button(
                     'Удалить',
                     protect(() => model.remove(id, entry.id)),
                     { className: 'small' },
                   ),
                 );
+                if (ui.extensions.isEnabled('resources:metadata'))
+                  actions.append(
+                    button('Метаданные', () => openData('metadata:open', { regionId: id }), {
+                      className: 'small',
+                    }),
+                  );
                 card.append(actions);
                 pane.append(group.element);
               }
@@ -433,6 +467,7 @@
             );
             state.on('change', draw, { signal: scope.signal });
             state.on('map:loaded', draw, { signal: scope.signal });
+            ui.extensions.on('change', draw, { signal: scope.signal });
             draw();
           },
         });

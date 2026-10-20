@@ -118,6 +118,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 .extension-row>span { flex:1; min-width:0; overflow-wrap:anywhere }
 .extension-row strong,.extension-row small { display:block }
 .extension-row small { color:#839ca8 }
+.extension-node>summary>button { flex:0 0 auto; margin:0 }
 .overlay-row { display:flex; align-items:flex-start; gap:4px; min-height:var(--atlas-step) }
 .overlay-toggle { flex:1; min-width:0; text-align:left; padding:0 4px }
 .overlay-toggle .data-name { max-width:none }

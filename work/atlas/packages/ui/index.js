@@ -1,6 +1,8 @@
 (function (root) {
   'use strict';
-  const { EventBus, Scope } = root.AtlasCore;
+  const { EventBus } = root.AtlasCore;
+  const { ExtensionHost } =
+    typeof module !== 'undefined' && module.exports ? require('./extensions.js') : root.AtlasUI;
   const { button, createSwitch } = root.AtlasUI.controls;
   const el = (tag, className = '', text = '') => {
     const node = document.createElement(tag);
@@ -12,107 +14,6 @@
     const node = el('label', 'field');
     node.append(el('span', 'field-label', label), input);
     return node;
-  }
-  class ExtensionHost extends EventBus {
-    #definitions = new Map();
-    #running = new Map();
-    constructor(ui) {
-      super();
-      this.ui = ui;
-    }
-    register(definition) {
-      if (
-        !definition?.id ||
-        typeof definition.start !== 'function' ||
-        this.#definitions.has(definition.id)
-      )
-        throw new Error('Расширение уже зарегистрировано или имеет неверный формат.');
-      this.#definitions.set(definition.id, definition);
-      this.emit('change', {});
-      return () => {
-        this.disable(definition.id);
-        this.#definitions.delete(definition.id);
-        this.emit('change', {});
-      };
-    }
-    get list() {
-      return [...this.#definitions.values()].map((d) => ({
-        id: d.id,
-        name: d.name || d.id,
-        description: d.description || '',
-        enabled: this.isEnabled(d.id),
-      }));
-    }
-    isEnabled(id) {
-      return !!this.#running.get(id) && !this.#running.get(id).disposed;
-    }
-    async enable(id) {
-      if (this.isEnabled(id)) return;
-      const definition = this.#definitions.get(id);
-      if (!definition) throw new Error('Расширение не найдено.');
-      const scope = new Scope(),
-        ui = this.ui;
-      this.#running.set(id, scope);
-      const context = Object.freeze({
-        id,
-        state: ui.state,
-        ui,
-        scope,
-        signal: scope.signal,
-        on: (type, fn) => ui.input.on(type, fn, { signal: scope.signal }),
-        action: (fn) => new root.AtlasUI.ActionHandler(fn, { signal: scope.signal }),
-        menu: (menu, item) =>
-          menu.register({ ...item, id: id + ':' + item.id, signal: scope.signal }),
-        windowMenu: (item) =>
-          ui.mainMenu.register({
-            ...item,
-            id: id + ':window:' + item.id,
-            path: ['Вид', 'Окна'],
-            signal: scope.signal,
-          }),
-        window: (options) =>
-          ui.windows.open({
-            ...options,
-            id: id + ':' + options.id,
-            windowId: options.windowId ? id + ':' + options.windowId : undefined,
-            signal: scope.signal,
-          }),
-        overlay: (options) =>
-          ui.viewport.addOverlay({
-            ...options,
-            id: id + ':' + options.id,
-            source: id,
-            signal: scope.signal,
-          }),
-        layer: (options) =>
-          ui.viewport.addOverlay({
-            ...options,
-            id: id + ':' + options.id,
-            source: id,
-            signal: scope.signal,
-          }),
-        onRegionClick: (handler, options = {}) =>
-          ui.regionClicks.subscribe(handler, { ...options, mode: 'passive', signal: scope.signal }),
-      });
-      try {
-        const cleanup = await definition.start(context);
-        if (typeof cleanup === 'function') scope.defer(cleanup);
-        else if (cleanup?.dispose) scope.own(cleanup);
-      } catch (error) {
-        scope.dispose();
-        this.#running.delete(id);
-        this.emit('change', {});
-        throw error;
-      }
-      this.emit('change', {});
-    }
-    disable(id) {
-      const scope = this.#running.get(id);
-      if (!scope) return;
-      scope.dispose();
-      this.#running.delete(id);
-      this.emit('change', {});
-    }
   }
   const singletonKey = Symbol('Interface');
   let singleton;
@@ -508,35 +409,91 @@
         x: Math.max(10, this.workspace.clientWidth - 340),
         y: 18,
         width: 320,
-        height: 310,
+        height: 420,
         render: (pane, scope) => {
+          const { createDataGroup, createDataRow } = root.AtlasUI.dataView;
+          const expanded = new Map();
           const draw = () => {
+            const focused = document.activeElement?.dataset.extensionId;
             pane.replaceChildren(
-              el('p', 'muted', 'Отключение удаляет UI и подписки модуля. Данные игры сохраняются.'),
+              el(
+                'p',
+                'muted',
+                'Дочерний модуль зависит от всех родителей. Дополнительные связи не меняют дерево. Данные игры сохраняются при отключении.',
+              ),
             );
-            for (const extension of this.extensions.list) {
-              const row = el('label', 'extension-row'),
-                input = document.createElement('input');
-              input.type = 'checkbox';
-              input.checked = extension.enabled;
-              input.setAttribute('aria-label', extension.name);
-              const text = el('span');
-              text.append(el('strong', '', extension.name), el('small', '', extension.description));
-              row.append(input, text);
-              input.onchange = async () => {
-                try {
-                  input.disabled = true;
-                  if (input.checked) await this.extensions.enable(extension.id);
-                  else this.extensions.disable(extension.id);
-                } catch (error) {
-                  this.notify(error.message);
+            const names = new Map(this.extensions.list.map((item) => [item.id, item.name]));
+            const labels = {
+              enabled: 'Вкл.',
+              starting: 'Запуск',
+              waiting: 'Ожидает',
+              error: 'Ошибка',
+              disabled: 'Выкл.',
+            };
+            const render = (extension, parent, path = '') => {
+              const title = path ? path + ' → ' + extension.name : extension.name;
+              const group = createDataGroup(extension.name, {
+                id: extension.id,
+                open: expanded.get(extension.id) ?? extension.children.length > 0,
+                onToggle: (value) => expanded.set(extension.id, value),
+              });
+              const toggle = createSwitch(
+                labels[extension.status],
+                async (checked, event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  try {
+                    if (checked) await this.extensions.enable(extension.id);
+                    else this.extensions.disable(extension.id);
+                  } catch (error) {
+                    this.notify(error.message);
+                  }
                   draw();
-                } finally {
-                  input.disabled = false;
-                }
-              };
-              pane.append(row);
-            }
+                },
+                { checked: extension.requested, title: title },
+              );
+              toggle.dataset.extensionId = extension.id;
+              toggle.setAttribute('aria-label', 'Расширение: ' + title);
+              group.element.classList.add('extension-node');
+              group.element.querySelector('summary').append(toggle);
+              if (extension.description) group.body.append(el('p', 'muted', extension.description));
+              if (extension.requires.length)
+                group.body.append(
+                  createDataRow(
+                    'Зависимости',
+                    extension.requires.map((id) => names.get(id) || id).join(', '),
+                  ),
+                );
+              if (extension.missing.length && extension.requested)
+                group.body.append(
+                  createDataRow(
+                    'Ожидает',
+                    extension.missing.map((id) => names.get(id) || id).join(', '),
+                  ),
+                );
+              if (extension.missing.length && extension.requested)
+                group.body.append(
+                  button(
+                    'Включить зависимости',
+                    async () => {
+                      try {
+                        await this.extensions.enable(extension.id);
+                      } catch (error) {
+                        this.notify(error.message);
+                      }
+                    },
+                    { disabled: extension.missing.some((id) => !names.has(id)) },
+                  ),
+                );
+              if (extension.error) group.body.append(el('p', 'form-error', extension.error));
+              for (const child of extension.children) render(child, group.body, title);
+              parent.append(group.element);
+            };
+            for (const extension of this.extensions.tree) render(extension, pane);
+            if (focused)
+              [...pane.querySelectorAll('button[data-extension-id]')]
+                .find((node) => node.dataset.extensionId === focused)
+                ?.focus({ preventScroll: true });
           };
           this.extensions.on('change', draw, { signal: scope.signal });
           draw();
