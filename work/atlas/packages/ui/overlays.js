@@ -12,7 +12,7 @@
       this.registry = registry;
       this.#off = registry.on('change', () => this.#sync());
     }
-    add({ signal, space = 'world', exportDraw, ...definition }) {
+    add({ signal, space = 'world', exportDraw, lazy = false, ...definition }) {
       if (
         !['world', 'screen'].includes(space) ||
         (exportDraw !== undefined && typeof exportDraw !== 'function') ||
@@ -28,8 +28,10 @@
       const canvas = document.createElement('canvas');
       canvas.className = 'map-layer';
       canvas.dataset.layer = definition.id;
-      canvas.width = space === 'world' ? this.#width : 1;
-      canvas.height = space === 'world' ? this.#height : 1;
+      canvas.width =
+        space === 'world' && (!lazy || registration.current?.visible) ? this.#width : 1;
+      canvas.height =
+        space === 'world' && (!lazy || registration.current?.visible) ? this.#height : 1;
       const context = canvas.getContext('2d', { willReadFrequently: true });
       context.imageSmoothingEnabled = false;
       world.append(canvas);
@@ -42,6 +44,7 @@
         canvas,
         context,
         space,
+        lazy: !!lazy,
         exportDraw,
         registration,
       };
@@ -73,20 +76,28 @@
       for (const overlay of this.registry.list) {
         const layer = this.#layers.get(overlay.id);
         if (layer) {
+          this.#sizeLayer(layer, overlay.visible);
           layer.plane.hidden = !overlay.visible;
           layer.plane.style.zIndex = String(overlay.index + 1);
         }
       }
     }
+    #sizeLayer(layer, visible, force = false) {
+      if (layer.space !== 'world') return;
+      const full = !layer.lazy || visible;
+      const width = full ? this.#width : 1,
+        height = full ? this.#height : 1;
+      if (!force && layer.canvas.width === width && layer.canvas.height === height) return;
+      layer.canvas.width = width;
+      layer.canvas.height = height;
+      layer.context.imageSmoothingEnabled = false;
+    }
     resizeWorld(width, height) {
       this.#width = width;
       this.#height = height;
       for (const layer of this.#layers.values())
-        if (layer.space === 'world') {
-          layer.canvas.width = width;
-          layer.canvas.height = height;
-          layer.context.imageSmoothingEnabled = false;
-        }
+        if (layer.space === 'world')
+          this.#sizeLayer(layer, this.registry.get(layer.id)?.visible, true);
     }
     transform(value) {
       this.#transform = value;

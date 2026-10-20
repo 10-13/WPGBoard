@@ -1,7 +1,7 @@
 /* Ordinary resource overlay and its compact legend; visibility lives in the registry. */
 (function (root) {
   'use strict';
-  const { EventBus, equal } = root.AtlasCore;
+  const { EventBus, equal, normalizeOverlayScope } = root.AtlasCore;
   const { resourceRichness, projectResourceRichness } = root.AtlasExtensions;
   function drawResourceRichness(context, index, data) {
     context.clearRect(0, 0, index.width, index.height);
@@ -28,7 +28,7 @@
         order: 15,
         visible: false,
       });
-      this.hiddenResources = this.readHiddenResources();
+      Object.assign(this, this.readOptions());
       const refresh = () => {
         if (ctx.signal.aborted) return;
         this.dirty = true;
@@ -62,10 +62,14 @@
       ctx.state.overlays.on(
         'settings:change',
         () => {
-          const hidden = this.readHiddenResources();
-          if (equal(hidden, this.hiddenResources)) return;
-          this.hiddenResources = hidden;
-          this.data = projectResourceRichness(this.data, hidden);
+          const options = this.readOptions();
+          if (
+            equal(options.hiddenResources, this.hiddenResources) &&
+            equal(options.provinceIds, this.provinceIds)
+          )
+            return;
+          Object.assign(this, options);
+          this.data = projectResourceRichness(this.data, this.hiddenResources, this.provinceIds);
           this.painted = null;
           this.draw();
           this.emit('change', {});
@@ -104,11 +108,25 @@
       );
       this.draw();
     }
-    readHiddenResources() {
-      const values = this.ctx.state.overlays.getOptions(this.overlay.id).hiddenResources;
-      return Array.isArray(values)
-        ? [...new Set(values.filter((key) => typeof key === 'string'))].sort()
-        : [];
+    readOptions() {
+      const options = this.ctx.state.overlays.getOptions(this.overlay.id),
+        values = options.hiddenResources;
+      let provinceIds = null;
+      try {
+        provinceIds = normalizeOverlayScope(options.provinceIds, this.ctx.state.regionIndex);
+      } catch (_) {}
+      return {
+        hiddenResources: Array.isArray(values)
+          ? [...new Set(values.filter((key) => typeof key === 'string'))].sort()
+          : [],
+        provinceIds,
+      };
+    }
+    setProvinceIds(provinceIds) {
+      this.ctx.state.overlays.setOptions(this.overlay.id, {
+        ...this.ctx.state.overlays.getOptions(this.overlay.id),
+        provinceIds,
+      });
     }
     setResourceVisible(key, visible) {
       const hidden = new Set(this.hiddenResources);
@@ -141,6 +159,7 @@
         this.data = projectResourceRichness(
           resourceRichness(block, this.ctx.state.meta.resources?.catalog),
           this.hiddenResources,
+          this.provinceIds,
         );
         if (block.invalid.length)
           this.message = 'Пропущено некорректных ресурсных записей: ' + block.invalid.length + '.';
@@ -172,6 +191,14 @@
         render: (pane, scope) => {
           pane.classList.add('atlas-data-scope');
           let expanded = true;
+          const areaControl = root.AtlasUI.overlayScope.createScopeControl({
+            state: ctx.state,
+            selection: ctx.ui.regionSelection,
+            areas: ctx.ui.overlayAreas,
+            readIds: () => this.provinceIds,
+            onChange: (ids) => this.setProvinceIds(ids),
+            signal: scope.signal,
+          });
           const draw = () => {
             const data = this.ensure();
             pane.replaceChildren();
@@ -181,19 +208,20 @@
                 className: 'wide',
                 title: 'Включить или выключить оверлей «Богатство ресурсов»',
               }),
+              areaControl,
             );
             pane.append(
               el(
                 'p',
                 'muted',
-                'Главный из включённых ресурсов: потенциальный выпуск с бонусами, до расходов сырья. При выключении лидера выбирается следующий ресурс.',
+                'Главный из включённых ресурсов: потенциальный выпуск с бонусами, до расходов сырья. При выключении лидера выбирается следующий ресурс. Область меняет шкалу и отрисовку, сохраняя мировой расчёт бонусов.',
               ),
             );
             pane.append(
               el(
                 'p',
                 'muted',
-                'Шкала слева направо: минимум → максимум по всем провинциям с выпуском. Цвет: на 50% темнее → на 50% светлее. Одинаковый выпуск — базовый цвет.',
+                'Шкала слева направо: минимум → максимум по провинциям с выпуском в выбранной области. Цвет: на 50% темнее → на 50% светлее. Одинаковый выпуск — базовый цвет.',
               ),
             );
 
@@ -201,7 +229,12 @@
               createDataRow('Окрашено провинций', data.winners.size.toLocaleString('ru-RU')),
               createDataRow(
                 'Без окраски',
-                (ctx.state.regions.size - data.winners.size).toLocaleString('ru-RU'),
+                (
+                  (this.provinceIds === null
+                    ? ctx.state.regions.size
+                    : this.provinceIds.filter((id) => ctx.state.regions.has(id)).length) -
+                  data.winners.size
+                ).toLocaleString('ru-RU'),
               ),
             );
             if (this.message) pane.append(el('p', 'form-error', this.message));
@@ -210,7 +243,7 @@
                 el(
                   'p',
                   'muted',
-                  'Нет производств с положительным выпуском. Ресурсные точки без производства не дают выпуск.',
+                  'В выбранной области нет производств с положительным выпуском. Ресурсные точки без производства не дают выпуск.',
                 ),
               );
               return;

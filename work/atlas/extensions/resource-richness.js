@@ -1,6 +1,7 @@
 /* A view of provincial potential: fixed resource identity and local intensity. */
 (function (root) {
   'use strict';
+  const { normalizeOverlayScope } = root.AtlasCore || require('../packages/core/index.js');
   const { resourceKey } =
     typeof module !== 'undefined' && module.exports
       ? require('./resources-model.js')
@@ -9,12 +10,46 @@
     typeof module !== 'undefined' && module.exports
       ? require('./resource-colors.js')
       : root.AtlasExtensions;
-  function projectResourceRichness(data, hiddenResources = []) {
-    const hidden = new Set(hiddenResources),
-      legend = data.legend.map((item) => ({ ...item, count: 0, enabled: !hidden.has(item.key) })),
-      resources = new Map(legend.map((item) => [item.key, item])),
+  function projectResourceRichness(
+    data,
+    hiddenResources = [],
+    provinceIds = data.provinceIds ?? null,
+  ) {
+    const scopeIds = normalizeOverlayScope(provinceIds),
+      scope = scopeIds === null ? null : new Set(scopeIds),
+      allProvinces = data.allProvinces || data.provinces,
+      allLegend = data.allLegend || data.legend,
+      provinces =
+        scope === null ? allProvinces : new Map([...allProvinces].filter(([id]) => scope.has(id))),
+      hidden = new Set(hiddenResources),
+      candidates = allLegend.map((item) => ({
+        ...item,
+        min: Infinity,
+        max: 0,
+        producingCount: 0,
+        count: 0,
+        enabled: !hidden.has(item.key),
+      })),
+      resources = new Map(candidates.map((item) => [item.key, item])),
       winners = new Map();
-    for (const [id, amounts] of data.provinces) {
+    // Normalize within the displayed area, including provinces where this resource loses.
+    for (const amounts of provinces.values())
+      for (const [key, amount] of amounts) {
+        const item = resources.get(key);
+        item.min = Math.min(item.min, amount);
+        item.max = Math.max(item.max, amount);
+        item.producingCount++;
+      }
+    const legend = candidates.filter((item) => item.producingCount > 0);
+    for (const item of legend)
+      item.scale =
+        item.min === item.max
+          ? [{ amount: item.min, color: item.color }]
+          : [0, 0.25, 0.5, 0.75, 1].map((t) => ({
+              amount: item.min + (item.max - item.min) * t,
+              color: resourceShade(item.color, t),
+            }));
+    for (const [id, amounts] of provinces) {
       let winner = null;
       for (const [key, amount] of amounts) {
         const item = resources.get(key);
@@ -42,9 +77,9 @@
         resources.get(winner.key).count++;
       }
     }
-    return { legend, winners, provinces: data.provinces };
+    return { legend, winners, provinces, allLegend, allProvinces, provinceIds: scopeIds };
   }
-  function resourceRichness(block, catalog) {
+  function resourceRichness(block, catalog, provinceIds = null) {
     const legend = [],
       resources = new Map(),
       provinces = new Map(),
@@ -79,23 +114,7 @@
         amounts.set(key, amount);
       }
     }
-    // Bounds use all producing provinces, even where another resource dominates.
-    for (const amounts of provinces.values())
-      for (const [key, amount] of amounts) {
-        const item = resources.get(key);
-        item.min = Math.min(item.min, amount);
-        item.max = Math.max(item.max, amount);
-        item.producingCount++;
-      }
-    for (const item of legend)
-      item.scale =
-        item.min === item.max
-          ? [{ amount: item.min, color: item.color }]
-          : [0, 0.25, 0.5, 0.75, 1].map((t) => ({
-              amount: item.min + (item.max - item.min) * t,
-              color: resourceShade(item.color, t),
-            }));
-    return projectResourceRichness({ legend, provinces });
+    return projectResourceRichness({ legend, provinces }, [], provinceIds);
   }
   const api = { resourceColor, resourceRichness, projectResourceRichness };
   Object.assign((root.AtlasExtensions ||= {}), api);

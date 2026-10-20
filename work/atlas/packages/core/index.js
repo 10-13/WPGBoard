@@ -900,7 +900,7 @@
       ? require('./metadata.js')
       : root.AtlasMetadataCore
   ).createMetadataAPI({ EventBus, clone, freeze, uid });
-  const { OverlayRegistry } = (
+  const { OverlayRegistry, normalizeOverlayScope } = (
     typeof module !== 'undefined' && module.exports
       ? require('./overlays.js')
       : root.AtlasOverlayCore
@@ -1101,6 +1101,7 @@
     TileMetadata,
     StatisticsRegistry,
     OverlayRegistry,
+    normalizeOverlayScope,
     GameState,
     getGameState,
     diff,

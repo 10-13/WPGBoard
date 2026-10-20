@@ -10,6 +10,26 @@
       const { state, ui, signal } = ctx,
         model = new root.AtlasExtensions.RegionsModel(state);
       model.registerActions(signal);
+      ui.overlayAreas.register(
+        'regions',
+        {
+          getAreas() {
+            const members = new Map();
+            for (const [province, region] of Object.entries(model.data.assignments)) {
+              const id = Number(province);
+              if (!state.regions.has(id)) continue;
+              if (!members.has(region)) members.set(region, []);
+              members.get(region).push(id);
+            }
+            return Object.values(model.data.items).map((region) => ({
+              id: region.id,
+              title: region.name,
+              provinceIds: members.get(region.id) || [],
+            }));
+          },
+        },
+        { signal },
+      );
       new root.AtlasExtensions.RegionOverlay(ctx, model);
       let activeRegion = Object.keys(model.data.items)[0] || null;
       const protect =

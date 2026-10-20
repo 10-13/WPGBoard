@@ -82,12 +82,14 @@
     ui.extensions.register(AtlasExtensions.history);
     ui.extensions.register(AtlasExtensions.metadata);
     ui.extensions.register(AtlasExtensions.resources);
+    ui.extensions.register(AtlasExtensions.geography);
     await ui.extensions.enable('files');
     await ui.extensions.enable('nations');
     await ui.extensions.enable('regions');
     await ui.extensions.enable('history');
     await ui.extensions.enable('metadata');
     await ui.extensions.enable('resources');
+    await ui.extensions.enable('geography');
     state.on('history:change', () => {
       clearTimeout(saveTimer);
       saveTimer = setTimeout(persist, 400);

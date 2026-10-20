@@ -2,6 +2,18 @@
 (function (root) {
   'use strict';
   function createOverlayAPI({ EventBus, clone, freeze, equal }) {
+    // A display scope is an explicit snapshot, independent from game/history state.
+    function normalizeOverlayScope(value, index = null) {
+      if (value === undefined || value === null) return null;
+      if (
+        !Array.isArray(value) ||
+        value.some((id) => !Number.isInteger(id) || id < 1 || id > 100000)
+      )
+        throw new Error('Область оверлея — массив ID провинций или null.');
+      return Object.freeze(
+        [...new Set(value)].filter((id) => !index || index.get(id)).sort((a, b) => a - b),
+      );
+    }
     const unsafe = new Set(['__proto__', 'prototype', 'constructor']);
     const validId = (id) =>
       typeof id === 'string' && !!id.trim() && id.length <= 150 && !unsafe.has(id);
@@ -187,7 +199,7 @@
         this.emit('change', { overlays: list });
       }
     }
-    return { OverlayRegistry };
+    return { OverlayRegistry, normalizeOverlayScope };
   }
   root.AtlasOverlayCore = { createOverlayAPI };
   if (typeof module !== 'undefined' && module.exports) module.exports = { createOverlayAPI };

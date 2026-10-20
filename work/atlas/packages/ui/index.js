@@ -25,6 +25,7 @@
       super();
       if (key !== singletonKey) throw new Error('Используйте AtlasUI.getUI().');
       this.input = new EventBus();
+      this.overlayAreas = new root.AtlasUI.overlayScope.AreaRegistry();
       this.regionClicks = new root.AtlasUI.RegionClicks({ onError: (e) => this.notify(e.message) });
       this.saveStatus = 'Локальная партия';
       this.mainMenu = new root.AtlasUI.TreeMenu({
