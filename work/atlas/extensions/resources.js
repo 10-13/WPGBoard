@@ -26,6 +26,7 @@
     id: 'resources', name: 'Ресурсы и производства', description: 'Рецепты, снабжение по приоритету, чистый выпуск и баффы.',
     start(ctx) {
       const { state, ui, signal } = ctx, model = new ResourceModel(state), catalog = new root.AtlasExtensions.ResourceCatalog(state); model.registerStatistics(signal); catalog.registerActions(signal); new root.AtlasExtensions.ResourceCatalogUI(ctx, catalog); let selected = ui.viewport.selectedId;
+      new root.AtlasExtensions.ResourceOverlay(ctx);
       const protect = fn => (...args) => { try { return fn(...args); } catch (e) { ui.notify(e.message); } };
       const openData = (event, payload) => { if (!ui.extensions.isEnabled('metadata')) { ui.notify('Включите модуль «Метаданные и статистика».'); return; } ui.emit(event, payload); };
       const markers = ctx.overlay({ id: 'markers', title: 'Ресурсы и производства', order: 20 });

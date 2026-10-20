@@ -142,6 +142,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 .nation-select>.atlas-data-row>.data-value,.region-select>.atlas-data-row>.data-value { flex-shrink:0; max-width:none }
 .region-select { display:block; width:100%; padding:0 4px; text-align:left; background:none; box-shadow:none }
 .nation-swatch { width:8px; height:var(--atlas-step); display:block; box-shadow:inset 0 0 0 1px #b8c8ca33; flex-shrink:0 }
+.resource-legend-swatch { display:inline-block; width:10px; height:10px; margin:0 6px 0 0; vertical-align:middle; box-shadow:inset 0 0 0 1px #d3dcdf55 }
 .nation-row>.icon-button { background:none; box-shadow:none; color:#9eafb6 }
 .section-line { min-height:var(--atlas-step); margin:0; padding:0; display:flex; align-items:flex-start; gap:6px; color:#c5ba9d; overflow-wrap:anywhere }
 .section-line>span { min-width:0 }
@@ -2912,6 +2913,126 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 })(globalThis);
 
 ;
+/* A view of the resource calculator's provincial potential, without game writes. */
+(function (root) {
+  'use strict';
+  const { resourceKey } = typeof module !== 'undefined' && module.exports ? require('./resources-model.js') : root.AtlasExtensions;
+  function resourceColor(index) {
+    // Colors belong to encounter slots, not to resource IDs or names.
+    if (!Number.isInteger(index) || index < 0) throw new Error('Нужен номер ресурса.');
+    const hue = (24 + index * 137.508) % 360, saturation = [62, 68, 58][index % 3], lightness = [58, 62, 54][index % 3];
+    return 'hsl(' + hue.toFixed(3) + ' ' + saturation + '% ' + lightness + '%)';
+  }
+  function resourceRichness(block) {
+    const legend = [], resources = new Map(), provinces = new Map();
+    for (const group of block.details) {
+      const key = resourceKey(group.resource, group.unit);
+      if (!group.regions.some(row => row.after1 > 0)) continue;
+      if (!resources.has(key)) {
+        const item = { key, resource: group.resource, unit: group.unit, color: resourceColor(legend.length), index: legend.length, count: 0 };
+        resources.set(key, item); legend.push(item);
+      }
+      for (const row of group.regions) {
+        if (!(row.after1 > 0)) continue;
+        if (!provinces.has(row.regionId)) provinces.set(row.regionId, new Map());
+        const amounts = provinces.get(row.regionId), amount = (amounts.get(key) || 0) + row.after1;
+        if (!Number.isFinite(amount)) throw new Error('Переполнение потенциала ресурса.');
+        amounts.set(key, amount);
+      }
+    }
+    const winners = new Map();
+    for (const [id, amounts] of provinces) {
+      let winner = null;
+      for (const [key, amount] of amounts) {
+        const item = resources.get(key);
+        if (!winner || amount > winner.amount || amount === winner.amount && item.index < winner.index) winner = { key, amount, index: item.index, color: item.color, resource: item.resource, unit: item.unit };
+      }
+      if (winner) { winners.set(id, winner); resources.get(winner.key).count++; }
+    }
+    return { legend, winners };
+  }
+  const api = { resourceColor, resourceRichness };
+  Object.assign(root.AtlasExtensions ||= {}, api); if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(globalThis);
+
+;
+/* Ordinary resource overlay and its compact legend; visibility lives in the registry. */
+(function (root) {
+  'use strict';
+  const { EventBus, equal } = root.AtlasCore;
+  const { resourceRichness } = root.AtlasExtensions;
+  function drawResourceRichness(context, index, data) {
+    context.clearRect(0, 0, index.width, index.height); context.imageSmoothingEnabled = false;
+    for (const [id, winner] of data.winners) {
+      context.fillStyle = winner.color;
+      index.forEachRun(id, (start, length) => context.fillRect(start % index.width, Math.floor(start / index.width), length, 1));
+    }
+  }
+  class ResourceOverlay extends EventBus {
+    constructor(ctx) {
+      super(); this.ctx = ctx; this.dirty = true; this.data = { legend: [], winners: new Map() }; this.message = '';
+      this.overlay = ctx.overlay({ id: 'richness', title: 'Богатство ресурсов', order: 15, visible: false });
+      const refresh = () => { if (ctx.signal.aborted) return; this.dirty = true; this.painted = null; this.draw(); this.emit('change', {}); };
+      ctx.state.on('change', ({ before, after }) => { if (!equal(before.meta.tiles, after.meta.tiles)) refresh(); }, { signal: ctx.signal });
+      ctx.ui.on('map:ready', refresh, { signal: ctx.signal });
+      ctx.state.statistics.on('change', refresh, { signal: ctx.signal });
+      ctx.state.overlays.on('change', () => { if (!ctx.signal.aborted) { this.draw(); this.emit('change', {}); } }, { signal: ctx.signal });
+      ctx.scope.defer(() => { this.data = { legend: [], winners: new Map() }; this.painted = null; });
+      ctx.windowMenu({ id: 'resource-legend', label: 'Легенда ресурсов', handler: () => this.open() });
+      ctx.menu(ctx.ui.mainMenu, { id: 'resource-legend', path: ['Мир', 'Ресурсы'], label: 'Легенда ресурсов', handler: () => this.open() });
+      ctx.ui.registerTooltip('resources:richness', event => {
+        const winner = this.overlay.visible ? this.data.winners.get(event.id) : null;
+        return winner ? 'Главный ресурс: ' + winner.resource + ' · ' + winner.amount.toLocaleString('ru-RU', { maximumFractionDigits: 4 }) + ' ' + winner.unit : '';
+      }, { signal: ctx.signal }); this.draw();
+    }
+    ensure() {
+      if (!this.dirty) return this.data;
+      this.dirty = false; this.message = '';
+      try {
+        const report = this.ctx.state.statistics.calculate([...this.ctx.state.regions.keys()]), block = report.get('resources');
+        if (!block) throw new Error(report.errors.find(e => e.id === 'resources')?.message || 'Сборщик ресурсов недоступен.');
+        this.data = resourceRichness(block);
+        if (block.invalid.length) this.message = 'Пропущено некорректных ресурсных записей: ' + block.invalid.length + '.';
+      } catch (error) { this.data = { legend: [], winners: new Map() }; this.message = 'Не удалось рассчитать ресурсы: ' + error.message; }
+      return this.data;
+    }
+    draw() {
+      if (!this.ctx.ui.viewport.ready || !this.overlay.visible) return;
+      const data = this.ensure(); if (this.painted === data) return;
+      drawResourceRichness(this.overlay.context, this.ctx.state.regionIndex, data); this.painted = data;
+    }
+    open() {
+      const { ctx } = this;
+      const { el } = root.AtlasUI.dom, { createSwitch } = root.AtlasUI.controls;
+      const { createDataRow, createDataGroup } = root.AtlasUI.dataView;
+      return ctx.window({ id: 'resource-legend', title: 'Легенда ресурсов', x: 295, y: 35, width: 310, height: 490, render: (pane, scope) => {
+        pane.classList.add('atlas-data-scope'); let expanded = true;
+        const draw = () => {
+          const data = this.ensure(); pane.replaceChildren();
+          pane.append(createSwitch('Оверлей ресурсов', checked => this.overlay.setVisible(checked), { checked: this.overlay.visible, className: 'wide', title: 'Включить или выключить оверлей «Богатство ресурсов»' }));
+          pane.append(el('p', 'muted', 'Цвет — ресурс с наибольшим местным максимальным выпуском, с бонусами и до расходов сырья.'));
+          pane.append(el('p', 'muted', 'Цвета назначаются по порядку появления ресурсов. При равном выпуске выбирается первый.'));
+          pane.append(createDataRow('Окрашено провинций', data.winners.size.toLocaleString('ru-RU')), createDataRow('Без выпуска', (ctx.state.regions.size - data.winners.size).toLocaleString('ru-RU')));
+          if (this.message) pane.append(el('p', 'form-error', this.message));
+          if (!data.legend.length) { pane.append(el('p', 'muted', 'Нет производств с положительным выпуском. Ресурсные точки без производства не дают выпуск.')); return; }
+          const group = createDataGroup('Ресурсы · число провинций', { open: expanded, onToggle: open => expanded = open });
+          for (const item of data.legend) {
+            const duplicate = data.legend.some(other => other !== item && other.resource.trim().toLowerCase() === item.resource.trim().toLowerCase());
+            const row = createDataRow(item.resource + (duplicate ? ' · ' + item.unit : ''), item.count.toLocaleString('ru-RU'), { id: item.key });
+            const swatch = el('span', 'resource-legend-swatch'); swatch.style.backgroundColor = item.color; swatch.setAttribute('aria-hidden', 'true');
+            row.querySelector('.data-name').prepend(swatch); group.body.append(row);
+          }
+          pane.append(group.element);
+        };
+        this.on('change', draw, { signal: scope.signal }); draw();
+      } });
+    }
+  }
+  const api = { ResourceOverlay, drawResourceRichness };
+  Object.assign(root.AtlasExtensions ||= {}, api); if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(globalThis);
+
+;
 /* Optional resource UI, pixel markers and an interpreter over generic entries. */
 (function (root) {
   'use strict';
@@ -2940,6 +3061,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     id: 'resources', name: 'Ресурсы и производства', description: 'Рецепты, снабжение по приоритету, чистый выпуск и баффы.',
     start(ctx) {
       const { state, ui, signal } = ctx, model = new ResourceModel(state), catalog = new root.AtlasExtensions.ResourceCatalog(state); model.registerStatistics(signal); catalog.registerActions(signal); new root.AtlasExtensions.ResourceCatalogUI(ctx, catalog); let selected = ui.viewport.selectedId;
+      new root.AtlasExtensions.ResourceOverlay(ctx);
       const protect = fn => (...args) => { try { return fn(...args); } catch (e) { ui.notify(e.message); } };
       const openData = (event, payload) => { if (!ui.extensions.isEnabled('metadata')) { ui.notify('Включите модуль «Метаданные и статистика».'); return; } ui.emit(event, payload); };
       const markers = ctx.overlay({ id: 'markers', title: 'Ресурсы и производства', order: 20 });
