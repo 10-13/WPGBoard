@@ -2,7 +2,7 @@
 (function (root) {
   'use strict';
   const { createResourceColorResolver } = typeof module !== 'undefined' && module.exports ? require('./resource-colors.js') : root.AtlasExtensions;
-  const placements = new WeakMap();
+  const RESOURCE_MARKER_FRAME_COLOR = '#101c22', placements = new WeakMap();
   function groupByColor(entries, colorFor) {
     const groups = new Map();
     for (const entry of entries) {
@@ -51,18 +51,19 @@
     if (!objects.length) return empty;
     const [, , bw, bh] = region.bbox, gap = production.length && bonuses.length ? 1 : 0, candidates = [];
     for (const p of rectangles(production.length)) for (const b of rectangles(bonuses.length)) {
-      const width = Math.max(p.width, b.width), height = p.height + gap + b.height;
-      if (width <= bw && height <= bh) candidates.push({ p, b, width, height, score: Math.abs(Math.log(width / height / (bw / bh))) });
+      const width = Math.max(p.width, b.width) + 2, height = p.height + (production.length ? 2 : 0) + gap + b.height + (bonuses.length ? 2 : 0);
+      if (width <= bw && height <= bh) candidates.push({ p, b, width, height, score: Math.abs(Math.log(Math.max(p.width, b.width) / (p.height + gap + b.height) / (bw / bh))) });
     }
+    // Decorative frames affect fitting, while the approved pixel layout keeps its proportions.
     candidates.sort((a, b) => a.score - b.score || a.width * a.height - b.width * b.height || a.width - b.width);
     for (const candidate of candidates) {
       const position = nearestPlacement(index, region, candidate.width, candidate.height); if (!position) continue;
       const [x, y] = position, blocks = [], pixels = [];
-      for (const [kind, values, shape, top] of [['production', production, candidate.p, y], ['resource-point', bonuses, candidate.b, y + candidate.p.height + gap]]) {
+      for (const [kind, values, shape, top] of [['production', production, candidate.p, y], ['resource-point', bonuses, candidate.b, y + candidate.p.height + (production.length ? 2 : 0) + gap]]) {
         if (!values.length) continue;
-        const left = x + Math.floor((candidate.width - shape.width) / 2), bounds = [left, top, shape.width, shape.height];
-        const cells = values.map((value, i) => ({ ...value, x: left + i % shape.width, y: top + Math.floor(i / shape.width) }));
-        blocks.push({ kind, bounds, pixels: cells }); pixels.push(...cells);
+        const frameLeft = x + Math.floor((candidate.width - shape.width - 2) / 2), left = frameLeft + 1, bounds = [left, top + 1, shape.width, shape.height], frame = [frameLeft, top, shape.width + 2, shape.height + 2];
+        const cells = values.map((value, i) => ({ ...value, x: left + i % shape.width, y: top + 1 + Math.floor(i / shape.width) }));
+        blocks.push({ kind, bounds, frame, pixels: cells }); pixels.push(...cells);
       }
       return { bounds: [x, y, candidate.width, candidate.height], blocks, pixels, count: objects.length };
     }
@@ -74,9 +75,17 @@
     for (const [key, tile] of Object.entries(tiles || {})) {
       const region = index.get(Number(key)); if (!region) continue;
       const layout = layoutResourceMarkers(index, region, Object.values(tile.entries || {}), colorFor);
+      context.fillStyle = RESOURCE_MARKER_FRAME_COLOR;
+      for (const block of layout.blocks) {
+        const [x, y, width, height] = block.frame;
+        for (let row = 0; row < height; row++) {
+          if (row === 0 || row === height - 1) context.fillRect(x, y + row, width, 1);
+          else { context.fillRect(x, y + row, 1, 1); context.fillRect(x + width - 1, y + row, 1, 1); }
+        }
+      }
       for (const pixel of layout.pixels) { context.fillStyle = pixel.color; context.fillRect(pixel.x, pixel.y, 1, 1); }
     }
   }
-  const api = { layoutResourceMarkers, drawResourceMarkers };
+  const api = { RESOURCE_MARKER_FRAME_COLOR, layoutResourceMarkers, drawResourceMarkers };
   Object.assign(root.AtlasExtensions ||= {}, api); if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);

@@ -32,7 +32,15 @@
       return id && Object.hasOwn(RESOURCE_COLORS, id) ? RESOURCE_COLORS[id] : customColor(id ? 'id:' + id : 'name:' + name);
     };
   }
+  function resourceShade(color, fraction) {
+    if (!/^#[0-9a-f]{6}$/i.test(color) || !Number.isFinite(fraction)) throw new Error('Нужны HEX-цвет и положение на шкале.');
+    const t = Math.max(0, Math.min(1, fraction));
+    return '#' + [1, 3, 5].map(i => {
+      const channel = parseInt(color.slice(i, i + 2), 16), dark = Math.round(channel * .5), light = Math.round(channel + (255 - channel) * .5);
+      return Math.round(dark + (light - dark) * t).toString(16).padStart(2, '0');
+    }).join('');
+  }
   const resourceColor = (resource, catalog) => createResourceColorResolver(catalog)(resource);
-  const api = { RESOURCE_COLORS, GENERAL_RESOURCE_COLOR, createResourceColorResolver, resourceColor };
+  const api = { RESOURCE_COLORS, GENERAL_RESOURCE_COLOR, createResourceColorResolver, resourceColor, resourceShade };
   Object.assign(root.AtlasExtensions ||= {}, api); if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);

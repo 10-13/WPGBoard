@@ -2,7 +2,7 @@
 const test = require('node:test'), assert = require('node:assert/strict');
 const { RESOURCE_COLORS, resourceColor, createResourceColorResolver } = require('../extensions/resource-colors.js');
 const { DEFAULT_RESOURCE_CATALOG } = require('../extensions/resource-catalog-data.js');
-const { layoutResourceMarkers, drawResourceMarkers } = require('../extensions/resource-markers.js');
+const { RESOURCE_MARKER_FRAME_COLOR, layoutResourceMarkers, drawResourceMarkers } = require('../extensions/resource-markers.js');
 const { resourceRichness } = require('../extensions/resource-richness.js');
 const object = (id, resource, kind = 'production', stats = {}) => ({ id, kind, source: 'resources', stats: { 'resource.name': resource, ...stats } });
 const entries = [object('ore', 'Железная руда'), object('steel', 'Сталь'), object('water', 'Вода', 'production', { 'resource.role': 'baseline' }), object('deposit', 'Железная руда', 'resource-point'), object('bonus', '*', 'resource-point')];
@@ -29,7 +29,7 @@ test('each enterprise remains a pixel; colors are contiguous and the two full re
   assert.equal(layout.count, input.length); assert.equal(layout.pixels.length, input.length); assertFits(layout, index, 1);
   const [production, bonuses] = layout.blocks;
   assert.equal(production.kind, 'production'); assert.equal(bonuses.kind, 'resource-point');
-  assert.equal(bonuses.bounds[1], production.bounds[1] + production.bounds[3] + 1);
+  assert.equal(bonuses.frame[1], production.frame[1] + production.frame[3] + 1);
   assert.deepEqual(production.pixels.map(p => p.id), ['ore', 'ore2', 'ore3', 'steel', 'steel2', 'water']);
   assert.equal(production.pixels.at(-1).color, resourceColor('water')); assert.equal(bonuses.pixels.at(-1).color, '#ffffff');
   assert.equal(JSON.stringify(input), before);
@@ -52,10 +52,14 @@ test('placement searches inside the real province and never paints a hole or nei
   const layout = layoutResourceMarkers(index, region, entries); assertFits(layout, index, 7);
   assert(layout.bounds); // The centered shape crosses the hole; another complete placement fits.
   const painted = [];
-  const context = { fillRect(x, y, w, h) { assert.equal(w, 1); assert.equal(h, 1); assert.equal(index.idAt(x, y), 7); painted.push([x, y, this.fillStyle]); } };
+  const context = { fillRect(x, y, w, h) { assert.equal(h, 1); for (let i = 0; i < w; i++) { assert.equal(index.idAt(x + i, y), 7); painted.push([x + i, y, this.fillStyle]); } } };
   drawResourceMarkers(context, index, { 7: { entries: Object.fromEntries(entries.map(e => [e.id, e])) } });
-  assert.equal(painted.length, entries.length); assert.equal(context.imageSmoothingEnabled, false);
-  assert.deepEqual(painted.map(p => p[2]), layout.pixels.map(p => p.color));
+  assert.equal(painted.filter(p => p[2] !== RESOURCE_MARKER_FRAME_COLOR).length, entries.length); assert.equal(context.imageSmoothingEnabled, false);
+  assert.deepEqual(painted.filter(p => p[2] !== RESOURCE_MARKER_FRAME_COLOR).map(p => p[2]), layout.pixels.map(p => p.color));
+  for (const block of layout.blocks) {
+    const [x, y, w, h] = block.frame;
+    for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) if (yy === y || yy === y + h - 1 || xx === x || xx === x + w - 1) assert(painted.some(p => p[0] === xx && p[1] === yy && p[2] === RESOURCE_MARKER_FRAME_COLOR));
+  }
 });
 test('blocks disappear together if their full footprint, including the gap, does not fit', () => {
   const region = { id: 1, bbox: [0, 0, 20, 20], anchor: [10, 10] }, index = rectangleIndex(region, (x, y) => x % 2 === 0 && y % 2 === 0);
@@ -71,7 +75,7 @@ test('production-only and bonus-only blocks need no empty block or extra gap; un
   for (const kind of ['production', 'resource-point']) {
     const input = [object('single', '*', kind), { id: 'note', source: 'notes', kind, stats: { 'resource.name': 'Сталь' } }];
     const layout = layoutResourceMarkers(index, region, input);
-    assert.equal(layout.blocks.length, 1); assert.equal(layout.pixels.length, 1); assert.deepEqual(layout.bounds, [4, 4, 1, 1]);
+    assert.equal(layout.blocks.length, 1); assert.equal(layout.pixels.length, 1); assert.deepEqual(layout.bounds, [3, 3, 3, 3]); assert.deepEqual(layout.blocks[0].bounds, [4, 4, 1, 1]);
     assert.equal(layout.pixels[0].color, '#ffffff');
   }
   assert.equal(layoutResourceMarkers(index, region, []).bounds, null);

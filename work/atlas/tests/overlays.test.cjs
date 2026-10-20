@@ -35,11 +35,26 @@ test('display preferences do not enter actions, history, branches, or shared par
   const state = getGameState(), index = new RegionIndex({ width: 1, height: 1, pixels: [1], regions: [{ id: 1, area: 1, bbox: [0, 0, 1, 1], anchor: [0, 0] }] });
   const project = { schemaVersion: 2, map: { id: 'display-only', original: { dataURL: 'data:image/png;base64,AAAA', width: 1, height: 1 }, indexImage: 'data:image/png;base64,AAAA' }, meta: { object: { exists: true } } };
   state.load(project, index); const a = state.overlays.register({ id: 'display:a' }), b = state.overlays.register({ id: 'display:b' });
-  const history = state.history.toJSON(), meta = state.meta; state.overlays.setVisible(a.id, false); state.overlays.reorder([b.id, a.id]);
+  const history = state.history.toJSON(), meta = state.meta; state.overlays.setVisible(a.id, false); state.overlays.reorder([b.id, a.id]); state.overlays.setOptions(a.id, { hiddenResources: ['coal'] });
   assert.deepEqual(state.history.toJSON(), history); assert.equal(state.meta, meta); assert.equal(state.toJSON().overlays, undefined); assert.equal(state.toJSON().meta, undefined);
   assert.equal(state.actions.types.some(d => d.type.startsWith('core.overlay')), false);
   state.history.createBranch('test'); state.setMeta('object', { exists: false }); state.history.undo(); state.history.checkout('test');
   assert.equal(state.overlays.get(a.id).visible, false); assert.deepEqual(state.overlays.list.map(o => o.id), [b.id, a.id]);
   state.load(project, index); assert.equal(state.overlays.get(a.id).visible, false, 'loading a party does not replace local display preferences');
-  a.dispose(); b.dispose(); state.overlays.reset();
+  assert.deepEqual(state.overlays.getOptions(a.id), { hiddenResources: ['coal'] }); a.dispose(); b.dispose(); state.overlays.reset();
+});
+test('per-overlay view options persist locally, survive unloading and reset with display defaults', () => {
+  const overlays = new OverlayRegistry(), registration = overlays.register({ id: 'resources:richness' }); let changes = 0;
+  overlays.on('settings:change', () => changes++);
+  const options = { hiddenResources: ['coal'], nested: { selected: true } };
+  assert.deepEqual(overlays.getOptions(registration.id), {}); assert.equal(overlays.setOptions(registration.id, {}), false);
+  overlays.setOptions(registration.id, options); options.hiddenResources.push('water');
+  assert.deepEqual(overlays.getOptions(registration.id).hiddenResources, ['coal']); assert(Object.isFrozen(overlays.getOptions(registration.id).nested));
+  assert.equal(overlays.setOptions(registration.id, { hiddenResources: ['coal'], nested: { selected: true } }), false); assert.equal(changes, 1);
+  const restored = new OverlayRegistry(); restored.restore(overlays.toJSON()); registration.dispose();
+  assert.deepEqual(overlays.getOptions('resources:richness').hiddenResources, ['coal']);
+  restored.register({ id: 'resources:richness' }); assert.deepEqual(restored.getOptions('resources:richness').hiddenResources, ['coal']);
+  const before = restored.toJSON();
+  for (const change of [() => restored.setOptions('missing', {}), () => restored.setOptions('resources:richness', []), () => restored.restore({ ...before, options: { a: 1 } }), () => restored.setOptions('resources:richness', { bad: NaN })]) assert.throws(change);
+  assert.deepEqual(restored.toJSON(), before); restored.reset(); assert.deepEqual(restored.getOptions('resources:richness'), {});
 });

@@ -2,7 +2,8 @@
 const test = require('node:test'), assert = require('node:assert/strict');
 const { getGameState, RegionIndex, Scope, EventBus } = require('../packages/core/index.js');
 const { ResourceModel } = require('../extensions/resources-model.js');
-const { resourceColor, resourceRichness } = require('../extensions/resource-richness.js');
+const { resourceColor, resourceRichness, projectResourceRichness } = require('../extensions/resource-richness.js');
+const { resourceShade } = require('../extensions/resource-colors.js');
 const { ResourceOverlay, drawResourceRichness } = require('../extensions/resource-overlay.js');
 function fixture(t) {
   const state = getGameState(), scope = new Scope();
@@ -60,9 +61,35 @@ test('the ordinary overlay lazily calculates, follows edits and releases with it
   assert.equal(calculations, 0); const before = state.history.toJSON();
   overlay.overlay.setVisible(true); assert.equal(calculations, 1); assert.equal(overlay.data.winners.get(1).resource, 'Уголь');
   overlay.overlay.setVisible(false); overlay.overlay.setVisible(true); assert.equal(calculations, 1);
+  const coalKey = overlay.data.legend[0].key;
+  overlay.setResourceVisible(coalKey, false); assert.equal(calculations, 1); assert.equal(overlay.data.winners.size, 0);
+  overlay.setResourceVisible(coalKey, true); assert.equal(calculations, 1); assert.equal(overlay.data.winners.size, 1);
+  overlay.setAllResourcesVisible(false); assert.equal(overlay.data.winners.size, 0); overlay.setAllResourcesVisible(true); assert.equal(overlay.data.winners.size, 1);
+  overlay.setResourceVisible(coalKey, false); state.overlays.reset(); assert.equal(overlay.data.legend[0].enabled, true); overlay.overlay.setVisible(true);
+
   assert.equal(state.overlays.get(other.id).visible, true); assert.deepEqual(state.history.toJSON(), before);
   model.save(1, production('Зерно', 30)); assert.equal(overlay.data.winners.get(1).resource, 'Зерно');
   state.history.undo(); assert.equal(overlay.data.winners.get(1).resource, 'Уголь');
   ui.emit('map:ready', {}); assert.equal(overlay.data.winners.get(1).resource, 'Уголь');
   scope.dispose(); assert.equal(state.overlays.has('resources:richness'), false); assert.equal(overlay.data.winners.size, 0);
+});
+
+test('resource intensity interpolates between half-dark and half-white boundaries without changing base colors', () => {
+  assert.equal(resourceShade('#204060', 0), '#102030'); assert.equal(resourceShade('#204060', 1), '#90a0b0');
+  assert.equal(resourceShade('#204060', .5), '#506070'); assert.equal(resourceShade('#204060', -1), '#102030'); assert.equal(resourceShade('#204060', 2), '#90a0b0');
+  assert.throws(() => resourceShade('#bad', 0)); assert.throws(() => resourceShade('#204060', NaN));
+});
+test('per-resource bounds include losing provinces and combined activities; filtering promotes the next resource without changing scales', () => {
+  const group = (resource, unit, rows) => ({ resource, unit, regions: rows.map(([regionId, after1]) => ({ regionId, after1 })) });
+  const result = resourceRichness({ details: [group('Уголь', 'т', [[1, 10], [2, 20], [3, 40]]), group('Уголь', 'т', [[1, 5], [2, 10]]), group('Вода', 'т', [[1, 100]]), group('Уголь', 'кг', [[4, 1000]])] });
+  const [coal, water, kilo] = result.legend;
+  assert.equal(coal.min, 15); assert.equal(coal.max, 40); assert.equal(coal.producingCount, 3); assert.equal(coal.count, 2);
+  assert.equal(kilo.min, 1000); assert.equal(kilo.max, 1000); assert.equal(kilo.scale.length, 1); assert.equal(result.winners.get(4).color, resourceColor('Уголь'));
+  assert.equal(result.winners.get(2).intensity, .6); assert.equal(result.winners.get(2).color, resourceShade(coal.color, .6));
+  assert.equal(result.winners.get(3).color, coal.lightColor); assert.equal(coal.scale.length, 5); assert.equal(coal.scale[0].amount, 15); assert.equal(coal.scale.at(-1).amount, 40);
+  const filtered = projectResourceRichness(result, [water.key]);
+  assert.equal(filtered.winners.get(1).key, coal.key); assert.equal(filtered.winners.get(1).color, coal.darkColor); assert.equal(filtered.legend[0].count, 3);
+  assert.equal(filtered.legend[1].enabled, false); assert.equal(filtered.legend[0].min, 15); assert.equal(filtered.legend[0].max, 40);
+  assert.equal(result.winners.get(1).key, water.key); assert.equal(result.legend[1].enabled, true, 'projection does not change its input');
+  const blank = projectResourceRichness(result, result.legend.map(item => item.key)); assert.equal(blank.winners.size, 0); assert.equal(blank.legend.length, 3);
 });

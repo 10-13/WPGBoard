@@ -182,6 +182,15 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   .map-navigation { right:8px; bottom:8px }
 }
 
+/* Resource intensity uses the common font and full 16 px rows. */
+.resource-legend-toggle { display:block; text-align:left; padding:0 4px }
+.resource-legend-item { margin:0 0 var(--atlas-step) }
+.resource-legend-item[data-enabled=false] .resource-legend-scale { opacity:.35 }
+.resource-legend-scale { display:flex; gap:1px; align-items:flex-start }
+.resource-legend-step { flex:1 1 0; min-width:0; line-height:var(--atlas-step); overflow-wrap:anywhere }
+.resource-legend-step>span { display:block; min-height:var(--atlas-step) }
+.resource-legend-step>.resource-legend-patch { height:var(--atlas-step); box-shadow:inset 0 0 0 1px #d3dcdf33 }
+
 /* Domain-free data primitives; typography comes from the application's tokens. */
 :root { --atlas-data-font:var(--atlas-font); --atlas-data-font-size:var(--atlas-font-size); --atlas-data-step:var(--atlas-step) }
 .atlas-data-row,.atlas-data-group { --data-step:var(--atlas-data-step) }
@@ -307,7 +316,8 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     const defaults = () => ({ version: 1, order: [], visibility: {} });
     const settings = value => {
       const data = clone(value); if (!object(data) || data.version !== 1 || !object(data.visibility) || Object.keys(data.visibility).length > 10000 || Object.entries(data.visibility).some(([id, visible]) => !validId(id) || typeof visible !== 'boolean')) throw new Error('Некорректные настройки отображения оверлеев.');
-      return freeze({ version: 1, order: [...ids(data.order)], visibility: data.visibility });
+      if (data.options !== undefined && (!object(data.options) || Object.keys(data.options).length > 10000 || Object.entries(data.options).some(([id, options]) => !validId(id) || !object(options)) || JSON.stringify(data.options).length > 1000000)) throw new Error('Некорректные параметры отображения оверлеев.');
+      return freeze({ version: 1, order: [...ids(data.order)], visibility: data.visibility, ...(data.options !== undefined ? { options: data.options } : {}) });
     };
     class OverlayRegistry extends EventBus {
       #definitions = new Map(); #last = []; #settings = freeze(defaults());
@@ -335,6 +345,13 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         if (typeof visible !== 'boolean') throw new TypeError('Видимость должна быть логическим значением.');
         if (overlay.visible === visible) return null;
         return this.restore({ ...this.#settings, visibility: { ...this.#settings.visibility, [id]: visible } });
+      }
+      getOptions(id) { return this.#settings.options?.[id] || Object.freeze({}); }
+      setOptions(id, options) {
+        if (!this.has(id)) throw new Error('Оверлей не зарегистрирован.');
+        if (!object(options)) throw new TypeError('Параметры отображения должны быть объектом.');
+        if (equal(this.getOptions(id), options)) return false;
+        return this.restore({ ...this.#settings, options: { ...(this.#settings.options || {}), [id]: options } });
       }
       reorder(orderedIds) {
         ids(orderedIds); const current = this.list.map(item => item.id);
@@ -2680,8 +2697,16 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       return id && Object.hasOwn(RESOURCE_COLORS, id) ? RESOURCE_COLORS[id] : customColor(id ? 'id:' + id : 'name:' + name);
     };
   }
+  function resourceShade(color, fraction) {
+    if (!/^#[0-9a-f]{6}$/i.test(color) || !Number.isFinite(fraction)) throw new Error('Нужны HEX-цвет и положение на шкале.');
+    const t = Math.max(0, Math.min(1, fraction));
+    return '#' + [1, 3, 5].map(i => {
+      const channel = parseInt(color.slice(i, i + 2), 16), dark = Math.round(channel * .5), light = Math.round(channel + (255 - channel) * .5);
+      return Math.round(dark + (light - dark) * t).toString(16).padStart(2, '0');
+    }).join('');
+  }
   const resourceColor = (resource, catalog) => createResourceColorResolver(catalog)(resource);
-  const api = { RESOURCE_COLORS, GENERAL_RESOURCE_COLOR, createResourceColorResolver, resourceColor };
+  const api = { RESOURCE_COLORS, GENERAL_RESOURCE_COLOR, createResourceColorResolver, resourceColor, resourceShade };
   Object.assign(root.AtlasExtensions ||= {}, api); if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);
 
@@ -2957,18 +2982,33 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 })(globalThis);
 
 ;
-/* A view of the resource calculator's provincial potential, without game writes. */
+/* A view of provincial potential: fixed resource identity and local intensity. */
 (function (root) {
   'use strict';
   const { resourceKey } = typeof module !== 'undefined' && module.exports ? require('./resources-model.js') : root.AtlasExtensions;
-  const { resourceColor, createResourceColorResolver } = typeof module !== 'undefined' && module.exports ? require('./resource-colors.js') : root.AtlasExtensions;
+  const { resourceColor, createResourceColorResolver, resourceShade } = typeof module !== 'undefined' && module.exports ? require('./resource-colors.js') : root.AtlasExtensions;
+  function projectResourceRichness(data, hiddenResources = []) {
+    const hidden = new Set(hiddenResources), legend = data.legend.map(item => ({ ...item, count: 0, enabled: !hidden.has(item.key) })), resources = new Map(legend.map(item => [item.key, item])), winners = new Map();
+    for (const [id, amounts] of data.provinces) {
+      let winner = null;
+      for (const [key, amount] of amounts) {
+        const item = resources.get(key); if (!item.enabled) continue;
+        if (!winner || amount > winner.amount || amount === winner.amount && item.index < winner.index) {
+          const intensity = item.max === item.min ? .5 : (amount - item.min) / (item.max - item.min);
+          winner = { key, amount, index: item.index, color: item.max === item.min ? item.color : resourceShade(item.color, intensity), resource: item.resource, unit: item.unit, intensity };
+        }
+      }
+      if (winner) { winners.set(id, winner); resources.get(winner.key).count++; }
+    }
+    return { legend, winners, provinces: data.provinces };
+  }
   function resourceRichness(block, catalog) {
     const legend = [], resources = new Map(), provinces = new Map(), colorFor = createResourceColorResolver(catalog);
     for (const group of block.details) {
       const key = resourceKey(group.resource, group.unit);
       if (!group.regions.some(row => row.after1 > 0)) continue;
       if (!resources.has(key)) {
-        const item = { key, resource: group.resource, unit: group.unit, color: colorFor(group.resource), index: legend.length, count: 0 };
+        const color = colorFor(group.resource), item = { key, resource: group.resource, unit: group.unit, color, darkColor: resourceShade(color, 0), lightColor: resourceShade(color, 1), index: legend.length, count: 0, producingCount: 0, min: Infinity, max: 0 };
         resources.set(key, item); legend.push(item);
       }
       for (const row of group.regions) {
@@ -2979,18 +3019,14 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         amounts.set(key, amount);
       }
     }
-    const winners = new Map();
-    for (const [id, amounts] of provinces) {
-      let winner = null;
-      for (const [key, amount] of amounts) {
-        const item = resources.get(key);
-        if (!winner || amount > winner.amount || amount === winner.amount && item.index < winner.index) winner = { key, amount, index: item.index, color: item.color, resource: item.resource, unit: item.unit };
-      }
-      if (winner) { winners.set(id, winner); resources.get(winner.key).count++; }
+    // Bounds use all producing provinces, even where another resource dominates.
+    for (const amounts of provinces.values()) for (const [key, amount] of amounts) {
+      const item = resources.get(key); item.min = Math.min(item.min, amount); item.max = Math.max(item.max, amount); item.producingCount++;
     }
-    return { legend, winners };
+    for (const item of legend) item.scale = item.min === item.max ? [{ amount: item.min, color: item.color }] : [0, .25, .5, .75, 1].map(t => ({ amount: item.min + (item.max - item.min) * t, color: resourceShade(item.color, t) }));
+    return projectResourceRichness({ legend, provinces });
   }
-  const api = { resourceColor, resourceRichness };
+  const api = { resourceColor, resourceRichness, projectResourceRichness };
   Object.assign(root.AtlasExtensions ||= {}, api); if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);
 
@@ -2999,7 +3035,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 (function (root) {
   'use strict';
   const { createResourceColorResolver } = typeof module !== 'undefined' && module.exports ? require('./resource-colors.js') : root.AtlasExtensions;
-  const placements = new WeakMap();
+  const RESOURCE_MARKER_FRAME_COLOR = '#101c22', placements = new WeakMap();
   function groupByColor(entries, colorFor) {
     const groups = new Map();
     for (const entry of entries) {
@@ -3048,18 +3084,19 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     if (!objects.length) return empty;
     const [, , bw, bh] = region.bbox, gap = production.length && bonuses.length ? 1 : 0, candidates = [];
     for (const p of rectangles(production.length)) for (const b of rectangles(bonuses.length)) {
-      const width = Math.max(p.width, b.width), height = p.height + gap + b.height;
-      if (width <= bw && height <= bh) candidates.push({ p, b, width, height, score: Math.abs(Math.log(width / height / (bw / bh))) });
+      const width = Math.max(p.width, b.width) + 2, height = p.height + (production.length ? 2 : 0) + gap + b.height + (bonuses.length ? 2 : 0);
+      if (width <= bw && height <= bh) candidates.push({ p, b, width, height, score: Math.abs(Math.log(Math.max(p.width, b.width) / (p.height + gap + b.height) / (bw / bh))) });
     }
+    // Decorative frames affect fitting, while the approved pixel layout keeps its proportions.
     candidates.sort((a, b) => a.score - b.score || a.width * a.height - b.width * b.height || a.width - b.width);
     for (const candidate of candidates) {
       const position = nearestPlacement(index, region, candidate.width, candidate.height); if (!position) continue;
       const [x, y] = position, blocks = [], pixels = [];
-      for (const [kind, values, shape, top] of [['production', production, candidate.p, y], ['resource-point', bonuses, candidate.b, y + candidate.p.height + gap]]) {
+      for (const [kind, values, shape, top] of [['production', production, candidate.p, y], ['resource-point', bonuses, candidate.b, y + candidate.p.height + (production.length ? 2 : 0) + gap]]) {
         if (!values.length) continue;
-        const left = x + Math.floor((candidate.width - shape.width) / 2), bounds = [left, top, shape.width, shape.height];
-        const cells = values.map((value, i) => ({ ...value, x: left + i % shape.width, y: top + Math.floor(i / shape.width) }));
-        blocks.push({ kind, bounds, pixels: cells }); pixels.push(...cells);
+        const frameLeft = x + Math.floor((candidate.width - shape.width - 2) / 2), left = frameLeft + 1, bounds = [left, top + 1, shape.width, shape.height], frame = [frameLeft, top, shape.width + 2, shape.height + 2];
+        const cells = values.map((value, i) => ({ ...value, x: left + i % shape.width, y: top + 1 + Math.floor(i / shape.width) }));
+        blocks.push({ kind, bounds, frame, pixels: cells }); pixels.push(...cells);
       }
       return { bounds: [x, y, candidate.width, candidate.height], blocks, pixels, count: objects.length };
     }
@@ -3071,10 +3108,18 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     for (const [key, tile] of Object.entries(tiles || {})) {
       const region = index.get(Number(key)); if (!region) continue;
       const layout = layoutResourceMarkers(index, region, Object.values(tile.entries || {}), colorFor);
+      context.fillStyle = RESOURCE_MARKER_FRAME_COLOR;
+      for (const block of layout.blocks) {
+        const [x, y, width, height] = block.frame;
+        for (let row = 0; row < height; row++) {
+          if (row === 0 || row === height - 1) context.fillRect(x, y + row, width, 1);
+          else { context.fillRect(x, y + row, 1, 1); context.fillRect(x + width - 1, y + row, 1, 1); }
+        }
+      }
       for (const pixel of layout.pixels) { context.fillStyle = pixel.color; context.fillRect(pixel.x, pixel.y, 1, 1); }
     }
   }
-  const api = { layoutResourceMarkers, drawResourceMarkers };
+  const api = { RESOURCE_MARKER_FRAME_COLOR, layoutResourceMarkers, drawResourceMarkers };
   Object.assign(root.AtlasExtensions ||= {}, api); if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);
 
@@ -3083,7 +3128,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 (function (root) {
   'use strict';
   const { EventBus, equal } = root.AtlasCore;
-  const { resourceRichness } = root.AtlasExtensions;
+  const { resourceRichness, projectResourceRichness } = root.AtlasExtensions;
   function drawResourceRichness(context, index, data) {
     context.clearRect(0, 0, index.width, index.height); context.imageSmoothingEnabled = false;
     for (const [id, winner] of data.winners) {
@@ -3091,16 +3136,22 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       index.forEachRun(id, (start, length) => context.fillRect(start % index.width, Math.floor(start / index.width), length, 1));
     }
   }
+  const format = n => n.toLocaleString('ru-RU', { maximumFractionDigits: 4 }), shortFormat = n => n.toLocaleString('ru-RU', { maximumSignificantDigits: 3 });
   class ResourceOverlay extends EventBus {
     constructor(ctx) {
-      super(); this.ctx = ctx; this.dirty = true; this.data = { legend: [], winners: new Map() }; this.message = '';
+      super(); this.ctx = ctx; this.dirty = true; this.data = { legend: [], winners: new Map(), provinces: new Map() }; this.message = '';
       this.overlay = ctx.overlay({ id: 'richness', title: 'Богатство ресурсов', order: 15, visible: false });
+      this.hiddenResources = this.readHiddenResources();
       const refresh = () => { if (ctx.signal.aborted) return; this.dirty = true; this.painted = null; this.draw(); this.emit('change', {}); };
       ctx.state.on('change', ({ before, after }) => { if (!equal(before.meta.tiles, after.meta.tiles) || !equal(before.meta.resources?.catalog, after.meta.resources?.catalog)) refresh(); }, { signal: ctx.signal });
       ctx.ui.on('map:ready', refresh, { signal: ctx.signal });
       ctx.state.statistics.on('change', refresh, { signal: ctx.signal });
       ctx.state.overlays.on('change', () => { if (!ctx.signal.aborted) { this.draw(); this.emit('change', {}); } }, { signal: ctx.signal });
-      ctx.scope.defer(() => { this.data = { legend: [], winners: new Map() }; this.painted = null; });
+      ctx.state.overlays.on('settings:change', () => {
+        const hidden = this.readHiddenResources(); if (equal(hidden, this.hiddenResources)) return;
+        this.hiddenResources = hidden; this.data = projectResourceRichness(this.data, hidden); this.painted = null; this.draw(); this.emit('change', {});
+      }, { signal: ctx.signal });
+      ctx.scope.defer(() => { this.data = { legend: [], winners: new Map(), provinces: new Map() }; this.painted = null; });
       ctx.windowMenu({ id: 'resource-legend', label: 'Легенда ресурсов', handler: () => this.open() });
       ctx.menu(ctx.ui.mainMenu, { id: 'resource-legend', path: ['Мир', 'Ресурсы'], label: 'Легенда ресурсов', handler: () => this.open() });
       ctx.ui.registerTooltip('resources:richness', event => {
@@ -3108,15 +3159,27 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         return winner ? 'Главный ресурс: ' + winner.resource + ' · ' + winner.amount.toLocaleString('ru-RU', { maximumFractionDigits: 4 }) + ' ' + winner.unit : '';
       }, { signal: ctx.signal }); this.draw();
     }
+    readHiddenResources() {
+      const values = this.ctx.state.overlays.getOptions(this.overlay.id).hiddenResources;
+      return Array.isArray(values) ? [...new Set(values.filter(key => typeof key === 'string'))].sort() : [];
+    }
+    setResourceVisible(key, visible) {
+      const hidden = new Set(this.hiddenResources); if (visible) hidden.delete(key); else hidden.add(key);
+      this.ctx.state.overlays.setOptions(this.overlay.id, { ...this.ctx.state.overlays.getOptions(this.overlay.id), hiddenResources: [...hidden].sort() });
+    }
+    setAllResourcesVisible(visible) {
+      const keys = this.ensure().legend.map(item => item.key);
+      this.ctx.state.overlays.setOptions(this.overlay.id, { ...this.ctx.state.overlays.getOptions(this.overlay.id), hiddenResources: visible ? [] : [...new Set([...this.hiddenResources, ...keys])].sort() });
+    }
     ensure() {
       if (!this.dirty) return this.data;
       this.dirty = false; this.message = '';
       try {
         const report = this.ctx.state.statistics.calculate([...this.ctx.state.regions.keys()]), block = report.get('resources');
         if (!block) throw new Error(report.errors.find(e => e.id === 'resources')?.message || 'Сборщик ресурсов недоступен.');
-        this.data = resourceRichness(block, this.ctx.state.meta.resources?.catalog);
+        this.data = projectResourceRichness(resourceRichness(block, this.ctx.state.meta.resources?.catalog), this.hiddenResources);
         if (block.invalid.length) this.message = 'Пропущено некорректных ресурсных записей: ' + block.invalid.length + '.';
-      } catch (error) { this.data = { legend: [], winners: new Map() }; this.message = 'Не удалось рассчитать ресурсы: ' + error.message; }
+      } catch (error) { this.data = { legend: [], winners: new Map(), provinces: new Map() }; this.message = 'Не удалось рассчитать ресурсы: ' + error.message; }
       return this.data;
     }
     draw() {
@@ -3126,25 +3189,36 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     }
     open() {
       const { ctx } = this;
-      const { el } = root.AtlasUI.dom, { createSwitch } = root.AtlasUI.controls;
+      const { el } = root.AtlasUI.dom, { createSwitch, button } = root.AtlasUI.controls;
       const { createDataRow, createDataGroup } = root.AtlasUI.dataView;
-      return ctx.window({ id: 'resource-legend', title: 'Легенда ресурсов', x: 295, y: 35, width: 310, height: 490, render: (pane, scope) => {
+      return ctx.window({ id: 'resource-legend', title: 'Легенда ресурсов', x: 295, y: 35, width: 360, height: 560, render: (pane, scope) => {
         pane.classList.add('atlas-data-scope'); let expanded = true;
         const draw = () => {
           const data = this.ensure(); pane.replaceChildren();
           pane.append(createSwitch('Оверлей ресурсов', checked => this.overlay.setVisible(checked), { checked: this.overlay.visible, className: 'wide', title: 'Включить или выключить оверлей «Богатство ресурсов»' }));
-          pane.append(el('p', 'muted', 'Цвет — ресурс с наибольшим местным максимальным выпуском, с бонусами и до расходов сырья.'));
-          pane.append(el('p', 'muted', 'Цвет каждого ресурса постоянный. При равном выпуске выбирается первый ресурс.'));
-          pane.append(el('p', 'muted', 'Верхний пиксельный блок — производства, нижний — улучшения. Один пиксель на объект; общий бонус — белый. Между блоками зазор 1 пиксель.'));
-          pane.append(createDataRow('Окрашено провинций', data.winners.size.toLocaleString('ru-RU')), createDataRow('Без выпуска', (ctx.state.regions.size - data.winners.size).toLocaleString('ru-RU')));
+          pane.append(el('p', 'muted', 'Главный из включённых ресурсов: потенциальный выпуск с бонусами, до расходов сырья. При выключении лидера выбирается следующий ресурс.'));
+          pane.append(el('p', 'muted', 'Шкала слева направо: минимум → максимум по всем провинциям с выпуском. Цвет: на 50% темнее → на 50% светлее. Одинаковый выпуск — базовый цвет.'));
+
+          pane.append(createDataRow('Окрашено провинций', data.winners.size.toLocaleString('ru-RU')), createDataRow('Без окраски', (ctx.state.regions.size - data.winners.size).toLocaleString('ru-RU')));
           if (this.message) pane.append(el('p', 'form-error', this.message));
           if (!data.legend.length) { pane.append(el('p', 'muted', 'Нет производств с положительным выпуском. Ресурсные точки без производства не дают выпуск.')); return; }
-          const group = createDataGroup('Ресурсы · число провинций', { open: expanded, onToggle: open => expanded = open });
+          const actions = el('div', 'tool-row'); actions.append(button('Показать все', () => this.setAllResourcesVisible(true)), button('Скрыть все', () => this.setAllResourcesVisible(false))); pane.append(actions);
+          const group = createDataGroup('Ресурсы · окрашено / с выпуском', { open: expanded, onToggle: open => expanded = open });
           for (const item of data.legend) {
             const duplicate = data.legend.some(other => other !== item && other.resource.trim().toLowerCase() === item.resource.trim().toLowerCase());
-            const row = createDataRow(item.resource + (duplicate ? ' · ' + item.unit : ''), item.count.toLocaleString('ru-RU'), { id: item.key });
+            const label = item.resource + (duplicate ? ' · ' + item.unit : ''), card = el('div', 'resource-legend-item'); card.dataset.enabled = String(item.enabled);
+            const toggle = createSwitch(label, checked => this.setResourceVisible(item.key, checked), { checked: item.enabled, className: 'wide resource-legend-toggle', title: 'Показывать ресурс: ' + label });
+            toggle.setAttribute('aria-label', 'Показывать ресурс: ' + label);
+            const row = createDataRow(label, item.count.toLocaleString('ru-RU') + ' / ' + item.producingCount.toLocaleString('ru-RU'), { id: item.key });
             const swatch = el('span', 'resource-legend-swatch'); swatch.style.backgroundColor = item.color; swatch.setAttribute('aria-hidden', 'true');
-            row.querySelector('.data-name').prepend(swatch); group.body.append(row);
+            row.querySelector('.data-name').prepend(swatch); toggle.replaceChildren(row); card.append(toggle);
+            card.append(createDataRow('Мин. — макс.', format(item.min) + ' — ' + format(item.max) + ' ' + item.unit));
+            const scale = el('div', 'resource-legend-scale'); scale.setAttribute('aria-label', 'Градации ресурса: ' + label);
+            for (const step of item.scale) {
+              const cell = el('div', 'resource-legend-step'), patch = el('span', 'resource-legend-patch'), amount = el('span', '', shortFormat(step.amount));
+              patch.style.backgroundColor = step.color; patch.setAttribute('aria-hidden', 'true'); cell.title = format(step.amount) + ' ' + item.unit; cell.append(patch, amount); scale.append(cell);
+            }
+            card.append(scale); group.body.append(card);
           }
           pane.append(group.element);
         };

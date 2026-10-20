@@ -9,7 +9,8 @@
     const defaults = () => ({ version: 1, order: [], visibility: {} });
     const settings = value => {
       const data = clone(value); if (!object(data) || data.version !== 1 || !object(data.visibility) || Object.keys(data.visibility).length > 10000 || Object.entries(data.visibility).some(([id, visible]) => !validId(id) || typeof visible !== 'boolean')) throw new Error('Некорректные настройки отображения оверлеев.');
-      return freeze({ version: 1, order: [...ids(data.order)], visibility: data.visibility });
+      if (data.options !== undefined && (!object(data.options) || Object.keys(data.options).length > 10000 || Object.entries(data.options).some(([id, options]) => !validId(id) || !object(options)) || JSON.stringify(data.options).length > 1000000)) throw new Error('Некорректные параметры отображения оверлеев.');
+      return freeze({ version: 1, order: [...ids(data.order)], visibility: data.visibility, ...(data.options !== undefined ? { options: data.options } : {}) });
     };
     class OverlayRegistry extends EventBus {
       #definitions = new Map(); #last = []; #settings = freeze(defaults());
@@ -37,6 +38,13 @@
         if (typeof visible !== 'boolean') throw new TypeError('Видимость должна быть логическим значением.');
         if (overlay.visible === visible) return null;
         return this.restore({ ...this.#settings, visibility: { ...this.#settings.visibility, [id]: visible } });
+      }
+      getOptions(id) { return this.#settings.options?.[id] || Object.freeze({}); }
+      setOptions(id, options) {
+        if (!this.has(id)) throw new Error('Оверлей не зарегистрирован.');
+        if (!object(options)) throw new TypeError('Параметры отображения должны быть объектом.');
+        if (equal(this.getOptions(id), options)) return false;
+        return this.restore({ ...this.#settings, options: { ...(this.#settings.options || {}), [id]: options } });
       }
       reorder(orderedIds) {
         ids(orderedIds); const current = this.list.map(item => item.id);
