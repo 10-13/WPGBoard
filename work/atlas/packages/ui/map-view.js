@@ -2,14 +2,16 @@
   'use strict';
   const { EventBus } = root.AtlasCore;
   class MapViewport extends EventBus {
-    #layers = new Map(); #loadGeneration = 0;
+    #loadGeneration = 0;
     constructor(host, state, input) {
-      super(); this.host = host; this.state = state; this.input = input; this.scale = 1; this.tx = 0; this.ty = 0; this.selectedId = null; this.hoverId = null; this.pointers = new Map(); this.ready = false; this.showIds = false; this.panOnly = false; this.baseStyle = 'original';
+      super(); this.host = host; this.state = state; this.input = input; this.scale = 1; this.tx = 0; this.ty = 0; this.selectedId = null; this.hoverId = null; this.pointers = new Map(); this.ready = false; this.panOnly = false; this.baseStyle = 'original';
       this.element = document.createElement('div'); this.element.className = 'map-viewport'; this.element.tabIndex = 0; this.element.setAttribute('aria-label', 'Карта провинций');
-      this.stage = document.createElement('div'); this.stage.className = 'map-stage'; this.canvas = document.createElement('canvas'); this.canvas.className = 'map-base'; this.stage.append(this.canvas);
-      this.hoverCanvas = document.createElement('canvas'); this.hoverCanvas.className = 'map-highlight'; this.hoverCanvas.style.zIndex = 90;
-      this.selectedCanvas = document.createElement('canvas'); this.selectedCanvas.className = 'map-highlight'; this.selectedCanvas.style.zIndex = 95; this.stage.append(this.hoverCanvas, this.selectedCanvas);
-      this.numbersCanvas = document.createElement('canvas'); this.numbersCanvas.className = 'map-numbers'; this.element.append(this.stage, this.numbersCanvas); host.append(this.element); this.ctx = this.canvas.getContext('2d');
+      this.stage = document.createElement('div'); this.stage.className = 'map-stage'; this.canvas = document.createElement('canvas'); this.canvas.className = 'map-base'; this.stage.append(this.canvas); this.element.append(this.stage);
+      this.overlays = new root.AtlasUI.OverlayRenderer(this.element, state.overlays);
+      this.hoverCanvas = this.addOverlay({ id: 'ui:hover', title: 'Наведение на провинцию', source: 'ui', order: 90, exportable: false }).canvas;
+      this.numbersCanvas = this.addOverlay({ id: 'ui:province-ids', title: 'Номера провинций', source: 'ui', order: 100, visible: false, space: 'screen', exportDraw: context => this.#drawIds(context, 1, 0, 0, this.canvas.width, this.canvas.height) }).canvas;
+      this.numbersCanvas.classList.add('map-numbers'); host.append(this.element); this.ctx = this.canvas.getContext('2d');
+      state.overlays.on('change', () => this.drawNumbers());
       this.element.addEventListener('wheel', e => { if (!this.ready) return; e.preventDefault(); const p = this.local(e); this.zoom(Math.exp(-Math.max(-100, Math.min(100, e.deltaY)) * .004), p.x, p.y); }, { passive: false });
       this.element.addEventListener('pointerdown', e => this.down(e)); this.element.addEventListener('pointermove', e => this.move(e)); this.element.addEventListener('pointerup', e => this.up(e));
       this.element.addEventListener('pointercancel', () => this.cancel()); this.element.addEventListener('lostpointercapture', e => { if (this.pointers.has(e.pointerId)) this.cancel(); });
@@ -25,28 +27,23 @@
       await Promise.all([original.decode(), image === original ? null : image.decode()]); if (generation !== this.#loadGeneration) return;
       this.originalImage = original; this.image = image; this.canvas.width = map.original.width; this.canvas.height = map.original.height; this.ctx.imageSmoothingEnabled = false; this.ctx.drawImage(image, 0, 0);
       this.stage.style.width = image.width + 'px'; this.stage.style.height = image.height + 'px';
-      for (const layer of this.#layers.values()) { layer.canvas.width = image.width; layer.canvas.height = image.height; layer.context.imageSmoothingEnabled = false; }
-      this.selectedId = null; this.hoverId = null; this.hoverCanvas.width = 1; this.selectedCanvas.width = 1; this.cancel(); this.ready = true; this.fit();
+      this.overlays.resizeWorld(image.width, image.height);
+      this.selectedId = null; this.hoverId = null; this.hoverCanvas.width = 1; this.cancel(); this.ready = true; this.fit();
       this.emit('ready', { viewport: this }); this.input.emit('selection:change', { id: null, region: null });
     }
     async setBaseStyle(style) { this.baseStyle = style; const camera = [this.scale, this.tx, this.ty], selected = this.selectedId; await this.load(); [this.scale, this.tx, this.ty] = camera; this.transform(); this.select(selected); }
-    addLayer({ id, order = 10, signal, exportable = true } = {}) {
-      if (!id || this.#layers.has(id)) throw new Error('Слой уже зарегистрирован или не имеет ID.');
-      const canvas = document.createElement('canvas'); canvas.className = 'map-layer'; canvas.dataset.layer = id; canvas.style.zIndex = order;
-      canvas.width = this.canvas.width; canvas.height = this.canvas.height; this.stage.append(canvas);
-      const dispose = () => { canvas.remove(); this.#layers.delete(id); signal?.removeEventListener('abort', dispose); };
-      const layer = { canvas, context: canvas.getContext('2d', { willReadFrequently: true }), dispose, order, exportable };
-      layer.context.imageSmoothingEnabled = false;
-      this.#layers.set(id, layer); signal?.addEventListener('abort', dispose, { once: true }); if (signal?.aborted) dispose(); return layer;
-    }
-    exportCanvas() { const out = document.createElement('canvas'); out.width = this.canvas.width; out.height = this.canvas.height; const ctx = out.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.drawImage(this.canvas, 0, 0); for (const layer of [...this.#layers.values()].filter(layer => layer.exportable).sort((a, b) => a.order - b.order)) ctx.drawImage(layer.canvas, 0, 0); if (this.showIds) this.#drawIds(ctx, 1, 0, 0, out.width, out.height); return out; }
+    addOverlay(options) { return this.overlays.add(options); }
+    addLayer(options) { return this.addOverlay(options); }
+    get showIds() { return this.state.overlays.get('ui:province-ids')?.visible || false; }
+    set showIds(visible) { this.state.overlays.setVisible('ui:province-ids', visible); }
+    exportCanvas() { const out = document.createElement('canvas'); out.width = this.canvas.width; out.height = this.canvas.height; const ctx = out.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.drawImage(this.canvas, 0, 0); this.overlays.exportTo(ctx); return out; }
     local(e) { const r = this.element.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
     world(p) { return { x: (p.x - this.tx) / this.scale, y: (p.y - this.ty) / this.scale }; }
     fitScale() { return Math.max(.01, Math.min((this.element.clientWidth - 28) / this.canvas.width, (this.element.clientHeight - 56) / this.canvas.height)); }
     fit() { if (!this.ready) return; this.scale = this.fitScale(); this.tx = (this.element.clientWidth - this.canvas.width * this.scale) / 2; this.ty = (this.element.clientHeight - this.canvas.height * this.scale) / 2; this.transform(); }
     zoom(factor, x = this.element.clientWidth / 2, y = this.element.clientHeight / 2) { if (!this.ready) return; const old = this.scale; this.scale = Math.min(15, Math.max(this.fitScale() * .5, old * factor)); this.tx = x - (x - this.tx) * this.scale / old; this.ty = y - (y - this.ty) * this.scale / old; this.constrain(); this.transform(); this.setHover(null); }
     constrain() { const w = this.element.clientWidth, h = this.element.clientHeight, sw = this.canvas.width * this.scale, sh = this.canvas.height * this.scale; this.tx = sw < w ? (w - sw) / 2 : Math.min(w * .7, Math.max(w * .3 - sw, this.tx)); this.ty = sh < h ? (h - sh) / 2 : Math.min(h * .7, Math.max(h * .3 - sh, this.ty)); }
-    transform() { this.stage.style.transform = `translate(${this.tx}px,${this.ty}px) scale(${this.scale})`; this.drawNumbers(); this.emit('camera:change', { scale: this.scale, x: this.tx, y: this.ty }); }
+    transform() { this.stage.style.transform = `translate(${this.tx}px,${this.ty}px) scale(${this.scale})`; this.overlays.transform(this.stage.style.transform); this.drawNumbers(); this.emit('camera:change', { scale: this.scale, x: this.tx, y: this.ty }); }
     down(e) {
       if (!this.ready || ![0, 1].includes(e.button)) return; const p = this.local(e); this.pointers.set(e.pointerId, p); this.element.setPointerCapture(e.pointerId);
       if (this.pointers.size === 1) this.gesture = { start: p, last: p, moved: false, multi: false };
@@ -71,7 +68,7 @@
     }
     cancel() { this.pointers.clear(); this.gesture = null; this.pinch = null; this.element.classList.remove('dragging'); this.setHover(null); }
     setHover(id, position = {}) { if (this.hoverId === id) return; this.hoverId = id; this.#highlight(this.hoverCanvas, id, false); const event = { id, region: this.state.regionIndex?.get(id) || null, ...position }; this.input.emit('province:hover', event); }
-    select(id, { fromClick = false } = {}) { this.selectedId = id; this.#highlight(this.selectedCanvas, id, true); this.input.emit('selection:change', { id, region: this.state.regionIndex?.get(id) || null, fromClick }); }
+    select(id, { fromClick = false } = {}) { this.selectedId = id; this.input.emit('selection:change', { id, region: this.state.regionIndex?.get(id) || null, fromClick }); }
     focusRegion(id) { const r = this.state.regionIndex.get(id); if (!r) return; this.scale = Math.min(6, Math.max(this.scale, Math.min(this.element.clientWidth / (r.bbox[2] * 2.8), this.element.clientHeight / (r.bbox[3] * 2.8)))); this.tx = this.element.clientWidth / 2 - r.anchor[0] * this.scale; this.ty = this.element.clientHeight / 2 - r.anchor[1] * this.scale; this.constrain(); this.transform(); this.select(id); }
     #highlight(canvas, id, selected) {
       const index = this.state.regionIndex, region = index?.get(id); if (!region) { canvas.width = 1; canvas.height = 1; return; }

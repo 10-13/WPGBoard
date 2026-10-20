@@ -65,10 +65,13 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 /* Pixel map and its controls. */
 .workspace { position:relative; min-height:0; min-width:0; overflow:hidden; isolation:isolate }
 .map-host,.map-viewport { position:absolute; inset:0 }
-.map-viewport { overflow:hidden; touch-action:none; outline:none; background:#304f5e; cursor:var(--region-click-cursor,crosshair) }
+.map-viewport { overflow:hidden; isolation:isolate; touch-action:none; outline:none; background:#304f5e; cursor:var(--region-click-cursor,crosshair) }
 .map-viewport.dragging { cursor:grabbing }
 .map-stage { position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform }
-.map-stage>canvas { position:absolute; top:0; left:0; image-rendering:crisp-edges; image-rendering:pixelated }
+.map-stage>canvas,.map-overlay-world>canvas { position:absolute; top:0; left:0; image-rendering:crisp-edges; image-rendering:pixelated }
+.map-overlay-plane { position:absolute; inset:0; pointer-events:none }
+.map-overlay-world { position:absolute; top:0; left:0; transform-origin:0 0 }
+.map-overlay-screen { position:absolute; inset:0 }
 .map-base { z-index:0; display:block }
 .map-layer,.map-highlight { pointer-events:none }
 .map-numbers { position:absolute; inset:0; pointer-events:none }
@@ -115,6 +118,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 .extension-row>span { flex:1; min-width:0; overflow-wrap:anywhere }
 .extension-row strong,.extension-row small { display:block }
 .extension-row small { color:#839ca8 }
+.overlay-row { display:flex; align-items:flex-start; gap:4px; min-height:var(--atlas-step) }
+.overlay-toggle { flex:1; min-width:0; text-align:left; padding:0 4px }
+.overlay-toggle .data-name { max-width:none }
+.overlay-toggle .data-value { flex-shrink:0; max-width:none }
 .file-input-proxy { position:fixed; left:-9999px; top:0; width:1px; height:1px; opacity:0 }
 
 /* Domain lists and forms use the shared row rhythm instead of separator bars. */

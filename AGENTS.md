@@ -30,3 +30,9 @@ Named regions are an independent extension (`regions-model.js`, `regions.js`),
 stored in `meta.regions`. Obsolete nation groups have no runtime API or UI and
 must not be migrated into regions. Keep the context tree rooted at Мир,
 Провинция, Прочее; domain extensions register their own subtrees.
+
+Overlay definitions and local display preferences belong to `state.overlays`.
+Visibility and composition order are not game actions: never put them in game
+metadata, history, branches, or party JSON/HTML. Persist display preferences
+separately in browser storage. Modules draw through `ctx.overlay`; hiding an
+overlay never deletes its game objects. Version actual map-object changes only.

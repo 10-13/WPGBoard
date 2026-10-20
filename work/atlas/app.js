@@ -6,8 +6,11 @@
   const state = AtlasCore.getGameState(), ui = AtlasUI.getUI(), storage = new AtlasPlatform.Storage();
   AtlasStatistics.registerBasicStatistics(state);
   const saveKey = embedded.saveKey || embedded.saveId || 'atlas-default-v1';
+  const displayKey = ['overlay-preferences', saveKey];
+  try { const savedDisplay = await storage.get(displayKey); if (savedDisplay) state.overlays.restore(savedDisplay); } catch (error) { /* Display preferences are optional and local to this browser. */ }
   await ui.mount({ host: document.getElementById('app'), state });
-  let loading = false, saveTimer, revision = 0, storageNotice = false;
+  let loading = false, saveTimer, displayTimer, revision = 0, storageNotice = false;
+  const persistDisplay = () => storage.put(displayKey, state.overlays.toJSON()).catch(() => {});
   const snapshot = () => ({ ...state.toJSON(), saveKey });
   async function persist() {
     if (!state.loaded) return; const current = ++revision; ui.setSaveStatus('Сохраняем…');
@@ -32,7 +35,8 @@
     ui.extensions.register(AtlasExtensions.createFilesExtension(services)); ui.extensions.register(AtlasExtensions.nations); ui.extensions.register(AtlasExtensions.regions); ui.extensions.register(AtlasExtensions.history); ui.extensions.register(AtlasExtensions.metadata); ui.extensions.register(AtlasExtensions.resources);
     await ui.extensions.enable('files'); await ui.extensions.enable('nations'); await ui.extensions.enable('regions'); await ui.extensions.enable('history'); await ui.extensions.enable('metadata'); await ui.extensions.enable('resources');
     state.on('history:change', () => { clearTimeout(saveTimer); saveTimer = setTimeout(persist, 400); });
-    await persist(); window.addEventListener('pagehide', persist);
+    state.overlays.on('settings:change', () => { clearTimeout(displayTimer); displayTimer = setTimeout(persistDisplay, 200); });
+    await persist(); window.addEventListener('pagehide', persist); window.addEventListener('pagehide', persistDisplay);
   } catch (error) {
     console.error(error); ui.setBusy(false); ui.notify(error.message);
     ui.windows.open({ id: 'startup:error', title: 'Не удалось открыть партию', x: 20, y: 20, width: 360, height: 180, render(pane) { pane.append(AtlasUI.dom.el('p', '', error.message)); } });

@@ -333,15 +333,16 @@
     dispatch(type, payload = null, options = {}) { const definition = this.#types.get(type); if (!definition) throw new Error('Тип экшена не зарегистрирован: ' + type); const data = freeze(clone(payload)); definition.validate?.(data); return this.#execute(definition, data, options); }
   }
   const { TileMetadata, StatisticsRegistry } = (typeof module !== 'undefined' && module.exports ? require('./metadata.js') : root.AtlasMetadataCore).createMetadataAPI({ EventBus, clone, freeze, uid });
+  const { OverlayRegistry } = (typeof module !== 'undefined' && module.exports ? require('./overlays.js') : root.AtlasOverlayCore).createOverlayAPI({ EventBus, clone, freeze, equal });
   const singletonToken = Symbol('GameState'); let singleton;
   class GameState extends EventBus {
-    #map = null; #regionIndex = null; #history = null; #snapshot = freeze({ params: {}, meta: {} }); #off = []; #actions; #tileMetadata; #statistics;
+    #map = null; #regionIndex = null; #history = null; #snapshot = freeze({ params: {}, meta: {} }); #off = []; #actions; #tileMetadata; #statistics; #overlays;
     constructor(token) {
       super(); if (token !== singletonToken) throw new Error('Используйте AtlasCore.getGameState().');
       this.#actions = new ActionRegistry((definition, payload, options) => this.#requireHistory().update(draft => definition.reduce(draft, payload, { regionIndex: this.regionIndex, originalMap: this.originalMap }), { ...options, label: options.label || (typeof definition.label === 'function' ? definition.label(payload) : definition.label) || definition.type, actionType: definition.type, payload }));
       this.#actions.register('core.meta.set', { reduce: (draft, payload) => { draft.meta = write(draft.meta, pathOf(payload.path), present(payload.value)); }, label: 'Изменение метаданных' });
       this.#actions.register('core.meta.delete', { reduce: (draft, payload) => { draft.meta = write(draft.meta, pathOf(payload.path), absent()); }, label: 'Удаление метаданных' });
-      this.#tileMetadata = new TileMetadata(this); this.#statistics = new StatisticsRegistry(this);
+      this.#tileMetadata = new TileMetadata(this); this.#statistics = new StatisticsRegistry(this); this.#overlays = new OverlayRegistry();
     }
     get map() { return this.#map; }
     get originalMap() { return this.#map?.original || null; }
@@ -353,6 +354,7 @@
     get actions() { return this.#actions; }
     get tileMetadata() { return this.#tileMetadata; }
     get statistics() { return this.#statistics; }
+    get overlays() { return this.#overlays; }
     dispatch(type, payload, options) { return this.#actions.dispatch(type, payload, options); }
     get loaded() { return !!this.#map; }
     load(project, regionIndex) {
@@ -381,7 +383,7 @@
     toJSON() { if (!this.loaded) throw new Error('Игра не загружена.'); return { schemaVersion: 2, map: clone(this.map), regions: this.regionIndex.toJSON(), history: this.history.toJSON(), updatedAt: Date.now() }; }
   }
   const getGameState = () => singleton || (singleton = new GameState(singletonToken));
-  const api = { EventBus, Scope, ReadonlyMap, RegionIndex, History, ActionRegistry, TileMetadata, StatisticsRegistry, GameState, getGameState, diff, clone, equal, freeze, uid };
+  const api = { EventBus, Scope, ReadonlyMap, RegionIndex, History, ActionRegistry, TileMetadata, StatisticsRegistry, OverlayRegistry, GameState, getGameState, diff, clone, equal, freeze, uid };
   root.AtlasCore = Object.freeze(api);
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);

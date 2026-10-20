@@ -18,7 +18,8 @@
         action: fn => new root.AtlasUI.ActionHandler(fn, { signal: scope.signal }),
         menu: (menu, item) => menu.register({ ...item, id: id + ':' + item.id, signal: scope.signal }),
         window: options => ui.windows.open({ ...options, id: id + ':' + options.id, windowId: options.windowId ? id + ':' + options.windowId : undefined, signal: scope.signal }),
-        layer: options => ui.viewport.addLayer({ ...options, id: id + ':' + options.id, signal: scope.signal }),
+        overlay: options => ui.viewport.addOverlay({ ...options, id: id + ':' + options.id, source: id, signal: scope.signal }),
+        layer: options => ui.viewport.addOverlay({ ...options, id: id + ':' + options.id, source: id, signal: scope.signal }),
         onRegionClick: (handler, options = {}) => ui.regionClicks.subscribe(handler, { ...options, mode: 'passive', signal: scope.signal }),
       });
       try { const cleanup = await definition.start(context); if (typeof cleanup === 'function') scope.defer(cleanup); else if (cleanup?.dispose) scope.own(cleanup); }
@@ -46,8 +47,7 @@
       const menuRow = el('div', 'shell-menu-row'); menuRow.append(menubar); host.replaceChildren(menuRow, this.workspace, this.footer, this.toast, this.busyOverlay);
       this.viewport = new root.AtlasUI.MapViewport(this.mapHost, state, this.input); this.windows = new root.AtlasUI.WindowManager(this.windowHost, { regionClicks: this.regionClicks });
       this.regionSelection = new root.AtlasUI.RegionSelection({ valid: id => state.regions.has(id) });
-      const selectionLayer = this.viewport.addLayer({ id: 'ui:selection', order: 95, exportable: false });
-      this.viewport.selectedCanvas.hidden = true;
+      const selectionLayer = this.viewport.addOverlay({ id: 'ui:selection', title: 'Выделение провинций', source: 'ui', order: 95, exportable: false });
       const drawSelection = () => root.AtlasUI.drawRegionSet(selectionLayer.context, state.regionIndex, this.regionSelection.ids);
       this.regionSelection.on('change', event => { drawSelection(); this.refresh(); this.input.emit('regions:selection', event); });
       this.viewport.on('ready', drawSelection);
@@ -65,6 +65,7 @@
       this.mainMenu.register({ id: 'ui.ids', path: ['Вид'], label: 'Показать / скрыть ID', handler: () => { this.viewport.showIds = !this.viewport.showIds; this.viewport.drawNumbers(); } });
       this.mainMenu.register({ id: 'ui.base', path: ['Вид'], label: 'Сменить светлую / исходную основу', handler: () => this.viewport.setBaseStyle(this.viewport.baseStyle === 'original' ? 'light' : 'original') });
       this.mainMenu.register({ id: 'ui.modules', path: ['Вид'], label: 'Расширения', handler: () => this.showExtensions() });
+      this.mainMenu.register({ id: 'ui.overlays', path: ['Вид'], label: 'Оверлеи', handler: () => this.showOverlays() });
       this.mainMenu.register({ id: 'ui.windows-help', path: ['Вид'], label: 'Управление окнами', handler: () => this.showWindowHelp() });
       this.input.on('province:context', e => {
         const regionIds = this.regionSelection.forContext(e.id), id = regionIds.length === 1 ? regionIds[0] : null, region = id ? state.regions.get(id) : null;
@@ -90,6 +91,27 @@
     #showTooltip(event) { this.tooltip.hidden = !event.id; this.tooltip.replaceChildren(); if (!event.id) return; this.tooltip.append(el('strong', '', 'Провинция #' + event.id)); for (const provider of this.#tooltipProviders.values()) { const text = provider(event, this.state); if (text) this.tooltip.append(el('div', '', String(text))); } }
     notify(message) { if (!this.toast) return; this.toast.textContent = String(message); this.toast.hidden = false; clearTimeout(this.#toastTimer); this.#toastTimer = setTimeout(() => this.toast.hidden = true, 4500); }
     setBusy(value, message = 'Загрузка карты…') { this.busyOverlay.hidden = !value; this.busyOverlay.textContent = message; }
+    showOverlays() {
+      this.windows.open({ id: 'ui:overlays', title: 'Оверлеи', x: Math.max(12, this.workspace.clientWidth - 350), y: 32, width: 330, height: 310, render: (pane, scope) => {
+        const draw = () => {
+          const focused = pane.contains(document.activeElement) ? document.activeElement : null, focusId = focused?.dataset.overlayId, focusControl = focused?.dataset.overlayControl;
+          pane.replaceChildren(el('p', 'muted', 'Сверху — передний план. Переключатель показывает или скрывает оверлей; стрелки меняют порядок. Настройки локальные.'));
+          const list = [...this.state.overlays.list].reverse();
+          for (const [index, overlay] of list.entries()) {
+            const row = el('div', 'overlay-row'); row.dataset.overlayItem = overlay.id;
+            const toggle = createSwitch(overlay.title, visible => this.state.overlays.setVisible(overlay.id, visible), { checked: overlay.visible, className: 'overlay-toggle' });
+            toggle.replaceChildren(root.AtlasUI.dataView.createDataRow(overlay.title, overlay.visible ? 'вкл' : 'выкл')); toggle.setAttribute('aria-label', overlay.title);
+            const up = button('↑', () => this.state.overlays.move(overlay.id, 1), { className: 'icon-button', title: 'Поднять оверлей: ' + overlay.title, disabled: index === 0 }); up.setAttribute('aria-label', 'Поднять оверлей: ' + overlay.title);
+            const down = button('↓', () => this.state.overlays.move(overlay.id, -1), { className: 'icon-button', title: 'Опустить оверлей: ' + overlay.title, disabled: index === list.length - 1 }); down.setAttribute('aria-label', 'Опустить оверлей: ' + overlay.title);
+            for (const [control, name] of [[toggle, 'toggle'], [up, 'up'], [down, 'down']]) { control.dataset.overlayId = overlay.id; control.dataset.overlayControl = name; }
+            row.append(toggle, up, down); pane.append(row);
+          }
+          pane.append(button('Порядок и видимость по умолчанию', () => this.state.overlays.reset(), { className: 'wide' }), el('p', 'muted', 'В PNG включаются видимые оверлеи карты в этом порядке. Подсветки наведения, выделения и набора статистики в PNG не входят.'));
+          if (focusId) { const controls = [...pane.querySelectorAll('button')].filter(node => node.dataset.overlayId === focusId), control = controls.find(node => node.dataset.overlayControl === focusControl && !node.disabled) || controls[0]; control?.focus({ preventScroll: true }); }
+        };
+        this.state.overlays.on('change', draw, { signal: scope.signal }); draw();
+      } });
+    }
     showExtensions() {
       this.windows.open({ id: 'ui:extensions', title: 'Расширения', x: Math.max(10, this.workspace.clientWidth - 340), y: 18, width: 320, height: 310, render: (pane, scope) => {
         const draw = () => { pane.replaceChildren(el('p', 'muted', 'Отключение удаляет UI и подписки модуля. Данные игры сохраняются.')); for (const extension of this.extensions.list) { const row = el('label', 'extension-row'), input = document.createElement('input'); input.type = 'checkbox'; input.checked = extension.enabled; input.setAttribute('aria-label', extension.name); const text = el('span'); text.append(el('strong', '', extension.name), el('small', '', extension.description)); row.append(input, text); input.onchange = async () => { try { input.disabled = true; if (input.checked) await this.extensions.enable(extension.id); else this.extensions.disable(extension.id); } catch (error) { this.notify(error.message); draw(); } finally { input.disabled = false; } }; pane.append(row); } };

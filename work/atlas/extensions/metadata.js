@@ -16,9 +16,8 @@
     id: 'metadata', name: 'Метаданные и статистика', description: 'Записи тайлов, общие статы и отчёты по наборам регионов.',
     start(ctx) {
       const { state, ui, signal } = ctx; let selected = ui.viewport.selectedId, mode = 'current', setTitle = '', mapId = state.map.id; const chosen = new Set();
-      let showChosen = true;
-      const highlight = ctx.layer({ id: 'chosen', order: 80, exportable: false });
-      const drawChosen = () => drawRegionSet(highlight.context, state.regionIndex, showChosen ? chosen : []);
+      const highlight = ctx.overlay({ id: 'chosen', title: 'Набор статистики', order: 80, exportable: false });
+      const drawChosen = () => drawRegionSet(highlight.context, state.regionIndex, chosen);
       const refreshSet = () => { drawChosen(); ui.emit('metadata:refresh', {}); ui.refresh(); };
       const addRegions = ids => { for (const id of ids) if (state.regions.has(id)) chosen.add(id); mode = 'set'; setTitle = ''; openStatistics(); };
       const removeRegions = ids => { for (const id of ids) chosen.delete(id); mode = 'set'; setTitle = ''; openStatistics(); };
@@ -89,14 +88,14 @@
             pane.replaceChildren(); const choose = document.createElement('select'); choose.setAttribute('aria-label', 'Область статистики');
             for (const [id, label] of [['current', 'Текущий тайл'], ['set', setTitle || 'Выбранный набор'], ['all', 'Вся карта']]) choose.append(new Option(label, id)); choose.value = mode; choose.onchange = () => { mode = choose.value; draw(); }; pane.append(field('Область', choose));
             const tools = el('div', 'tool-row set-tools');
-            tools.append(createSwitch('Подсветка набора', checked => { showChosen = checked; drawChosen(); }, { checked: showChosen, title: 'Показать или скрыть бирюзовую подсветку набора статистики' }), button('Очистить набор', () => { chosen.clear(); setTitle = ''; mode = 'set'; refreshSet(); }, { disabled: !chosen.size })); pane.append(tools, el('p', 'set-count', 'Провинций в наборе: ' + chosen.size));
+            tools.append(createSwitch('Подсветка набора', checked => highlight.setVisible(checked), { checked: highlight.visible, title: 'Показать или скрыть бирюзовую подсветку набора статистики' }), button('Очистить набор', () => { chosen.clear(); setTitle = ''; mode = 'set'; refreshSet(); }, { disabled: !chosen.size })); pane.append(tools, el('p', 'set-count', 'Провинций в наборе: ' + chosen.size));
             pane.append(el('p', 'muted', 'Клик выбирает провинцию; Shift + клик добавляет или убирает. Правый клик → Прочее → Статистика: добавить, исключить или задать область.'));
             const ids = mode === 'all' ? [...state.regions.keys()] : mode === 'current' ? state.regions.has(selected) ? [selected] : [] : [...chosen].filter(id => state.regions.has(id));
             if (!ids.length) pane.append(el('p', 'muted', 'Выберите тайл или добавьте регионы в набор.'));
             try { renderBlocks(pane, state.statistics.collect(ids), expanded); } catch (e) { pane.append(el('p', 'form-error', e.message)); }
           };
           const update = e => { selected = e.id; draw(); }; tab.onRegionClick(update);
-          ui.input.on('selection:change', e => { if (!e.fromClick) update(e); }, { signal: scope.signal }); state.statistics.on('change', draw, { signal: scope.signal }); watch(draw, scope); draw();
+          ui.input.on('selection:change', e => { if (!e.fromClick) update(e); }, { signal: scope.signal }); state.statistics.on('change', draw, { signal: scope.signal }); state.overlays.on('change', draw, { signal: scope.signal }); watch(draw, scope); draw();
         } }); refreshSet(); return handle;
       }
       ctx.on('selection:change', e => { selected = e.id; });

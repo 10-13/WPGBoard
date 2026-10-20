@@ -73,10 +73,13 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 /* Pixel map and its controls. */
 .workspace { position:relative; min-height:0; min-width:0; overflow:hidden; isolation:isolate }
 .map-host,.map-viewport { position:absolute; inset:0 }
-.map-viewport { overflow:hidden; touch-action:none; outline:none; background:#304f5e; cursor:var(--region-click-cursor,crosshair) }
+.map-viewport { overflow:hidden; isolation:isolate; touch-action:none; outline:none; background:#304f5e; cursor:var(--region-click-cursor,crosshair) }
 .map-viewport.dragging { cursor:grabbing }
 .map-stage { position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform }
-.map-stage>canvas { position:absolute; top:0; left:0; image-rendering:crisp-edges; image-rendering:pixelated }
+.map-stage>canvas,.map-overlay-world>canvas { position:absolute; top:0; left:0; image-rendering:crisp-edges; image-rendering:pixelated }
+.map-overlay-plane { position:absolute; inset:0; pointer-events:none }
+.map-overlay-world { position:absolute; top:0; left:0; transform-origin:0 0 }
+.map-overlay-screen { position:absolute; inset:0 }
 .map-base { z-index:0; display:block }
 .map-layer,.map-highlight { pointer-events:none }
 .map-numbers { position:absolute; inset:0; pointer-events:none }
@@ -123,6 +126,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 .extension-row>span { flex:1; min-width:0; overflow-wrap:anywhere }
 .extension-row strong,.extension-row small { display:block }
 .extension-row small { color:#839ca8 }
+.overlay-row { display:flex; align-items:flex-start; gap:4px; min-height:var(--atlas-step) }
+.overlay-toggle { flex:1; min-width:0; text-align:left; padding:0 4px }
+.overlay-toggle .data-name { max-width:none }
+.overlay-toggle .data-value { flex-shrink:0; max-width:none }
 .file-input-proxy { position:fixed; left:-9999px; top:0; width:1px; height:1px; opacity:0 }
 
 /* Domain lists and forms use the shared row rhythm instead of separator bars. */
@@ -285,6 +292,72 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   }
   root.AtlasMetadataCore = { createMetadataAPI };
   if (typeof module !== 'undefined' && module.exports) module.exports = { createMetadataAPI };
+})(globalThis);
+
+;
+/* Headless overlay definitions and local display preferences. No game actions, Canvas or DOM. */
+(function (root) {
+  'use strict';
+  function createOverlayAPI({ EventBus, clone, freeze, equal }) {
+    const unsafe = new Set(['__proto__', 'prototype', 'constructor']);
+    const validId = id => typeof id === 'string' && !!id.trim() && id.length <= 150 && !unsafe.has(id);
+    const object = value => value && typeof value === 'object' && !Array.isArray(value);
+    const ids = values => { if (!Array.isArray(values) || values.length > 10000 || values.some(id => !validId(id)) || new Set(values).size !== values.length) throw new Error('Нужен список уникальных ID оверлеев.'); return values; };
+    const defaults = () => ({ version: 1, order: [], visibility: {} });
+    const settings = value => {
+      const data = clone(value); if (!object(data) || data.version !== 1 || !object(data.visibility) || Object.keys(data.visibility).length > 10000 || Object.entries(data.visibility).some(([id, visible]) => !validId(id) || typeof visible !== 'boolean')) throw new Error('Некорректные настройки отображения оверлеев.');
+      return freeze({ version: 1, order: [...ids(data.order)], visibility: data.visibility });
+    };
+    class OverlayRegistry extends EventBus {
+      #definitions = new Map(); #last = []; #settings = freeze(defaults());
+      #savedOrder() { return this.#settings.order; }
+      get list() {
+        const saved = this.#savedOrder(), rank = new Map(saved.map((id, i) => [id, i])), visibility = this.#settings.visibility;
+        return freeze([...this.#definitions.values()].sort((a, b) => {
+          const ar = rank.get(a.id), br = rank.get(b.id);
+          if (ar !== undefined || br !== undefined) return (ar ?? Infinity) - (br ?? Infinity);
+          return a.order - b.order || a.id.localeCompare(b.id);
+        }).map((d, index) => ({ ...d, visible: object(visibility) && Object.hasOwn(visibility, d.id) && typeof visibility[d.id] === 'boolean' ? visibility[d.id] : d.visible, index })));
+      }
+      has(id) { return this.#definitions.has(id); }
+      get(id) { return this.list.find(item => item.id === id) || null; }
+      register({ id, title = id, source = 'core', order = 10, visible = true, exportable = true }, { signal } = {}) {
+        if (!validId(id) || this.has(id) || typeof title !== 'string' || !title.trim() || typeof source !== 'string' || !source.trim() || !Number.isFinite(order) || typeof visible !== 'boolean' || typeof exportable !== 'boolean') throw new Error('Нужны уникальный ID, название и параметры оверлея.');
+        const definition = freeze({ id, title, source, order, visible, exportable }), registry = this;
+        let active = !signal?.aborted;
+        const dispose = () => { if (!active) return; active = false; if (this.#definitions.get(id) === definition) this.#definitions.delete(id); signal?.removeEventListener('abort', dispose); this.#changed(); };
+        if (active) { this.#definitions.set(id, definition); signal?.addEventListener('abort', dispose, { once: true }); this.#changed(); }
+        return Object.freeze({ id, get current() { return active ? registry.get(id) : null; }, dispose });
+      }
+      setVisible(id, visible) {
+        const overlay = this.get(id); if (!overlay) throw new Error('Оверлей не зарегистрирован.');
+        if (typeof visible !== 'boolean') throw new TypeError('Видимость должна быть логическим значением.');
+        if (overlay.visible === visible) return null;
+        return this.restore({ ...this.#settings, visibility: { ...this.#settings.visibility, [id]: visible } });
+      }
+      reorder(orderedIds) {
+        ids(orderedIds); const current = this.list.map(item => item.id);
+        if (orderedIds.length !== current.length || orderedIds.some(id => !this.has(id))) throw new Error('Укажите каждый зарегистрированный оверлей ровно один раз.');
+        if (equal(current, orderedIds)) return null;
+        // Keep the slots of temporarily unloaded modules; they retain their place when enabled again.
+        let cursor = 0; const order = this.#savedOrder().map(id => this.has(id) ? orderedIds[cursor++] : id);
+        order.push(...orderedIds.slice(cursor));
+        return this.restore({ ...this.#settings, order });
+      }
+      move(id, delta) {
+        if (!this.has(id) || !Number.isInteger(delta)) throw new Error('Укажите оверлей и целое смещение.');
+        const order = this.list.map(item => item.id), from = order.indexOf(id), to = Math.max(0, Math.min(order.length - 1, from + delta));
+        if (from === to) return null; order.splice(from, 1); order.splice(to, 0, id); return this.reorder(order);
+      }
+      reset() { return this.restore(defaults()); }
+      toJSON() { return clone(this.#settings); }
+      restore(value) { const next = settings(value); if (equal(this.#settings, next)) return false; this.#settings = next; this.#changed(); this.emit('settings:change', { settings: this.#settings }); return true; }
+      #changed() { const list = this.list; if (equal(list, this.#last)) return; this.#last = list; this.emit('change', { overlays: list }); }
+    }
+    return { OverlayRegistry };
+  }
+  root.AtlasOverlayCore = { createOverlayAPI };
+  if (typeof module !== 'undefined' && module.exports) module.exports = { createOverlayAPI };
 })(globalThis);
 
 ;
@@ -623,15 +696,16 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     dispatch(type, payload = null, options = {}) { const definition = this.#types.get(type); if (!definition) throw new Error('Тип экшена не зарегистрирован: ' + type); const data = freeze(clone(payload)); definition.validate?.(data); return this.#execute(definition, data, options); }
   }
   const { TileMetadata, StatisticsRegistry } = (typeof module !== 'undefined' && module.exports ? require('./metadata.js') : root.AtlasMetadataCore).createMetadataAPI({ EventBus, clone, freeze, uid });
+  const { OverlayRegistry } = (typeof module !== 'undefined' && module.exports ? require('./overlays.js') : root.AtlasOverlayCore).createOverlayAPI({ EventBus, clone, freeze, equal });
   const singletonToken = Symbol('GameState'); let singleton;
   class GameState extends EventBus {
-    #map = null; #regionIndex = null; #history = null; #snapshot = freeze({ params: {}, meta: {} }); #off = []; #actions; #tileMetadata; #statistics;
+    #map = null; #regionIndex = null; #history = null; #snapshot = freeze({ params: {}, meta: {} }); #off = []; #actions; #tileMetadata; #statistics; #overlays;
     constructor(token) {
       super(); if (token !== singletonToken) throw new Error('Используйте AtlasCore.getGameState().');
       this.#actions = new ActionRegistry((definition, payload, options) => this.#requireHistory().update(draft => definition.reduce(draft, payload, { regionIndex: this.regionIndex, originalMap: this.originalMap }), { ...options, label: options.label || (typeof definition.label === 'function' ? definition.label(payload) : definition.label) || definition.type, actionType: definition.type, payload }));
       this.#actions.register('core.meta.set', { reduce: (draft, payload) => { draft.meta = write(draft.meta, pathOf(payload.path), present(payload.value)); }, label: 'Изменение метаданных' });
       this.#actions.register('core.meta.delete', { reduce: (draft, payload) => { draft.meta = write(draft.meta, pathOf(payload.path), absent()); }, label: 'Удаление метаданных' });
-      this.#tileMetadata = new TileMetadata(this); this.#statistics = new StatisticsRegistry(this);
+      this.#tileMetadata = new TileMetadata(this); this.#statistics = new StatisticsRegistry(this); this.#overlays = new OverlayRegistry();
     }
     get map() { return this.#map; }
     get originalMap() { return this.#map?.original || null; }
@@ -643,6 +717,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     get actions() { return this.#actions; }
     get tileMetadata() { return this.#tileMetadata; }
     get statistics() { return this.#statistics; }
+    get overlays() { return this.#overlays; }
     dispatch(type, payload, options) { return this.#actions.dispatch(type, payload, options); }
     get loaded() { return !!this.#map; }
     load(project, regionIndex) {
@@ -671,7 +746,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     toJSON() { if (!this.loaded) throw new Error('Игра не загружена.'); return { schemaVersion: 2, map: clone(this.map), regions: this.regionIndex.toJSON(), history: this.history.toJSON(), updatedAt: Date.now() }; }
   }
   const getGameState = () => singleton || (singleton = new GameState(singletonToken));
-  const api = { EventBus, Scope, ReadonlyMap, RegionIndex, History, ActionRegistry, TileMetadata, StatisticsRegistry, GameState, getGameState, diff, clone, equal, freeze, uid };
+  const api = { EventBus, Scope, ReadonlyMap, RegionIndex, History, ActionRegistry, TileMetadata, StatisticsRegistry, OverlayRegistry, GameState, getGameState, diff, clone, equal, freeze, uid };
   root.AtlasCore = Object.freeze(api);
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);
@@ -1053,18 +1128,64 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 })(globalThis);
 
 ;
+/* Canvas bindings for the headless registry. Every plane shares one composition order. */
+(function (root) {
+  'use strict';
+  class OverlayRenderer {
+    #layers = new Map(); #off; #transform = ''; #width = 1; #height = 1;
+    constructor(host, registry) { this.host = host; this.registry = registry; this.#off = registry.on('change', () => this.#sync()); }
+    add({ signal, space = 'world', exportDraw, ...definition }) {
+      if (!['world', 'screen'].includes(space) || exportDraw !== undefined && typeof exportDraw !== 'function' || space === 'screen' && definition.exportable !== false && !exportDraw) throw new Error('Для экранного оверлея с PNG нужна функция exportDraw.');
+      const registration = this.registry.register(definition, { signal });
+      const plane = document.createElement('div'); plane.className = 'map-overlay-plane'; plane.dataset.overlay = definition.id;
+      const world = document.createElement('div'); world.className = space === 'world' ? 'map-overlay-world' : 'map-overlay-screen';
+      const canvas = document.createElement('canvas'); canvas.className = 'map-layer'; canvas.dataset.layer = definition.id;
+      canvas.width = space === 'world' ? this.#width : 1; canvas.height = space === 'world' ? this.#height : 1;
+      const context = canvas.getContext('2d', { willReadFrequently: true }); context.imageSmoothingEnabled = false;
+      world.append(canvas); plane.append(world); if (space === 'world') world.style.transform = this.#transform;
+      const layer = { id: definition.id, plane, world, canvas, context, space, exportDraw, registration };
+      if (registration.current) { this.#layers.set(definition.id, layer); this.host.append(plane); this.#sync(); }
+      return Object.freeze({ id: definition.id, canvas, context, dispose: registration.dispose,
+        get visible() { return registration.current?.visible || false; },
+        setVisible: visible => { if (!registration.current) throw new Error('Оверлей отключён.'); return this.registry.setVisible(definition.id, visible); }
+      });
+    }
+    #sync() {
+      for (const [id, layer] of this.#layers) if (!this.registry.has(id)) { layer.plane.remove(); this.#layers.delete(id); }
+      for (const overlay of this.registry.list) { const layer = this.#layers.get(overlay.id); if (layer) { layer.plane.hidden = !overlay.visible; layer.plane.style.zIndex = String(overlay.index + 1); } }
+    }
+    resizeWorld(width, height) {
+      this.#width = width; this.#height = height;
+      for (const layer of this.#layers.values()) if (layer.space === 'world') { layer.canvas.width = width; layer.canvas.height = height; layer.context.imageSmoothingEnabled = false; }
+    }
+    transform(value) { this.#transform = value; for (const layer of this.#layers.values()) if (layer.space === 'world') layer.world.style.transform = value; }
+    exportTo(context) {
+      for (const overlay of this.registry.list) {
+        if (!overlay.visible || !overlay.exportable) continue; const layer = this.#layers.get(overlay.id); if (!layer) continue;
+        if (layer.exportDraw) layer.exportDraw(context); else context.drawImage(layer.canvas, 0, 0);
+      }
+    }
+    dispose() { for (const layer of [...this.#layers.values()]) layer.registration.dispose(); this.#off(); }
+  }
+  Object.assign(root.AtlasUI ||= {}, { OverlayRenderer });
+  if (typeof module !== 'undefined' && module.exports) module.exports = { OverlayRenderer };
+})(globalThis);
+
+;
 (function (root) {
   'use strict';
   const { EventBus } = root.AtlasCore;
   class MapViewport extends EventBus {
-    #layers = new Map(); #loadGeneration = 0;
+    #loadGeneration = 0;
     constructor(host, state, input) {
-      super(); this.host = host; this.state = state; this.input = input; this.scale = 1; this.tx = 0; this.ty = 0; this.selectedId = null; this.hoverId = null; this.pointers = new Map(); this.ready = false; this.showIds = false; this.panOnly = false; this.baseStyle = 'original';
+      super(); this.host = host; this.state = state; this.input = input; this.scale = 1; this.tx = 0; this.ty = 0; this.selectedId = null; this.hoverId = null; this.pointers = new Map(); this.ready = false; this.panOnly = false; this.baseStyle = 'original';
       this.element = document.createElement('div'); this.element.className = 'map-viewport'; this.element.tabIndex = 0; this.element.setAttribute('aria-label', 'Карта провинций');
-      this.stage = document.createElement('div'); this.stage.className = 'map-stage'; this.canvas = document.createElement('canvas'); this.canvas.className = 'map-base'; this.stage.append(this.canvas);
-      this.hoverCanvas = document.createElement('canvas'); this.hoverCanvas.className = 'map-highlight'; this.hoverCanvas.style.zIndex = 90;
-      this.selectedCanvas = document.createElement('canvas'); this.selectedCanvas.className = 'map-highlight'; this.selectedCanvas.style.zIndex = 95; this.stage.append(this.hoverCanvas, this.selectedCanvas);
-      this.numbersCanvas = document.createElement('canvas'); this.numbersCanvas.className = 'map-numbers'; this.element.append(this.stage, this.numbersCanvas); host.append(this.element); this.ctx = this.canvas.getContext('2d');
+      this.stage = document.createElement('div'); this.stage.className = 'map-stage'; this.canvas = document.createElement('canvas'); this.canvas.className = 'map-base'; this.stage.append(this.canvas); this.element.append(this.stage);
+      this.overlays = new root.AtlasUI.OverlayRenderer(this.element, state.overlays);
+      this.hoverCanvas = this.addOverlay({ id: 'ui:hover', title: 'Наведение на провинцию', source: 'ui', order: 90, exportable: false }).canvas;
+      this.numbersCanvas = this.addOverlay({ id: 'ui:province-ids', title: 'Номера провинций', source: 'ui', order: 100, visible: false, space: 'screen', exportDraw: context => this.#drawIds(context, 1, 0, 0, this.canvas.width, this.canvas.height) }).canvas;
+      this.numbersCanvas.classList.add('map-numbers'); host.append(this.element); this.ctx = this.canvas.getContext('2d');
+      state.overlays.on('change', () => this.drawNumbers());
       this.element.addEventListener('wheel', e => { if (!this.ready) return; e.preventDefault(); const p = this.local(e); this.zoom(Math.exp(-Math.max(-100, Math.min(100, e.deltaY)) * .004), p.x, p.y); }, { passive: false });
       this.element.addEventListener('pointerdown', e => this.down(e)); this.element.addEventListener('pointermove', e => this.move(e)); this.element.addEventListener('pointerup', e => this.up(e));
       this.element.addEventListener('pointercancel', () => this.cancel()); this.element.addEventListener('lostpointercapture', e => { if (this.pointers.has(e.pointerId)) this.cancel(); });
@@ -1080,28 +1201,23 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       await Promise.all([original.decode(), image === original ? null : image.decode()]); if (generation !== this.#loadGeneration) return;
       this.originalImage = original; this.image = image; this.canvas.width = map.original.width; this.canvas.height = map.original.height; this.ctx.imageSmoothingEnabled = false; this.ctx.drawImage(image, 0, 0);
       this.stage.style.width = image.width + 'px'; this.stage.style.height = image.height + 'px';
-      for (const layer of this.#layers.values()) { layer.canvas.width = image.width; layer.canvas.height = image.height; layer.context.imageSmoothingEnabled = false; }
-      this.selectedId = null; this.hoverId = null; this.hoverCanvas.width = 1; this.selectedCanvas.width = 1; this.cancel(); this.ready = true; this.fit();
+      this.overlays.resizeWorld(image.width, image.height);
+      this.selectedId = null; this.hoverId = null; this.hoverCanvas.width = 1; this.cancel(); this.ready = true; this.fit();
       this.emit('ready', { viewport: this }); this.input.emit('selection:change', { id: null, region: null });
     }
     async setBaseStyle(style) { this.baseStyle = style; const camera = [this.scale, this.tx, this.ty], selected = this.selectedId; await this.load(); [this.scale, this.tx, this.ty] = camera; this.transform(); this.select(selected); }
-    addLayer({ id, order = 10, signal, exportable = true } = {}) {
-      if (!id || this.#layers.has(id)) throw new Error('Слой уже зарегистрирован или не имеет ID.');
-      const canvas = document.createElement('canvas'); canvas.className = 'map-layer'; canvas.dataset.layer = id; canvas.style.zIndex = order;
-      canvas.width = this.canvas.width; canvas.height = this.canvas.height; this.stage.append(canvas);
-      const dispose = () => { canvas.remove(); this.#layers.delete(id); signal?.removeEventListener('abort', dispose); };
-      const layer = { canvas, context: canvas.getContext('2d', { willReadFrequently: true }), dispose, order, exportable };
-      layer.context.imageSmoothingEnabled = false;
-      this.#layers.set(id, layer); signal?.addEventListener('abort', dispose, { once: true }); if (signal?.aborted) dispose(); return layer;
-    }
-    exportCanvas() { const out = document.createElement('canvas'); out.width = this.canvas.width; out.height = this.canvas.height; const ctx = out.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.drawImage(this.canvas, 0, 0); for (const layer of [...this.#layers.values()].filter(layer => layer.exportable).sort((a, b) => a.order - b.order)) ctx.drawImage(layer.canvas, 0, 0); if (this.showIds) this.#drawIds(ctx, 1, 0, 0, out.width, out.height); return out; }
+    addOverlay(options) { return this.overlays.add(options); }
+    addLayer(options) { return this.addOverlay(options); }
+    get showIds() { return this.state.overlays.get('ui:province-ids')?.visible || false; }
+    set showIds(visible) { this.state.overlays.setVisible('ui:province-ids', visible); }
+    exportCanvas() { const out = document.createElement('canvas'); out.width = this.canvas.width; out.height = this.canvas.height; const ctx = out.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.drawImage(this.canvas, 0, 0); this.overlays.exportTo(ctx); return out; }
     local(e) { const r = this.element.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
     world(p) { return { x: (p.x - this.tx) / this.scale, y: (p.y - this.ty) / this.scale }; }
     fitScale() { return Math.max(.01, Math.min((this.element.clientWidth - 28) / this.canvas.width, (this.element.clientHeight - 56) / this.canvas.height)); }
     fit() { if (!this.ready) return; this.scale = this.fitScale(); this.tx = (this.element.clientWidth - this.canvas.width * this.scale) / 2; this.ty = (this.element.clientHeight - this.canvas.height * this.scale) / 2; this.transform(); }
     zoom(factor, x = this.element.clientWidth / 2, y = this.element.clientHeight / 2) { if (!this.ready) return; const old = this.scale; this.scale = Math.min(15, Math.max(this.fitScale() * .5, old * factor)); this.tx = x - (x - this.tx) * this.scale / old; this.ty = y - (y - this.ty) * this.scale / old; this.constrain(); this.transform(); this.setHover(null); }
     constrain() { const w = this.element.clientWidth, h = this.element.clientHeight, sw = this.canvas.width * this.scale, sh = this.canvas.height * this.scale; this.tx = sw < w ? (w - sw) / 2 : Math.min(w * .7, Math.max(w * .3 - sw, this.tx)); this.ty = sh < h ? (h - sh) / 2 : Math.min(h * .7, Math.max(h * .3 - sh, this.ty)); }
-    transform() { this.stage.style.transform = `translate(${this.tx}px,${this.ty}px) scale(${this.scale})`; this.drawNumbers(); this.emit('camera:change', { scale: this.scale, x: this.tx, y: this.ty }); }
+    transform() { this.stage.style.transform = `translate(${this.tx}px,${this.ty}px) scale(${this.scale})`; this.overlays.transform(this.stage.style.transform); this.drawNumbers(); this.emit('camera:change', { scale: this.scale, x: this.tx, y: this.ty }); }
     down(e) {
       if (!this.ready || ![0, 1].includes(e.button)) return; const p = this.local(e); this.pointers.set(e.pointerId, p); this.element.setPointerCapture(e.pointerId);
       if (this.pointers.size === 1) this.gesture = { start: p, last: p, moved: false, multi: false };
@@ -1126,7 +1242,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     }
     cancel() { this.pointers.clear(); this.gesture = null; this.pinch = null; this.element.classList.remove('dragging'); this.setHover(null); }
     setHover(id, position = {}) { if (this.hoverId === id) return; this.hoverId = id; this.#highlight(this.hoverCanvas, id, false); const event = { id, region: this.state.regionIndex?.get(id) || null, ...position }; this.input.emit('province:hover', event); }
-    select(id, { fromClick = false } = {}) { this.selectedId = id; this.#highlight(this.selectedCanvas, id, true); this.input.emit('selection:change', { id, region: this.state.regionIndex?.get(id) || null, fromClick }); }
+    select(id, { fromClick = false } = {}) { this.selectedId = id; this.input.emit('selection:change', { id, region: this.state.regionIndex?.get(id) || null, fromClick }); }
     focusRegion(id) { const r = this.state.regionIndex.get(id); if (!r) return; this.scale = Math.min(6, Math.max(this.scale, Math.min(this.element.clientWidth / (r.bbox[2] * 2.8), this.element.clientHeight / (r.bbox[3] * 2.8)))); this.tx = this.element.clientWidth / 2 - r.anchor[0] * this.scale; this.ty = this.element.clientHeight / 2 - r.anchor[1] * this.scale; this.constrain(); this.transform(); this.select(id); }
     #highlight(canvas, id, selected) {
       const index = this.state.regionIndex, region = index?.get(id); if (!region) { canvas.width = 1; canvas.height = 1; return; }
@@ -1202,7 +1318,8 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         action: fn => new root.AtlasUI.ActionHandler(fn, { signal: scope.signal }),
         menu: (menu, item) => menu.register({ ...item, id: id + ':' + item.id, signal: scope.signal }),
         window: options => ui.windows.open({ ...options, id: id + ':' + options.id, windowId: options.windowId ? id + ':' + options.windowId : undefined, signal: scope.signal }),
-        layer: options => ui.viewport.addLayer({ ...options, id: id + ':' + options.id, signal: scope.signal }),
+        overlay: options => ui.viewport.addOverlay({ ...options, id: id + ':' + options.id, source: id, signal: scope.signal }),
+        layer: options => ui.viewport.addOverlay({ ...options, id: id + ':' + options.id, source: id, signal: scope.signal }),
         onRegionClick: (handler, options = {}) => ui.regionClicks.subscribe(handler, { ...options, mode: 'passive', signal: scope.signal }),
       });
       try { const cleanup = await definition.start(context); if (typeof cleanup === 'function') scope.defer(cleanup); else if (cleanup?.dispose) scope.own(cleanup); }
@@ -1230,8 +1347,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       const menuRow = el('div', 'shell-menu-row'); menuRow.append(menubar); host.replaceChildren(menuRow, this.workspace, this.footer, this.toast, this.busyOverlay);
       this.viewport = new root.AtlasUI.MapViewport(this.mapHost, state, this.input); this.windows = new root.AtlasUI.WindowManager(this.windowHost, { regionClicks: this.regionClicks });
       this.regionSelection = new root.AtlasUI.RegionSelection({ valid: id => state.regions.has(id) });
-      const selectionLayer = this.viewport.addLayer({ id: 'ui:selection', order: 95, exportable: false });
-      this.viewport.selectedCanvas.hidden = true;
+      const selectionLayer = this.viewport.addOverlay({ id: 'ui:selection', title: 'Выделение провинций', source: 'ui', order: 95, exportable: false });
       const drawSelection = () => root.AtlasUI.drawRegionSet(selectionLayer.context, state.regionIndex, this.regionSelection.ids);
       this.regionSelection.on('change', event => { drawSelection(); this.refresh(); this.input.emit('regions:selection', event); });
       this.viewport.on('ready', drawSelection);
@@ -1249,6 +1365,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       this.mainMenu.register({ id: 'ui.ids', path: ['Вид'], label: 'Показать / скрыть ID', handler: () => { this.viewport.showIds = !this.viewport.showIds; this.viewport.drawNumbers(); } });
       this.mainMenu.register({ id: 'ui.base', path: ['Вид'], label: 'Сменить светлую / исходную основу', handler: () => this.viewport.setBaseStyle(this.viewport.baseStyle === 'original' ? 'light' : 'original') });
       this.mainMenu.register({ id: 'ui.modules', path: ['Вид'], label: 'Расширения', handler: () => this.showExtensions() });
+      this.mainMenu.register({ id: 'ui.overlays', path: ['Вид'], label: 'Оверлеи', handler: () => this.showOverlays() });
       this.mainMenu.register({ id: 'ui.windows-help', path: ['Вид'], label: 'Управление окнами', handler: () => this.showWindowHelp() });
       this.input.on('province:context', e => {
         const regionIds = this.regionSelection.forContext(e.id), id = regionIds.length === 1 ? regionIds[0] : null, region = id ? state.regions.get(id) : null;
@@ -1274,6 +1391,27 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     #showTooltip(event) { this.tooltip.hidden = !event.id; this.tooltip.replaceChildren(); if (!event.id) return; this.tooltip.append(el('strong', '', 'Провинция #' + event.id)); for (const provider of this.#tooltipProviders.values()) { const text = provider(event, this.state); if (text) this.tooltip.append(el('div', '', String(text))); } }
     notify(message) { if (!this.toast) return; this.toast.textContent = String(message); this.toast.hidden = false; clearTimeout(this.#toastTimer); this.#toastTimer = setTimeout(() => this.toast.hidden = true, 4500); }
     setBusy(value, message = 'Загрузка карты…') { this.busyOverlay.hidden = !value; this.busyOverlay.textContent = message; }
+    showOverlays() {
+      this.windows.open({ id: 'ui:overlays', title: 'Оверлеи', x: Math.max(12, this.workspace.clientWidth - 350), y: 32, width: 330, height: 310, render: (pane, scope) => {
+        const draw = () => {
+          const focused = pane.contains(document.activeElement) ? document.activeElement : null, focusId = focused?.dataset.overlayId, focusControl = focused?.dataset.overlayControl;
+          pane.replaceChildren(el('p', 'muted', 'Сверху — передний план. Переключатель показывает или скрывает оверлей; стрелки меняют порядок. Настройки локальные.'));
+          const list = [...this.state.overlays.list].reverse();
+          for (const [index, overlay] of list.entries()) {
+            const row = el('div', 'overlay-row'); row.dataset.overlayItem = overlay.id;
+            const toggle = createSwitch(overlay.title, visible => this.state.overlays.setVisible(overlay.id, visible), { checked: overlay.visible, className: 'overlay-toggle' });
+            toggle.replaceChildren(root.AtlasUI.dataView.createDataRow(overlay.title, overlay.visible ? 'вкл' : 'выкл')); toggle.setAttribute('aria-label', overlay.title);
+            const up = button('↑', () => this.state.overlays.move(overlay.id, 1), { className: 'icon-button', title: 'Поднять оверлей: ' + overlay.title, disabled: index === 0 }); up.setAttribute('aria-label', 'Поднять оверлей: ' + overlay.title);
+            const down = button('↓', () => this.state.overlays.move(overlay.id, -1), { className: 'icon-button', title: 'Опустить оверлей: ' + overlay.title, disabled: index === list.length - 1 }); down.setAttribute('aria-label', 'Опустить оверлей: ' + overlay.title);
+            for (const [control, name] of [[toggle, 'toggle'], [up, 'up'], [down, 'down']]) { control.dataset.overlayId = overlay.id; control.dataset.overlayControl = name; }
+            row.append(toggle, up, down); pane.append(row);
+          }
+          pane.append(button('Порядок и видимость по умолчанию', () => this.state.overlays.reset(), { className: 'wide' }), el('p', 'muted', 'В PNG включаются видимые оверлеи карты в этом порядке. Подсветки наведения, выделения и набора статистики в PNG не входят.'));
+          if (focusId) { const controls = [...pane.querySelectorAll('button')].filter(node => node.dataset.overlayId === focusId), control = controls.find(node => node.dataset.overlayControl === focusControl && !node.disabled) || controls[0]; control?.focus({ preventScroll: true }); }
+        };
+        this.state.overlays.on('change', draw, { signal: scope.signal }); draw();
+      } });
+    }
     showExtensions() {
       this.windows.open({ id: 'ui:extensions', title: 'Расширения', x: Math.max(10, this.workspace.clientWidth - 340), y: 18, width: 320, height: 310, render: (pane, scope) => {
         const draw = () => { pane.replaceChildren(el('p', 'muted', 'Отключение удаляет UI и подписки модуля. Данные игры сохраняются.')); for (const extension of this.extensions.list) { const row = el('label', 'extension-row'), input = document.createElement('input'); input.type = 'checkbox'; input.checked = extension.enabled; input.setAttribute('aria-label', extension.name); const text = el('span'); text.append(el('strong', '', extension.name), el('small', '', extension.description)); row.append(input, text); input.onchange = async () => { try { input.disabled = true; if (input.checked) await this.extensions.enable(extension.id); else this.extensions.disable(extension.id); } catch (error) { this.notify(error.message); draw(); } finally { input.disabled = false; } }; pane.append(row); } };
@@ -1494,7 +1632,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   const { createDataRow } = root.AtlasUI.dataView;
   class NationPainter {
     constructor(ctx, model) {
-      this.state = ctx.state; this.ui = ctx.ui; this.model = model; this.layer = ctx.layer({ id: 'ownership', order: 10 }); this.borderLayer = ctx.layer({ id: 'borders', order: 11 });
+      this.state = ctx.state; this.ui = ctx.ui; this.model = model; this.layer = ctx.overlay({ id: 'ownership', title: 'Владения наций', order: 10 }); this.borderLayer = ctx.overlay({ id: 'borders', title: 'Границы наций', order: 11 });
       this.state.on('change', e => this.update(e), { signal: ctx.signal }); ctx.ui.on('map:ready', () => this.drawAll(), { signal: ctx.signal }); this.drawAll();
     }
     drawRegion(id) {
@@ -1875,9 +2013,8 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     id: 'metadata', name: 'Метаданные и статистика', description: 'Записи тайлов, общие статы и отчёты по наборам регионов.',
     start(ctx) {
       const { state, ui, signal } = ctx; let selected = ui.viewport.selectedId, mode = 'current', setTitle = '', mapId = state.map.id; const chosen = new Set();
-      let showChosen = true;
-      const highlight = ctx.layer({ id: 'chosen', order: 80, exportable: false });
-      const drawChosen = () => drawRegionSet(highlight.context, state.regionIndex, showChosen ? chosen : []);
+      const highlight = ctx.overlay({ id: 'chosen', title: 'Набор статистики', order: 80, exportable: false });
+      const drawChosen = () => drawRegionSet(highlight.context, state.regionIndex, chosen);
       const refreshSet = () => { drawChosen(); ui.emit('metadata:refresh', {}); ui.refresh(); };
       const addRegions = ids => { for (const id of ids) if (state.regions.has(id)) chosen.add(id); mode = 'set'; setTitle = ''; openStatistics(); };
       const removeRegions = ids => { for (const id of ids) chosen.delete(id); mode = 'set'; setTitle = ''; openStatistics(); };
@@ -1948,14 +2085,14 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             pane.replaceChildren(); const choose = document.createElement('select'); choose.setAttribute('aria-label', 'Область статистики');
             for (const [id, label] of [['current', 'Текущий тайл'], ['set', setTitle || 'Выбранный набор'], ['all', 'Вся карта']]) choose.append(new Option(label, id)); choose.value = mode; choose.onchange = () => { mode = choose.value; draw(); }; pane.append(field('Область', choose));
             const tools = el('div', 'tool-row set-tools');
-            tools.append(createSwitch('Подсветка набора', checked => { showChosen = checked; drawChosen(); }, { checked: showChosen, title: 'Показать или скрыть бирюзовую подсветку набора статистики' }), button('Очистить набор', () => { chosen.clear(); setTitle = ''; mode = 'set'; refreshSet(); }, { disabled: !chosen.size })); pane.append(tools, el('p', 'set-count', 'Провинций в наборе: ' + chosen.size));
+            tools.append(createSwitch('Подсветка набора', checked => highlight.setVisible(checked), { checked: highlight.visible, title: 'Показать или скрыть бирюзовую подсветку набора статистики' }), button('Очистить набор', () => { chosen.clear(); setTitle = ''; mode = 'set'; refreshSet(); }, { disabled: !chosen.size })); pane.append(tools, el('p', 'set-count', 'Провинций в наборе: ' + chosen.size));
             pane.append(el('p', 'muted', 'Клик выбирает провинцию; Shift + клик добавляет или убирает. Правый клик → Прочее → Статистика: добавить, исключить или задать область.'));
             const ids = mode === 'all' ? [...state.regions.keys()] : mode === 'current' ? state.regions.has(selected) ? [selected] : [] : [...chosen].filter(id => state.regions.has(id));
             if (!ids.length) pane.append(el('p', 'muted', 'Выберите тайл или добавьте регионы в набор.'));
             try { renderBlocks(pane, state.statistics.collect(ids), expanded); } catch (e) { pane.append(el('p', 'form-error', e.message)); }
           };
           const update = e => { selected = e.id; draw(); }; tab.onRegionClick(update);
-          ui.input.on('selection:change', e => { if (!e.fromClick) update(e); }, { signal: scope.signal }); state.statistics.on('change', draw, { signal: scope.signal }); watch(draw, scope); draw();
+          ui.input.on('selection:change', e => { if (!e.fromClick) update(e); }, { signal: scope.signal }); state.statistics.on('change', draw, { signal: scope.signal }); state.overlays.on('change', draw, { signal: scope.signal }); watch(draw, scope); draw();
         } }); refreshSet(); return handle;
       }
       ctx.on('selection:change', e => { selected = e.id; });
@@ -2176,7 +2313,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       const { state, ui, signal } = ctx, model = new ResourceModel(state); model.registerStatistics(signal); let selected = ui.viewport.selectedId;
       const protect = fn => (...args) => { try { return fn(...args); } catch (e) { ui.notify(e.message); } };
       const openData = (event, payload) => { if (!ui.extensions.isEnabled('metadata')) { ui.notify('Включите модуль «Метаданные и статистика».'); return; } ui.emit(event, payload); };
-      const markers = ctx.layer({ id: 'markers', order: 20 });
+      const markers = ctx.overlay({ id: 'markers', title: 'Ресурсы и производства', order: 20 });
       const drawMarkers = () => { markers.context.clearRect(0, 0, markers.canvas.width, markers.canvas.height); drawResourceMarkers(markers.context, state.regions, state.meta.tiles); };
       state.on('change', drawMarkers, { signal }); ui.on('map:ready', drawMarkers, { signal }); drawMarkers();
       function edit(regionId, kind = 'production', original = null) {
@@ -2277,8 +2414,11 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   const state = AtlasCore.getGameState(), ui = AtlasUI.getUI(), storage = new AtlasPlatform.Storage();
   AtlasStatistics.registerBasicStatistics(state);
   const saveKey = embedded.saveKey || embedded.saveId || 'atlas-default-v1';
+  const displayKey = ['overlay-preferences', saveKey];
+  try { const savedDisplay = await storage.get(displayKey); if (savedDisplay) state.overlays.restore(savedDisplay); } catch (error) { /* Display preferences are optional and local to this browser. */ }
   await ui.mount({ host: document.getElementById('app'), state });
-  let loading = false, saveTimer, revision = 0, storageNotice = false;
+  let loading = false, saveTimer, displayTimer, revision = 0, storageNotice = false;
+  const persistDisplay = () => storage.put(displayKey, state.overlays.toJSON()).catch(() => {});
   const snapshot = () => ({ ...state.toJSON(), saveKey });
   async function persist() {
     if (!state.loaded) return; const current = ++revision; ui.setSaveStatus('Сохраняем…');
@@ -2303,7 +2443,8 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     ui.extensions.register(AtlasExtensions.createFilesExtension(services)); ui.extensions.register(AtlasExtensions.nations); ui.extensions.register(AtlasExtensions.regions); ui.extensions.register(AtlasExtensions.history); ui.extensions.register(AtlasExtensions.metadata); ui.extensions.register(AtlasExtensions.resources);
     await ui.extensions.enable('files'); await ui.extensions.enable('nations'); await ui.extensions.enable('regions'); await ui.extensions.enable('history'); await ui.extensions.enable('metadata'); await ui.extensions.enable('resources');
     state.on('history:change', () => { clearTimeout(saveTimer); saveTimer = setTimeout(persist, 400); });
-    await persist(); window.addEventListener('pagehide', persist);
+    state.overlays.on('settings:change', () => { clearTimeout(displayTimer); displayTimer = setTimeout(persistDisplay, 200); });
+    await persist(); window.addEventListener('pagehide', persist); window.addEventListener('pagehide', persistDisplay);
   } catch (error) {
     console.error(error); ui.setBusy(false); ui.notify(error.message);
     ui.windows.open({ id: 'startup:error', title: 'Не удалось открыть партию', x: 20, y: 20, width: 360, height: 180, render(pane) { pane.append(AtlasUI.dom.el('p', '', error.message)); } });

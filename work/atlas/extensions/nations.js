@@ -6,7 +6,7 @@
   const { createDataRow } = root.AtlasUI.dataView;
   class NationPainter {
     constructor(ctx, model) {
-      this.state = ctx.state; this.ui = ctx.ui; this.model = model; this.layer = ctx.layer({ id: 'ownership', order: 10 }); this.borderLayer = ctx.layer({ id: 'borders', order: 11 });
+      this.state = ctx.state; this.ui = ctx.ui; this.model = model; this.layer = ctx.overlay({ id: 'ownership', title: 'Владения наций', order: 10 }); this.borderLayer = ctx.overlay({ id: 'borders', title: 'Границы наций', order: 11 });
       this.state.on('change', e => this.update(e), { signal: ctx.signal }); ctx.ui.on('map:ready', () => this.drawAll(), { signal: ctx.signal }); this.drawAll();
     }
     drawRegion(id) {

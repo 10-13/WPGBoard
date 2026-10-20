@@ -36,9 +36,9 @@ test('removing a region clears its assignments atomically and undo restores both
   state.history.undo(); assert.deepEqual(model.members('north'), [1, 2]); assert.equal(model.data.items.north.name, 'North');
 });
 test('invalid names, unsafe IDs, missing provinces and unknown target regions fail without changing history', t => {
-  const { state, model } = fixture(t), before = state.toJSON();
+  const { state, model } = fixture(t), before = state.history.toJSON();
   for (const run of [() => model.save({ name: '' }), () => model.save({ id: '__proto__', name: 'Bad' }), () => model.save({ name: 'Bad', provinceIds: [99] }), () => model.assign([1], 'unknown'), () => model.assign([1, 99], null), () => model.remove('unknown'), () => state.dispatch('regions.assign', { provinceIds: '1', regionId: null })]) assert.throws(run);
-  assert.deepEqual(state.toJSON(), before);
+  assert.deepEqual(state.history.toJSON(), before);
 });
 test('region actions survive export, restoration and independent reversal with the library disabled', t => {
   const { state, model, index, scope } = fixture(t); const id = model.save({ name: 'Saved', provinceIds: [1, 3] }); model.assign([2], id);

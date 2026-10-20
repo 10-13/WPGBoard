@@ -27,7 +27,7 @@
       const { state, ui, signal } = ctx, model = new ResourceModel(state); model.registerStatistics(signal); let selected = ui.viewport.selectedId;
       const protect = fn => (...args) => { try { return fn(...args); } catch (e) { ui.notify(e.message); } };
       const openData = (event, payload) => { if (!ui.extensions.isEnabled('metadata')) { ui.notify('Включите модуль «Метаданные и статистика».'); return; } ui.emit(event, payload); };
-      const markers = ctx.layer({ id: 'markers', order: 20 });
+      const markers = ctx.overlay({ id: 'markers', title: 'Ресурсы и производства', order: 20 });
       const drawMarkers = () => { markers.context.clearRect(0, 0, markers.canvas.width, markers.canvas.height); drawResourceMarkers(markers.context, state.regions, state.meta.tiles); };
       state.on('change', drawMarkers, { signal }); ui.on('map:ready', drawMarkers, { signal }); drawMarkers();
       function edit(regionId, kind = 'production', original = null) {
