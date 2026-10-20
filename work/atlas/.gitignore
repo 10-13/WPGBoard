@@ -5,3 +5,6 @@ map-preview.png
 upload-fixture.png
 __pycache__/
 *.tar.gz
+
+# Local preview copy of the geography deliverable.
+dist/atlas-1936.html
