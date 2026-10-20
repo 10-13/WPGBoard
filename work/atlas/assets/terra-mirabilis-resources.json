@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "source": {
+    "url": "https://github.com/NikolasKowalski/TerraMirabilisPublic/blob/master/Пустая%20карта/Ресурсы.md",
+    "revision": "4b23fc15c77b77c94985d2f49c1a10c91190e880",
+    "sha256": "9dc1321f96beaa9e9f5a3fd3a31e96c4008554c53aa2ef370cbf358266aa5f7c",
+    "notes": [
+      "Названия восьми ресурсов буквально повторяют таблицу источника, включая написание «Аллюминий».",
+      "Никель и хром остаются одним ресурсом «Легирующие металлы».",
+      "Источник не задаёт численных пропорций рецептов; каталог чертежей пуст.",
+      "Условный бонус +100% к местной добыче перенесён из прежней игровой расстановки, а не из текста репозитория. Базовый выпуск не добавляется."
+    ]
+  },
+  "sourceTypes": {
+    "coal": "coal",
+    "oil": "oil",
+    "steel": "steel",
+    "aluminum": "aluminium",
+    "alloys": "alloy-metals",
+    "tungsten": "tungsten",
+    "rubber": "rubber",
+    "helium": "helium"
+  },
+  "catalog": {
+    "version": 1,
+    "resources": {
+      "coal": { "id": "coal", "name": "Уголь", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "raw", "description": "Базовый уголь и крупные угольные бассейны из описания Terra Mirabilis." },
+      "oil": { "id": "oil", "name": "Нефть", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "raw", "description": "Нефть — самостоятельный ресурс из таблицы Terra Mirabilis." },
+      "steel": { "id": "steel", "name": "Сталь", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "product", "description": "Единый игровой ресурс «Сталь». Железо и железная руда отдельно не вводятся. В описании для выплавки нужен уголь, но численные объёмы рецепта не заданы." },
+      "aluminium": { "id": "aluminium", "name": "Аллюминий", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "product", "description": "Металл для авиации. Название сохранено в написании таблицы источника; отдельного ресурса «Бокситы» нет." },
+      "alloy-metals": { "id": "alloy-metals", "name": "Легирующие металлы", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "product", "description": "Общий ресурс никеля и хрома для качественной брони; на отдельные металлы не разделяется." },
+      "tungsten": { "id": "tungsten", "name": "Вольфрам", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "product", "description": "Ресурс для сложной промышленности и подкалиберных снарядов. Отдельная вольфрамовая руда не вводится." },
+      "rubber": { "id": "rubber", "name": "Каучук", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "raw", "description": "Каучук для резины; отдельный ресурс резины и рецепт не добавляются." },
+      "helium": { "id": "helium", "name": "Гелий", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "raw", "description": "Ресурс для негорючих дирижаблей из таблицы Terra Mirabilis." }
+    },
+    "recipes": {}
+  }
+}

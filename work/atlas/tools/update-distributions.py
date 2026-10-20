@@ -10,7 +10,7 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUTS = ROOT.parent.parent / 'outputs'
 DATA = re.compile(r'(<script id="atlas-data" type="application/json">)(.*?)(</script>)', re.S)
-PARTIES = ('workspace', 'campaign', 'atlas', 'atlas-1936', 'atlas-1936-import', 'atlas-1936-economy')
+PARTIES = ('workspace', 'campaign', 'atlas', 'atlas-1936', 'atlas-1936-import', 'atlas-1936-economy', 'atlas-1936-resources')
 
 
 def main():
