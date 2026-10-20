@@ -66,7 +66,7 @@ const corrected = history.update(draft => {
       + '\nСписок ресурсов: ' + specification.source.url;
   }
 }, {
-  source: 'terra-mirabilis-import', label: 'Terra Mirabilis: точный каталог из 8 ресурсов и соответствие 69 точек',
+  source: 'terra-mirabilis-import', label: 'Terra Mirabilis: каталог, цвета 8 ресурсов и соответствие 69 точек',
   actionType: 'core.patch', payload: { template: 'terra-mirabilis-resource-points-v1', revision: specification.source.revision }
 });
 project.history = history.toJSON(); if (corrected) project.updatedAt = Date.now();

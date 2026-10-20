@@ -143,6 +143,9 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 .region-select { display:block; width:100%; padding:0 4px; text-align:left; background:none; box-shadow:none }
 .nation-swatch { width:8px; height:var(--atlas-step); display:block; box-shadow:inset 0 0 0 1px #b8c8ca33; flex-shrink:0 }
 .resource-legend-swatch { display:inline-block; width:10px; height:10px; margin:0 6px 0 0; vertical-align:middle; box-shadow:inset 0 0 0 1px #d3dcdf55 }
+.resource-color-controls { display:flex; flex:1; min-width:0; gap:4px }
+.resource-color-controls>input[type=color] { flex:0 0 32px; width:32px }
+.resource-color-controls>input:not([type=color]) { flex:1; min-width:0 }
 .nation-row>.icon-button { background:none; box-shadow:none; color:#9eafb6 }
 .section-line { min-height:var(--atlas-step); margin:0; padding:0; display:flex; align-items:flex-start; gap:6px; color:#c5ba9d; overflow-wrap:anywhere }
 .section-line>span { min-width:0 }
@@ -2663,7 +2666,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 })(globalThis);
 
 ;
-/* Static visual identity, shared by catalog, map fills and object markers. */
+/* Authored resource colors with stable fallbacks for parties predating color fields. */
 (function (root) {
   'use strict';
   const { DEFAULT_RESOURCE_CATALOG } = typeof module !== 'undefined' && module.exports ? require('./resource-catalog-data.js') : root.AtlasExtensions;
@@ -2678,6 +2681,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   });
   const GENERAL_RESOURCE_COLOR = '#ffffff';
   const normalized = text => String(text).trim().toLowerCase();
+  const isResourceColor = value => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
   function customColor(key) {
     let hash = 2166136261; for (const char of key) hash = Math.imul(hash ^ char.codePointAt(0), 16777619);
     const hue = (hash >>> 0) % 360 / 60, saturation = .58, lightness = .62;
@@ -2694,6 +2698,8 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       const value = typeof resource === 'object' && resource ? resource.id : String(resource), name = normalized(value);
       if (name === '*') return GENERAL_RESOURCE_COLOR;
       const id = byId.has(value) ? value : byName.get(name);
+      const authored = id && byId.get(id)?.color;
+      if (isResourceColor(authored)) return authored.toLowerCase();
       return id && Object.hasOwn(RESOURCE_COLORS, id) ? RESOURCE_COLORS[id] : customColor(id ? 'id:' + id : 'name:' + name);
     };
   }
@@ -2706,7 +2712,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     }).join('');
   }
   const resourceColor = (resource, catalog) => createResourceColorResolver(catalog)(resource);
-  const api = { RESOURCE_COLORS, GENERAL_RESOURCE_COLOR, createResourceColorResolver, resourceColor, resourceShade };
+  const api = { RESOURCE_COLORS, GENERAL_RESOURCE_COLOR, isResourceColor, createResourceColorResolver, resourceColor, resourceShade };
   Object.assign(root.AtlasExtensions ||= {}, api); if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);
 
@@ -2716,7 +2722,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   'use strict';
   const { clone, freeze, uid } = typeof module !== 'undefined' && module.exports ? require('../packages/core/index.js') : root.AtlasCore;
   const { DEFAULT_RESOURCE_CATALOG } = typeof module !== 'undefined' && module.exports ? require('./resource-catalog-data.js') : root.AtlasExtensions;
-  const { resourceColor } = typeof module !== 'undefined' && module.exports ? require('./resource-colors.js') : root.AtlasExtensions;
+  const { resourceColor, isResourceColor } = typeof module !== 'undefined' && module.exports ? require('./resource-colors.js') : root.AtlasExtensions;
   const own = (o, k) => Object.hasOwn(o, k), safe = id => typeof id === 'string' && /^[\w-]{1,100}$/.test(id) && !['__proto__', 'prototype', 'constructor'].includes(id);
   const text = (value, length) => typeof value === 'string' && value.trim().length > 0 && value.length <= length;
   function validateCatalog(data) {
@@ -2724,6 +2730,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     const names = new Set();
     for (const [id, r] of Object.entries(data.resources)) {
       if (!safe(id) || r?.id !== id || !text(r.name, 80) || !text(r.unit, 40) || !text(r.category, 80) || !['raw', 'product'].includes(r.kind) || typeof r.description !== 'string' || r.description.length > 4000) throw new Error('Укажите название, единицу, категорию и тип ресурса.');
+      if (r.color !== undefined && !isResourceColor(r.color)) throw new Error('Цвет ресурса должен быть в формате #RRGGBB.');
       const name = r.name.trim().toLowerCase(); if (names.has(name)) throw new Error('Названия ресурсов должны быть уникальны.'); names.add(name);
     }
     for (const [id, recipe] of Object.entries(data.recipes)) {
@@ -2783,8 +2790,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       register('recipe.save', (data, p) => { if (!safe(p.id)) throw new Error('Некорректный ID чертежа.'); data.recipes[p.id] = p; });
       register('recipe.remove', (data, { id }) => { if (!own(data.recipes, id)) throw new Error('Чертёж не найден.'); delete data.recipes[id]; });
     }
-    saveResource({ id = uid('good'), name, category, unit = 'ед.', kind = 'product', description = '' }) {
-      this.state.dispatch('resources.catalog.resource.save', { id, name: name.trim(), category: category.trim(), unit: unit.trim(), kind, description }, { source: 'resources', label: 'Ресурс: ' + name }); return id;
+    saveResource({ id = uid('good'), name, category, unit = 'ед.', kind = 'product', description = '', color = this.data.resources[id]?.color }) {
+      const resource = { id, name: name.trim(), category: category.trim(), unit: unit.trim(), kind, description };
+      if (color !== undefined) resource.color = typeof color === 'string' ? color.trim().toLowerCase() : color;
+      this.state.dispatch('resources.catalog.resource.save', resource, { source: 'resources', label: 'Ресурс: ' + name }); return id;
     }
     saveRecipe({ id = uid('blueprint'), name, description = '', inputs = [], outputs }) {
       this.state.dispatch('resources.catalog.recipe.save', { id, name: name.trim(), description, inputs, outputs }, { source: 'resources', label: 'Чертёж: ' + name }); return id;
@@ -2890,12 +2899,19 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       const original = this.catalog.data.resources[id];
       return this.ctx.window({ id: 'good-edit:' + (id || 'new'), title: original ? 'Изменить ресурс' : 'Новый ресурс', x: 330, y: 70, width: 350, height: 350, render: (pane, scope, tab) => {
         const form = el('form'), name = document.createElement('input'), category = document.createElement('input'), unit = document.createElement('input'), kind = document.createElement('select'), description = document.createElement('textarea');
+        const color = document.createElement('input'), colorHex = document.createElement('input'), colorControls = el('div', 'resource-color-controls');
         for (const [node, label, value, limit] of [[name, 'Название ресурса', original?.name || '', 80], [category, 'Категория ресурса', original?.category || 'Прочее', 80], [unit, 'Единица ресурса', original?.unit || 'ед.', 40]]) { node.value = value; node.required = true; node.maxLength = limit; node.setAttribute('aria-label', label); }
         kind.append(new Option('Природный ресурс', 'raw'), new Option('Продукт переработки', 'product')); kind.value = original?.kind || 'product'; kind.setAttribute('aria-label', 'Тип ресурса');
         description.value = original?.description || ''; description.maxLength = 4000; description.rows = 4; description.setAttribute('aria-label', 'Описание ресурса');
-        form.append(field('Название', name), field('Категория', category), field('Единица', unit), field('Тип', kind), field('Описание', description));
+        color.type = 'color'; color.value = this.catalog.color(original?.id || 'Новый ресурс'); color.setAttribute('aria-label', 'Цвет ресурса');
+        colorHex.value = color.value; colorHex.required = true; colorHex.maxLength = 7; colorHex.pattern = '#[0-9a-fA-F]{6}'; colorHex.setAttribute('aria-label', 'Цвет ресурса HEX'); colorHex.title = 'Цвет в формате #RRGGBB';
+        color.oninput = () => { colorHex.value = color.value; };
+        colorHex.oninput = () => { if (root.AtlasExtensions.isResourceColor(colorHex.value)) color.value = colorHex.value; };
+        colorControls.append(color, colorHex);
+        form.append(field('Название', name), field('Категория', category), field('Единица', unit), field('Тип', kind), field('Цвет', colorControls), field('Описание', description));
+        form.append(el('p', 'muted', 'Цвет — часть ресурса: сохраняется в игре и передаётся с JSON и HTML.'));
         const save = button('Сохранить ресурс', () => {}, { className: 'accent wide' }); save.type = 'submit'; form.append(save);
-        form.onsubmit = this.protect(e => { e.preventDefault(); this.catalog.saveResource({ ...(id ? { id } : {}), name: name.value, category: category.value, unit: unit.value, kind: kind.value, description: description.value }); tab.close(); });
+        form.onsubmit = this.protect(e => { e.preventDefault(); this.catalog.saveResource({ ...(id ? { id } : {}), name: name.value, category: category.value, unit: unit.value, kind: kind.value, description: description.value, color: colorHex.value }); tab.close(); });
         this.ctx.state.on('map:loaded', () => tab.close(), { signal: scope.signal }); pane.append(form); name.focus();
       } });
     }

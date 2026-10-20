@@ -90,12 +90,19 @@
       const original = this.catalog.data.resources[id];
       return this.ctx.window({ id: 'good-edit:' + (id || 'new'), title: original ? 'Изменить ресурс' : 'Новый ресурс', x: 330, y: 70, width: 350, height: 350, render: (pane, scope, tab) => {
         const form = el('form'), name = document.createElement('input'), category = document.createElement('input'), unit = document.createElement('input'), kind = document.createElement('select'), description = document.createElement('textarea');
+        const color = document.createElement('input'), colorHex = document.createElement('input'), colorControls = el('div', 'resource-color-controls');
         for (const [node, label, value, limit] of [[name, 'Название ресурса', original?.name || '', 80], [category, 'Категория ресурса', original?.category || 'Прочее', 80], [unit, 'Единица ресурса', original?.unit || 'ед.', 40]]) { node.value = value; node.required = true; node.maxLength = limit; node.setAttribute('aria-label', label); }
         kind.append(new Option('Природный ресурс', 'raw'), new Option('Продукт переработки', 'product')); kind.value = original?.kind || 'product'; kind.setAttribute('aria-label', 'Тип ресурса');
         description.value = original?.description || ''; description.maxLength = 4000; description.rows = 4; description.setAttribute('aria-label', 'Описание ресурса');
-        form.append(field('Название', name), field('Категория', category), field('Единица', unit), field('Тип', kind), field('Описание', description));
+        color.type = 'color'; color.value = this.catalog.color(original?.id || 'Новый ресурс'); color.setAttribute('aria-label', 'Цвет ресурса');
+        colorHex.value = color.value; colorHex.required = true; colorHex.maxLength = 7; colorHex.pattern = '#[0-9a-fA-F]{6}'; colorHex.setAttribute('aria-label', 'Цвет ресурса HEX'); colorHex.title = 'Цвет в формате #RRGGBB';
+        color.oninput = () => { colorHex.value = color.value; };
+        colorHex.oninput = () => { if (root.AtlasExtensions.isResourceColor(colorHex.value)) color.value = colorHex.value; };
+        colorControls.append(color, colorHex);
+        form.append(field('Название', name), field('Категория', category), field('Единица', unit), field('Тип', kind), field('Цвет', colorControls), field('Описание', description));
+        form.append(el('p', 'muted', 'Цвет — часть ресурса: сохраняется в игре и передаётся с JSON и HTML.'));
         const save = button('Сохранить ресурс', () => {}, { className: 'accent wide' }); save.type = 'submit'; form.append(save);
-        form.onsubmit = this.protect(e => { e.preventDefault(); this.catalog.saveResource({ ...(id ? { id } : {}), name: name.value, category: category.value, unit: unit.value, kind: kind.value, description: description.value }); tab.close(); });
+        form.onsubmit = this.protect(e => { e.preventDefault(); this.catalog.saveResource({ ...(id ? { id } : {}), name: name.value, category: category.value, unit: unit.value, kind: kind.value, description: description.value, color: colorHex.value }); tab.close(); });
         this.ctx.state.on('map:loaded', () => tab.close(), { signal: scope.signal }); pane.append(form); name.focus();
       } });
     }

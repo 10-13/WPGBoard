@@ -1,4 +1,4 @@
-/* Static visual identity, shared by catalog, map fills and object markers. */
+/* Authored resource colors with stable fallbacks for parties predating color fields. */
 (function (root) {
   'use strict';
   const { DEFAULT_RESOURCE_CATALOG } = typeof module !== 'undefined' && module.exports ? require('./resource-catalog-data.js') : root.AtlasExtensions;
@@ -13,6 +13,7 @@
   });
   const GENERAL_RESOURCE_COLOR = '#ffffff';
   const normalized = text => String(text).trim().toLowerCase();
+  const isResourceColor = value => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
   function customColor(key) {
     let hash = 2166136261; for (const char of key) hash = Math.imul(hash ^ char.codePointAt(0), 16777619);
     const hue = (hash >>> 0) % 360 / 60, saturation = .58, lightness = .62;
@@ -29,6 +30,8 @@
       const value = typeof resource === 'object' && resource ? resource.id : String(resource), name = normalized(value);
       if (name === '*') return GENERAL_RESOURCE_COLOR;
       const id = byId.has(value) ? value : byName.get(name);
+      const authored = id && byId.get(id)?.color;
+      if (isResourceColor(authored)) return authored.toLowerCase();
       return id && Object.hasOwn(RESOURCE_COLORS, id) ? RESOURCE_COLORS[id] : customColor(id ? 'id:' + id : 'name:' + name);
     };
   }
@@ -41,6 +44,6 @@
     }).join('');
   }
   const resourceColor = (resource, catalog) => createResourceColorResolver(catalog)(resource);
-  const api = { RESOURCE_COLORS, GENERAL_RESOURCE_COLOR, createResourceColorResolver, resourceColor, resourceShade };
+  const api = { RESOURCE_COLORS, GENERAL_RESOURCE_COLOR, isResourceColor, createResourceColorResolver, resourceColor, resourceShade };
   Object.assign(root.AtlasExtensions ||= {}, api); if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);

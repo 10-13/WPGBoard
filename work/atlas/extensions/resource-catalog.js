@@ -3,7 +3,7 @@
   'use strict';
   const { clone, freeze, uid } = typeof module !== 'undefined' && module.exports ? require('../packages/core/index.js') : root.AtlasCore;
   const { DEFAULT_RESOURCE_CATALOG } = typeof module !== 'undefined' && module.exports ? require('./resource-catalog-data.js') : root.AtlasExtensions;
-  const { resourceColor } = typeof module !== 'undefined' && module.exports ? require('./resource-colors.js') : root.AtlasExtensions;
+  const { resourceColor, isResourceColor } = typeof module !== 'undefined' && module.exports ? require('./resource-colors.js') : root.AtlasExtensions;
   const own = (o, k) => Object.hasOwn(o, k), safe = id => typeof id === 'string' && /^[\w-]{1,100}$/.test(id) && !['__proto__', 'prototype', 'constructor'].includes(id);
   const text = (value, length) => typeof value === 'string' && value.trim().length > 0 && value.length <= length;
   function validateCatalog(data) {
@@ -11,6 +11,7 @@
     const names = new Set();
     for (const [id, r] of Object.entries(data.resources)) {
       if (!safe(id) || r?.id !== id || !text(r.name, 80) || !text(r.unit, 40) || !text(r.category, 80) || !['raw', 'product'].includes(r.kind) || typeof r.description !== 'string' || r.description.length > 4000) throw new Error('Укажите название, единицу, категорию и тип ресурса.');
+      if (r.color !== undefined && !isResourceColor(r.color)) throw new Error('Цвет ресурса должен быть в формате #RRGGBB.');
       const name = r.name.trim().toLowerCase(); if (names.has(name)) throw new Error('Названия ресурсов должны быть уникальны.'); names.add(name);
     }
     for (const [id, recipe] of Object.entries(data.recipes)) {
@@ -70,8 +71,10 @@
       register('recipe.save', (data, p) => { if (!safe(p.id)) throw new Error('Некорректный ID чертежа.'); data.recipes[p.id] = p; });
       register('recipe.remove', (data, { id }) => { if (!own(data.recipes, id)) throw new Error('Чертёж не найден.'); delete data.recipes[id]; });
     }
-    saveResource({ id = uid('good'), name, category, unit = 'ед.', kind = 'product', description = '' }) {
-      this.state.dispatch('resources.catalog.resource.save', { id, name: name.trim(), category: category.trim(), unit: unit.trim(), kind, description }, { source: 'resources', label: 'Ресурс: ' + name }); return id;
+    saveResource({ id = uid('good'), name, category, unit = 'ед.', kind = 'product', description = '', color = this.data.resources[id]?.color }) {
+      const resource = { id, name: name.trim(), category: category.trim(), unit: unit.trim(), kind, description };
+      if (color !== undefined) resource.color = typeof color === 'string' ? color.trim().toLowerCase() : color;
+      this.state.dispatch('resources.catalog.resource.save', resource, { source: 'resources', label: 'Ресурс: ' + name }); return id;
     }
     saveRecipe({ id = uid('blueprint'), name, description = '', inputs = [], outputs }) {
       this.state.dispatch('resources.catalog.recipe.save', { id, name: name.trim(), description, inputs, outputs }, { source: 'resources', label: 'Чертёж: ' + name }); return id;

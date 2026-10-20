@@ -8,6 +8,7 @@
       "Названия восьми ресурсов буквально повторяют таблицу источника, включая написание «Аллюминий».",
       "Никель и хром остаются одним ресурсом «Легирующие металлы».",
       "Источник не задаёт численных пропорций рецептов; каталог чертежей пуст.",
+      "Контрастная палитра, включая тёмно-зелёный каучук, согласована пользователем как часть игры; это не цвета исходного описания GitHub.",
       "Условный бонус +100% к местной добыче перенесён из прежней игровой расстановки, а не из текста репозитория. Базовый выпуск не добавляется."
     ]
   },
@@ -24,14 +25,14 @@
   "catalog": {
     "version": 1,
     "resources": {
-      "coal": { "id": "coal", "name": "Уголь", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "raw", "description": "Базовый уголь и крупные угольные бассейны из описания Terra Mirabilis." },
-      "oil": { "id": "oil", "name": "Нефть", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "raw", "description": "Нефть — самостоятельный ресурс из таблицы Terra Mirabilis." },
-      "steel": { "id": "steel", "name": "Сталь", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "product", "description": "Единый игровой ресурс «Сталь». Железо и железная руда отдельно не вводятся. В описании для выплавки нужен уголь, но численные объёмы рецепта не заданы." },
-      "aluminium": { "id": "aluminium", "name": "Аллюминий", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "product", "description": "Металл для авиации. Название сохранено в написании таблицы источника; отдельного ресурса «Бокситы» нет." },
-      "alloy-metals": { "id": "alloy-metals", "name": "Легирующие металлы", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "product", "description": "Общий ресурс никеля и хрома для качественной брони; на отдельные металлы не разделяется." },
-      "tungsten": { "id": "tungsten", "name": "Вольфрам", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "product", "description": "Ресурс для сложной промышленности и подкалиберных снарядов. Отдельная вольфрамовая руда не вводится." },
-      "rubber": { "id": "rubber", "name": "Каучук", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "raw", "description": "Каучук для резины; отдельный ресурс резины и рецепт не добавляются." },
-      "helium": { "id": "helium", "name": "Гелий", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "raw", "description": "Ресурс для негорючих дирижаблей из таблицы Terra Mirabilis." }
+      "coal": { "id": "coal", "name": "Уголь", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "raw", "color": "#252b34", "description": "Базовый уголь и крупные угольные бассейны из описания Terra Mirabilis." },
+      "oil": { "id": "oil", "name": "Нефть", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "raw", "color": "#c91d35", "description": "Нефть — самостоятельный ресурс из таблицы Terra Mirabilis." },
+      "steel": { "id": "steel", "name": "Сталь", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "product", "color": "#194bd1", "description": "Единый игровой ресурс «Сталь». Железо и железная руда отдельно не вводятся. В описании для выплавки нужен уголь, но численные объёмы рецепта не заданы." },
+      "aluminium": { "id": "aluminium", "name": "Аллюминий", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "product", "color": "#007c91", "description": "Металл для авиации. Название сохранено в написании таблицы источника; отдельного ресурса «Бокситы» нет." },
+      "alloy-metals": { "id": "alloy-metals", "name": "Легирующие металлы", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "product", "color": "#8c1db5", "description": "Общий ресурс никеля и хрома для качественной брони; на отдельные металлы не разделяется." },
+      "tungsten": { "id": "tungsten", "name": "Вольфрам", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "product", "color": "#ba4a00", "description": "Ресурс для сложной промышленности и подкалиберных снарядов. Отдельная вольфрамовая руда не вводится." },
+      "rubber": { "id": "rubber", "name": "Каучук", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "raw", "color": "#005c2b", "description": "Каучук для резины; отдельный ресурс резины и рецепт не добавляются." },
+      "helium": { "id": "helium", "name": "Гелий", "unit": "ед./ход", "category": "Ресурсы Terra Mirabilis", "kind": "raw", "color": "#8c6b00", "description": "Ресурс для негорючих дирижаблей из таблицы Terra Mirabilis." }
     },
     "recipes": {}
   }

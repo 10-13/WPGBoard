@@ -135,6 +135,9 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 .region-select { display:block; width:100%; padding:0 4px; text-align:left; background:none; box-shadow:none }
 .nation-swatch { width:8px; height:var(--atlas-step); display:block; box-shadow:inset 0 0 0 1px #b8c8ca33; flex-shrink:0 }
 .resource-legend-swatch { display:inline-block; width:10px; height:10px; margin:0 6px 0 0; vertical-align:middle; box-shadow:inset 0 0 0 1px #d3dcdf55 }
+.resource-color-controls { display:flex; flex:1; min-width:0; gap:4px }
+.resource-color-controls>input[type=color] { flex:0 0 32px; width:32px }
+.resource-color-controls>input:not([type=color]) { flex:1; min-width:0 }
 .nation-row>.icon-button { background:none; box-shadow:none; color:#9eafb6 }
 .section-line { min-height:var(--atlas-step); margin:0; padding:0; display:flex; align-items:flex-start; gap:6px; color:#c5ba9d; overflow-wrap:anywhere }
 .section-line>span { min-width:0 }
