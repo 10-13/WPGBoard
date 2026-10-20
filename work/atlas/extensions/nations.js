@@ -136,11 +136,17 @@
         } });
       }
       ctx.on('selection:change', event => { selected = event.id; });
-      ctx.menu(ui.mainMenu, { id: 'open', path: ['Мир'], label: 'Нации', handler: openNations });
-      ctx.menu(ui.mainMenu, { id: 'nation-info', path: ['Мир'], label: 'Информация о выбранной нации', enabled: () => !!model.data.items[activeNation], handler: () => openNationInfo() });
-      ctx.menu(ui.mainMenu, { id: 'nation-set', path: ['Мир'], label: 'Добавить территории выбранной нации в набор', enabled: () => !!model.data.items[activeNation], handler: () => addNationToSet(activeNation) });
-      ctx.menu(ui.mainMenu, { id: 'inspect', path: ['Мир'], label: 'Свойства провинции', handler: openInspector });
-      ctx.menu(ui.mainMenu, { id: 'new-nation', path: ['Мир', 'Создать'], label: 'Нация', handler: () => editNation() });
+      ctx.windowMenu({ id: 'list', label: 'Нации', handler: openNations });
+      ctx.windowMenu({ id: 'info', label: 'Информация о выбранной нации', enabled: () => !!model.data.items[activeNation], handler: () => openNationInfo() });
+      ctx.windowMenu({ id: 'inspector', label: 'Свойства провинции', handler: openInspector });
+      ctx.menu(ui.mainMenu, { id: 'open', path: ['Мир', 'Нации'], label: 'Список наций', handler: openNations });
+      ctx.menu(ui.mainMenu, { id: 'new-nation', path: ['Мир', 'Нации'], label: 'Создать нацию', handler: () => editNation() });
+      ctx.menu(ui.mainMenu, { id: 'nation-info', path: ['Мир', 'Нации'], label: 'Информация о выбранной нации', enabled: () => !!model.data.items[activeNation], handler: () => openNationInfo() });
+      ctx.menu(ui.mainMenu, { id: 'nation-edit', path: ['Мир', 'Нации'], label: 'Редактировать выбранную нацию', enabled: () => !!model.data.items[activeNation], handler: () => editNation(activeNation) });
+      ctx.menu(ui.mainMenu, { id: 'assign-selection', path: ['Мир', 'Нации'], label: 'Назначить выделение выбранной нации', enabled: () => !!model.data.items[activeNation] && ui.regionSelection.size > 0, handler: () => model.assign(ui.regionSelection.ids, activeNation) });
+      ctx.menu(ui.mainMenu, { id: 'release-selection', path: ['Мир', 'Нации'], label: 'Освободить выделенные провинции', enabled: () => ui.regionSelection.size > 0, handler: () => model.assign(ui.regionSelection.ids, null) });
+      ctx.menu(ui.mainMenu, { id: 'nation-set', path: ['Мир', 'Нации'], label: 'Добавить территории выбранной нации в набор', enabled: () => !!model.data.items[activeNation], handler: () => addNationToSet(activeNation) });
+      ctx.menu(ui.mainMenu, { id: 'select-nation', path: ['Инструменты', 'Выделение'], label: 'Выделить территории выбранной нации', enabled: () => !!model.data.items[activeNation], handler: () => ui.regionSelection.replace(model.members(activeNation)) });
       ctx.menu(ui.tileMenu, { id: 'assign', path: ['Мир', 'Владения'], label: 'Назначить выбранной нации', batch: true, order: 0, enabled: () => !!model.data.items[activeNation], handler: ids => model.assign(ids, activeNation) });
       ctx.menu(ui.tileMenu, { id: 'release', path: ['Мир', 'Владения'], label: 'Освободить', batch: true, order: 1, handler: ids => model.assign(ids, null) });
       ctx.menu(ui.tileMenu, { id: 'goto', path: ['Мир', 'Владения'], label: 'К нации', order: 2, enabled: e => model.nationsFor([e.id]).length > 0, handler: id => { activeNation = model.data.owners[id]; openNations(); ui.emit('nations:selection', {}); } });

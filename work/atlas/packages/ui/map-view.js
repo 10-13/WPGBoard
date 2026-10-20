@@ -20,7 +20,7 @@
       new ResizeObserver(() => { if (this.ready) { this.constrain(); this.transform(); } }).observe(this.element);
     }
     async load() {
-      const generation = ++this.#loadGeneration; this.ready = false;
+      const generation = ++this.#loadGeneration; this.ready = false; this.topology = null; this.topologyIndex = null;
       const map = this.state.map, original = new Image(); original.src = map.original.dataURL;
       const image = this.baseStyle === 'light' && map.displayImage ? new Image() : original;
       if (image !== original) image.src = map.displayImage;
@@ -34,6 +34,18 @@
     async setBaseStyle(style) { this.baseStyle = style; const camera = [this.scale, this.tx, this.ty], selected = this.selectedId; await this.load(); [this.scale, this.tx, this.ty] = camera; this.transform(); this.select(selected); }
     addOverlay(options) { return this.overlays.add(options); }
     addLayer(options) { return this.addOverlay(options); }
+    getTopology() {
+      if (!this.ready) throw new Error('Дождитесь загрузки карты.');
+      const index = this.state.regionIndex;
+      if (this.topologyIndex !== index) {
+        const source = document.createElement('canvas'); source.width = index.width; source.height = index.height;
+        try {
+          const context = source.getContext('2d', { willReadFrequently: true }); context.drawImage(this.originalImage, 0, 0);
+          this.topology = new root.AtlasCore.ProvinceTopology(index, context.getImageData(0, 0, index.width, index.height).data); this.topologyIndex = index;
+        } finally { source.width = source.height = 1; }
+      }
+      return this.topology;
+    }
     get showIds() { return this.state.overlays.get('ui:province-ids')?.visible || false; }
     set showIds(visible) { this.state.overlays.setVisible('ui:province-ids', visible); }
     exportCanvas() { const out = document.createElement('canvas'); out.width = this.canvas.width; out.height = this.canvas.height; const ctx = out.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.drawImage(this.canvas, 0, 0); this.overlays.exportTo(ctx); return out; }

@@ -42,8 +42,13 @@
           state.on('change', draw, { signal: scope.signal }); state.on('map:loaded', draw, { signal: scope.signal }); ui.on('regions:active', draw, { signal: scope.signal }); draw();
         } });
       }
-      ctx.menu(ui.mainMenu, { id: 'open', path: ['Мир'], label: 'Регионы', handler: () => open() });
-      ctx.menu(ui.mainMenu, { id: 'new', path: ['Мир', 'Создать'], label: 'Регион', handler: () => edit() });
+      ctx.windowMenu({ id: 'list', label: 'Регионы', handler: () => open() });
+      ctx.menu(ui.mainMenu, { id: 'open', path: ['Мир', 'Регионы'], label: 'Список регионов', handler: () => open() });
+      ctx.menu(ui.mainMenu, { id: 'new', path: ['Мир', 'Регионы'], label: 'Создать регион из выделения', handler: () => edit() });
+      ctx.menu(ui.mainMenu, { id: 'rename', path: ['Мир', 'Регионы'], label: 'Переименовать выбранный регион', enabled: () => !!model.data.items[activeRegion], handler: () => edit(activeRegion) });
+      ctx.menu(ui.mainMenu, { id: 'assign-selection', path: ['Мир', 'Регионы'], label: 'Добавить выделение в выбранный регион', enabled: () => !!model.data.items[activeRegion] && ui.regionSelection.size > 0, handler: () => model.assign(ui.regionSelection.ids, activeRegion) });
+      ctx.menu(ui.mainMenu, { id: 'clear-selection', path: ['Мир', 'Регионы'], label: 'Исключить выделение из регионов', enabled: () => ui.regionSelection.ids.some(id => !!model.forProvince(id)), handler: () => model.assign(ui.regionSelection.ids, null) });
+      ctx.menu(ui.mainMenu, { id: 'select-region', path: ['Инструменты', 'Выделение'], label: 'Выделить выбранный регион', enabled: () => !!model.data.items[activeRegion], handler: () => selectOnMap(activeRegion) });
       ctx.menu(ui.tileMenu, { id: 'assign', path: ['Мир', 'Регионы'], label: 'Добавить в выбранный регион', batch: true, order: 10, enabled: () => !!model.data.items[activeRegion], handler: ids => model.assign(ids, activeRegion) });
       ctx.menu(ui.tileMenu, { id: 'clear', path: ['Мир', 'Регионы'], label: 'Очистить регион', batch: true, order: 11, enabled: e => e.regionIds.some(id => !!model.forProvince(id)), handler: ids => model.assign(ids, null) });
       ctx.menu(ui.tileMenu, { id: 'select', path: ['Мир', 'Регионы'], label: 'Выделить регион', order: 12, enabled: e => !!model.forProvince(e.id), handler: id => selectOnMap(model.forProvince(id).id) });

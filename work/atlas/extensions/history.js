@@ -50,11 +50,13 @@
           const input = document.createElement('input'); input.setAttribute('aria-label', 'Имя импортируемой ветки'); input.value = String(bundle.name || 'proposal') + '-импорт'; pane.append(el('p', 'muted', 'Изменения останутся отдельной веткой до слияния в main.'), input, button('Добавить в историю', attempt(() => { state.history.importBranch(bundle, { name: input.value.trim() }); tab.close(); openHistory(); }), { className: 'accent wide' }));
         } });
       }
-      ctx.menu(ui.mainMenu, { id: 'open', path: ['История'], label: 'Ветки и журнал', handler: openHistory });
-      ctx.menu(ui.mainMenu, { id: 'undo', path: ['История'], label: 'Отменить', enabled: () => state.history.canUndo, handler: () => state.history.undo() });
-      ctx.menu(ui.mainMenu, { id: 'redo', path: ['История'], label: 'Повторить', enabled: () => state.history.canRedo, handler: () => state.history.redo() });
-      ctx.menu(ui.mainMenu, { id: 'export', path: ['История', 'Обмен журналами'], label: 'Экспорт активной ветки', handler: exportBranch });
-      ctx.menu(ui.mainMenu, { id: 'import', path: ['История', 'Обмен журналами'], label: 'Импорт ветки', handler: importBranch });
+      ctx.windowMenu({ id: 'branches', label: 'Ветки', handler: openBranches });
+      ctx.windowMenu({ id: 'log', label: 'Журнал действий', handler: openLog });
+      ctx.menu(ui.mainMenu, { id: 'open', path: ['Инструменты', 'История'], label: 'Ветки и журнал', handler: openHistory });
+      ctx.menu(ui.mainMenu, { id: 'undo', path: ['Инструменты', 'История'], label: 'Отменить', enabled: () => state.history.canUndo, handler: () => state.history.undo() });
+      ctx.menu(ui.mainMenu, { id: 'redo', path: ['Инструменты', 'История'], label: 'Повторить', enabled: () => state.history.canRedo, handler: () => state.history.redo() });
+      ctx.menu(ui.mainMenu, { id: 'export', path: ['Инструменты', 'История', 'Обмен журналами'], label: 'Экспорт активной ветки', handler: exportBranch });
+      ctx.menu(ui.mainMenu, { id: 'import', path: ['Инструменты', 'История', 'Обмен журналами'], label: 'Импорт ветки', handler: importBranch });
     }
   };
   Object.assign(root.AtlasExtensions ||= {}, { history: definition });

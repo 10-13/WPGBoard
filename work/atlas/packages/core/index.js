@@ -334,6 +334,7 @@
   }
   const { TileMetadata, StatisticsRegistry } = (typeof module !== 'undefined' && module.exports ? require('./metadata.js') : root.AtlasMetadataCore).createMetadataAPI({ EventBus, clone, freeze, uid });
   const { OverlayRegistry } = (typeof module !== 'undefined' && module.exports ? require('./overlays.js') : root.AtlasOverlayCore).createOverlayAPI({ EventBus, clone, freeze, equal });
+  const { ProvinceTopology } = typeof module !== 'undefined' && module.exports ? require('./province-topology.js') : root.AtlasTopologyCore;
   const singletonToken = Symbol('GameState'); let singleton;
   class GameState extends EventBus {
     #map = null; #regionIndex = null; #history = null; #snapshot = freeze({ params: {}, meta: {} }); #off = []; #actions; #tileMetadata; #statistics; #overlays;
@@ -383,7 +384,7 @@
     toJSON() { if (!this.loaded) throw new Error('Игра не загружена.'); return { schemaVersion: 2, map: clone(this.map), regions: this.regionIndex.toJSON(), history: this.history.toJSON(), updatedAt: Date.now() }; }
   }
   const getGameState = () => singleton || (singleton = new GameState(singletonToken));
-  const api = { EventBus, Scope, ReadonlyMap, RegionIndex, History, ActionRegistry, TileMetadata, StatisticsRegistry, OverlayRegistry, GameState, getGameState, diff, clone, equal, freeze, uid };
+  const api = { EventBus, Scope, ReadonlyMap, RegionIndex, ProvinceTopology, History, ActionRegistry, TileMetadata, StatisticsRegistry, OverlayRegistry, GameState, getGameState, diff, clone, equal, freeze, uid };
   root.AtlasCore = Object.freeze(api);
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);

@@ -7,9 +7,14 @@
     constructor(ctx, catalog) {
       this.ctx = ctx; this.catalog = catalog; this.target = 'steel'; this.amount = 1; this.choices = {};
       this.protect = fn => (...args) => { try { return fn(...args); } catch (e) { ctx.ui.notify(e.message); } };
-      ctx.menu(ctx.ui.mainMenu, { id: 'blueprints', path: ['Ресурсы'], label: 'Чертежи', handler: () => this.openRecipes() });
-      ctx.menu(ctx.ui.mainMenu, { id: 'goods', path: ['Ресурсы'], label: 'Каталог ресурсов', handler: () => this.openResources() });
-      ctx.menu(ctx.ui.mainMenu, { id: 'resource-tree', path: ['Ресурсы'], label: 'Дерево ресурсов', handler: () => this.openTree() });
+      ctx.windowMenu({ id: 'blueprints', label: 'Чертежи', handler: () => this.openRecipes() });
+      ctx.windowMenu({ id: 'goods', label: 'Каталог ресурсов', handler: () => this.openResources() });
+      ctx.windowMenu({ id: 'resource-tree', label: 'Дерево ресурсов', handler: () => this.openTree() });
+      ctx.menu(ctx.ui.mainMenu, { id: 'blueprints', path: ['Мир', 'Ресурсы'], label: 'Чертежи', handler: () => this.openRecipes() });
+      ctx.menu(ctx.ui.mainMenu, { id: 'goods', path: ['Мир', 'Ресурсы'], label: 'Каталог ресурсов', handler: () => this.openResources() });
+      ctx.menu(ctx.ui.mainMenu, { id: 'resource-tree', path: ['Мир', 'Ресурсы'], label: 'Дерево ресурсов', handler: () => this.openTree() });
+      ctx.menu(ctx.ui.mainMenu, { id: 'new-blueprint', path: ['Мир', 'Ресурсы'], label: 'Создать чертёж', handler: () => this.editRecipe() });
+      ctx.menu(ctx.ui.mainMenu, { id: 'new-good', path: ['Мир', 'Ресурсы'], label: 'Создать ресурс', handler: () => this.editResource() });
       ctx.state.on('map:loaded', () => { this.choices = {}; }, { signal: ctx.signal });
     }
     watch(scope, draw) {

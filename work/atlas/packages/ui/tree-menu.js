@@ -14,8 +14,11 @@
     dispose() { this.disable(); }
   }
   class TreeMenu extends EventBus {
-    #items = new Map(); #bar = null; #contextProvider; #popup = null; #popupCleanup;
-    constructor({ id = uid('menu'), regionContext = false, onError = error => console.error(error) } = {}) { super(); this.id = id; this.regionContext = regionContext; this.onError = onError; }
+    #items = new Map(); #bar = null; #contextProvider; #popup = null; #popupCleanup; #rootOrder;
+    constructor({ id = uid('menu'), regionContext = false, rootOrder = [], onError = error => console.error(error) } = {}) {
+      super(); if (!Array.isArray(rootOrder) || rootOrder.some(label => typeof label !== 'string') || new Set(rootOrder).size !== rootOrder.length) throw new Error('Нужен список уникальных названий корневых пунктов.');
+      this.id = id; this.regionContext = regionContext; this.onError = onError; this.#rootOrder = [...rootOrder];
+    }
     get size() { return this.#items.size; }
     register({ id = uid('action'), path = [], label, handler, signal, batch = false, when = () => true, enabled = () => true, order = 0 }) {
       if (this.#items.has(id)) throw new Error('Пункт меню уже зарегистрирован: ' + id);
@@ -51,7 +54,11 @@
         }
         node.children.push({ ...item, enabled: typeof item.enabled === 'function' ? !!item.enabled(context) : !!item.enabled });
       }
-      const sort = node => { node.children.sort((a, b) => a.order - b.order); for (const child of node.children) if (child.group) sort(child); };
+      const sort = node => {
+        const rank = item => { const index = this.#rootOrder.indexOf(item.label); return index < 0 ? this.#rootOrder.length : index; };
+        node.children.sort((a, b) => (node === rootNode && !prefix.length ? rank(a) - rank(b) : 0) || a.order - b.order);
+        for (const child of node.children) if (child.group) sort(child);
+      };
       sort(rootNode); return rootNode.children;
     }
     #changed() { this.close(); this.#renderBar(); this.emit('change', { menu: this }); }

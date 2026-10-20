@@ -17,6 +17,7 @@
         on: (type, fn) => ui.input.on(type, fn, { signal: scope.signal }),
         action: fn => new root.AtlasUI.ActionHandler(fn, { signal: scope.signal }),
         menu: (menu, item) => menu.register({ ...item, id: id + ':' + item.id, signal: scope.signal }),
+        windowMenu: item => ui.mainMenu.register({ ...item, id: id + ':window:' + item.id, path: ['Вид', 'Окна'], signal: scope.signal }),
         window: options => ui.windows.open({ ...options, id: id + ':' + options.id, windowId: options.windowId ? id + ':' + options.windowId : undefined, signal: scope.signal }),
         overlay: options => ui.viewport.addOverlay({ ...options, id: id + ':' + options.id, source: id, signal: scope.signal }),
         layer: options => ui.viewport.addOverlay({ ...options, id: id + ':' + options.id, source: id, signal: scope.signal }),
@@ -33,7 +34,7 @@
     #statuses = new Map(); #tooltipProviders = new Map(); #toastTimer;
     constructor(key) {
       super(); if (key !== singletonKey) throw new Error('Используйте AtlasUI.getUI().');
-      this.input = new EventBus(); this.regionClicks = new root.AtlasUI.RegionClicks({ onError: e => this.notify(e.message) }); this.saveStatus = 'Локальная партия'; this.mainMenu = new root.AtlasUI.TreeMenu({ id: 'main', onError: e => this.notify(e.message) }); this.tileMenu = new root.AtlasUI.TreeMenu({ id: 'tile', regionContext: true, onError: e => this.notify(e.message) }); this.extensions = new ExtensionHost(this);
+      this.input = new EventBus(); this.regionClicks = new root.AtlasUI.RegionClicks({ onError: e => this.notify(e.message) }); this.saveStatus = 'Локальная партия'; this.mainMenu = new root.AtlasUI.TreeMenu({ id: 'main', rootOrder: ['Файл', 'Вид', 'Мир', 'Инструменты'], onError: e => this.notify(e.message) }); this.tileMenu = new root.AtlasUI.TreeMenu({ id: 'tile', regionContext: true, onError: e => this.notify(e.message) }); this.extensions = new ExtensionHost(this);
     }
     async mount({ host, state = root.AtlasCore.getGameState() }) {
       if (this.host) return this; this.host = host; this.state = state; host.className = 'atlas-shell';
@@ -60,13 +61,18 @@
       const refreshClicks = () => { this.viewport.element.style.setProperty('--region-click-cursor', this.regionClicks.active?.cursor || 'crosshair'); this.refresh(); };
       this.regionClicks.on('change', refreshClicks); refreshClicks();
       this.input.on('province:click', event => this.regionClicks.dispatch(event, { active: !event.originalEvent?.shiftKey }));
-      this.mainMenu.register({ id: 'ui.clear-selection', path: ['Мир'], label: 'Снять выделение провинций', enabled: () => this.regionSelection.size > 0, handler: () => this.regionSelection.clear() });
+      this.mainMenu.register({ id: 'ui.clear-selection', path: ['Инструменты', 'Выделение'], label: 'Снять выделение', enabled: () => this.regionSelection.size > 0, handler: () => this.regionSelection.clear() });
+      this.mainMenu.register({ id: 'ui.select-all', path: ['Инструменты', 'Выделение'], label: 'Выделить все провинции', enabled: () => state.loaded, handler: () => this.regionSelection.replace([...state.regions.keys()]) });
+      this.mainMenu.register({ id: 'ui.invert-selection', path: ['Инструменты', 'Выделение'], label: 'Инвертировать выделение', enabled: () => state.loaded, handler: () => this.regionSelection.replace([...state.regions.keys()].filter(id => !this.regionSelection.has(id))) });
+      this.mainMenu.register({ id: 'ui.expand-selection', path: ['Инструменты', 'Выделение'], label: 'Добавить соседние провинции', enabled: () => this.regionSelection.size > 0, handler: () => this.regionSelection.replace(this.viewport.getTopology().expand(this.regionSelection.ids)) });
+      this.mainMenu.register({ id: 'ui.erode-selection', path: ['Инструменты', 'Выделение'], label: 'Эрозия выделения', enabled: () => this.regionSelection.size > 0, handler: () => this.regionSelection.replace(this.viewport.getTopology().erode(this.regionSelection.ids)) });
+      this.mainMenu.register({ id: 'ui.stop-editing', path: ['Инструменты', 'Выделение'], label: 'Выключить активное редактирование', enabled: () => !!this.regionClicks.activeId, handler: () => this.regionClicks.clearActive() });
       this.mainMenu.register({ id: 'ui.fit', path: ['Вид'], label: 'Вся карта', handler: () => this.viewport.fit() });
       this.mainMenu.register({ id: 'ui.ids', path: ['Вид'], label: 'Показать / скрыть ID', handler: () => { this.viewport.showIds = !this.viewport.showIds; this.viewport.drawNumbers(); } });
       this.mainMenu.register({ id: 'ui.base', path: ['Вид'], label: 'Сменить светлую / исходную основу', handler: () => this.viewport.setBaseStyle(this.viewport.baseStyle === 'original' ? 'light' : 'original') });
-      this.mainMenu.register({ id: 'ui.modules', path: ['Вид'], label: 'Расширения', handler: () => this.showExtensions() });
-      this.mainMenu.register({ id: 'ui.overlays', path: ['Вид'], label: 'Оверлеи', handler: () => this.showOverlays() });
-      this.mainMenu.register({ id: 'ui.windows-help', path: ['Вид'], label: 'Управление окнами', handler: () => this.showWindowHelp() });
+      this.mainMenu.register({ id: 'ui.modules', path: ['Вид', 'Окна'], label: 'Расширения', handler: () => this.showExtensions() });
+      this.mainMenu.register({ id: 'ui.overlays', path: ['Вид', 'Окна'], label: 'Оверлеи', handler: () => this.showOverlays() });
+      this.mainMenu.register({ id: 'ui.windows-help', path: ['Вид', 'Окна'], label: 'Управление окнами', handler: () => this.showWindowHelp() });
       this.input.on('province:context', e => {
         const regionIds = this.regionSelection.forContext(e.id), id = regionIds.length === 1 ? regionIds[0] : null, region = id ? state.regions.get(id) : null;
         if (id) this.viewport.select(id);

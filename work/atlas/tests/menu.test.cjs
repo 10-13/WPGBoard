@@ -39,3 +39,26 @@ test('ordinary reusable menus retain the original context API and disconnected b
   menu.register({ id: 'batch', label: 'Batch', batch: true, signal: lifetime.signal, handler: () => assert.fail('disconnected') });
   lifetime.abort(); menu.invoke('batch', { id: 1 }); assert.equal(menu.size, 0);
 });
+test('root menu order stays stable regardless of extension registration order or child priorities', () => {
+  const menu = new TreeMenu({ rootOrder: ['Файл', 'Вид', 'Мир', 'Инструменты'] });
+  for (const [id, path, order] of [['world', ['Мир', 'Нации'], -200], ['tools', ['Инструменты', 'Выделение'], 0], ['view-b', ['Вид', 'Окна'], 5], ['view-a', ['Вид', 'Окна'], 2], ['file', ['Файл'], -100]]) menu.register({ id, path, order, label: id, handler: () => {} });
+  assert.deepEqual(menu.getTree().map(n => n.label), ['Файл', 'Вид', 'Мир', 'Инструменты']);
+  assert.deepEqual(menu.getTree({}, ['Вид', 'Окна']).map(n => n.id), ['view-a', 'view-b']);
+  menu.unregister('file'); assert.deepEqual(menu.getTree().map(n => n.label), ['Вид', 'Мир', 'Инструменты']);
+  assert.throws(() => new TreeMenu({ rootOrder: ['A', 'A'] }));
+});
+test('window launchers share handler lifecycle and disappear with their extension', async () => {
+  require('../packages/ui/controls.js'); require('../packages/ui/index.js');
+  const menu = new TreeMenu(), host = new globalThis.AtlasUI.ExtensionHost({ mainMenu: menu }); let action, calls = 0;
+  host.register({ id: 'example', start(ctx) {
+    action = ctx.action(() => calls++);
+    ctx.menu(menu, { id: 'list', path: ['Мир', 'Нации'], label: 'Список', handler: action });
+    ctx.windowMenu({ id: 'list', label: 'Нации', handler: action });
+  } });
+  await host.enable('example');
+  assert.equal(menu.getTree({}, ['Вид', 'Окна'])[0].id, 'example:window:list');
+  menu.invoke('example:window:list'); menu.invoke('example:list'); assert.equal(calls, 2);
+  action.disable(); assert.equal(menu.size, 0); assert.deepEqual(menu.getTree(), []);
+  host.disable('example'); await host.enable('example'); assert.equal(menu.size, 2);
+  host.disable('example'); assert.equal(menu.size, 0); menu.invoke('example:window:list'); assert.equal(calls, 2);
+});

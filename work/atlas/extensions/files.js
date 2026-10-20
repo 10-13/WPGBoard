@@ -32,6 +32,7 @@
           } });
         }
         ctx.menu(ui.mainMenu, { id: 'settings', path: ['Файл'], label: 'Параметры партии', handler: campaignSettings, order: -100 });
+        ctx.windowMenu({ id: 'settings', label: 'Параметры партии', handler: campaignSettings });
         ctx.menu(ui.mainMenu, { id: 'save', path: ['Файл'], label: 'Сохранить партию · JSON', handler: exportJSON, order: -90 });
         ctx.menu(ui.mainMenu, { id: 'open', path: ['Файл'], label: 'Открыть партию', handler: importJSON, order: -80 });
         ctx.menu(ui.mainMenu, { id: 'png', path: ['Файл', 'Экспорт'], label: 'Карта · PNG', handler: exportPNG, order: -70 });

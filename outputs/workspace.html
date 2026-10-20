@@ -361,6 +361,67 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 })(globalThis);
 
 ;
+/* Read-only province adjacency derived from labels and the original raster. */
+(function (root) {
+  'use strict';
+  class ProvinceTopology {
+    #neighbors = new Map(); #exterior = new Set();
+    constructor(index, rgba) {
+      const { width, height } = index, total = width * height;
+      if (!rgba || rgba.length !== total * 4) throw new Error('Размер изображения не совпадает с индексом провинций.');
+      for (const id of index.regions.keys()) this.#neighbors.set(id, new Set());
+      const ink = new Uint8Array(total);
+      const cardinal = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+      for (let p = 0; p < total; p++) { const i = p * 4; ink[p] = rgba[i + 3] > 128 && Math.max(rgba[i], rgba[i + 1], rgba[i + 2]) <= 48 ? 1 : 0; }
+      const connect = (a, b) => { if (a && b && a !== b) { this.#neighbors.get(a).add(b); this.#neighbors.get(b).add(a); } };
+      const ray = (x, y, dx, dy) => {
+        for (let distance = 1; distance <= 4; distance++) {
+          const xx = x + dx * distance, yy = y + dy * distance;
+          if (xx < 0 || yy < 0 || xx >= width || yy >= height) return { exterior: true };
+          const id = index.idAt(xx, yy); if (id) return { id };
+          if (!ink[yy * width + xx]) return { exterior: true }; // Never cross water.
+        }
+        return {};
+      };
+      for (let p = 0; p < total; p++) {
+        const x = p % width, y = Math.floor(p / width), id = index.idAt(x, y);
+        if (id) {
+          for (const [dx, dy] of cardinal) {
+            const xx = x + dx, yy = y + dy, other = index.idAt(xx, yy);
+            if (other) { if (dx === 1 || dy === 1) connect(id, other); }
+            else if (xx < 0 || yy < 0 || xx >= width || yy >= height || !ink[yy * width + xx]) this.#exterior.add(id);
+          }
+        } else if (ink[p]) {
+          // Opposing cardinal rays find a shared border, not a diagonal corner.
+          // Black strokes have no province ID; bridge ink only, up to four pixels.
+          for (const [a, b] of [[ray(x, y, -1, 0), ray(x, y, 1, 0)], [ray(x, y, 0, -1), ray(x, y, 0, 1)]]) {
+            connect(a.id, b.id);
+            if (a.id && b.exterior) this.#exterior.add(a.id);
+            if (b.id && a.exterior) this.#exterior.add(b.id);
+          }
+        }
+      }
+      Object.freeze(this);
+    }
+    #valid(ids) { return new Set([...ids].filter(id => this.#neighbors.has(id))); }
+    neighborsOf(id) { return Object.freeze([...(this.#neighbors.get(id) || [])].sort((a, b) => a - b)); }
+    touchesExterior(id) { return this.#exterior.has(id); }
+    neighbors(ids) {
+      const selected = this.#valid(ids), result = new Set();
+      for (const id of selected) for (const neighbor of this.#neighbors.get(id)) if (!selected.has(neighbor)) result.add(neighbor);
+      return Object.freeze([...result].sort((a, b) => a - b));
+    }
+    expand(ids) { const selected = this.#valid(ids); return Object.freeze([...new Set([...selected, ...this.neighbors(selected)])].sort((a, b) => a - b)); }
+    erode(ids) {
+      const selected = this.#valid(ids);
+      return Object.freeze([...selected].filter(id => !this.#exterior.has(id) && [...this.#neighbors.get(id)].every(neighbor => selected.has(neighbor))).sort((a, b) => a - b));
+    }
+  }
+  root.AtlasTopologyCore = { ProvinceTopology };
+  if (typeof module !== 'undefined' && module.exports) module.exports = { ProvinceTopology };
+})(globalThis);
+
+;
 /* Headless game state and append-only history. No browser or rendering APIs. */
 (function (root) {
   'use strict';
@@ -697,6 +758,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   }
   const { TileMetadata, StatisticsRegistry } = (typeof module !== 'undefined' && module.exports ? require('./metadata.js') : root.AtlasMetadataCore).createMetadataAPI({ EventBus, clone, freeze, uid });
   const { OverlayRegistry } = (typeof module !== 'undefined' && module.exports ? require('./overlays.js') : root.AtlasOverlayCore).createOverlayAPI({ EventBus, clone, freeze, equal });
+  const { ProvinceTopology } = typeof module !== 'undefined' && module.exports ? require('./province-topology.js') : root.AtlasTopologyCore;
   const singletonToken = Symbol('GameState'); let singleton;
   class GameState extends EventBus {
     #map = null; #regionIndex = null; #history = null; #snapshot = freeze({ params: {}, meta: {} }); #off = []; #actions; #tileMetadata; #statistics; #overlays;
@@ -746,7 +808,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     toJSON() { if (!this.loaded) throw new Error('Игра не загружена.'); return { schemaVersion: 2, map: clone(this.map), regions: this.regionIndex.toJSON(), history: this.history.toJSON(), updatedAt: Date.now() }; }
   }
   const getGameState = () => singleton || (singleton = new GameState(singletonToken));
-  const api = { EventBus, Scope, ReadonlyMap, RegionIndex, History, ActionRegistry, TileMetadata, StatisticsRegistry, OverlayRegistry, GameState, getGameState, diff, clone, equal, freeze, uid };
+  const api = { EventBus, Scope, ReadonlyMap, RegionIndex, ProvinceTopology, History, ActionRegistry, TileMetadata, StatisticsRegistry, OverlayRegistry, GameState, getGameState, diff, clone, equal, freeze, uid };
   root.AtlasCore = Object.freeze(api);
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);
@@ -792,8 +854,11 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     dispose() { this.disable(); }
   }
   class TreeMenu extends EventBus {
-    #items = new Map(); #bar = null; #contextProvider; #popup = null; #popupCleanup;
-    constructor({ id = uid('menu'), regionContext = false, onError = error => console.error(error) } = {}) { super(); this.id = id; this.regionContext = regionContext; this.onError = onError; }
+    #items = new Map(); #bar = null; #contextProvider; #popup = null; #popupCleanup; #rootOrder;
+    constructor({ id = uid('menu'), regionContext = false, rootOrder = [], onError = error => console.error(error) } = {}) {
+      super(); if (!Array.isArray(rootOrder) || rootOrder.some(label => typeof label !== 'string') || new Set(rootOrder).size !== rootOrder.length) throw new Error('Нужен список уникальных названий корневых пунктов.');
+      this.id = id; this.regionContext = regionContext; this.onError = onError; this.#rootOrder = [...rootOrder];
+    }
     get size() { return this.#items.size; }
     register({ id = uid('action'), path = [], label, handler, signal, batch = false, when = () => true, enabled = () => true, order = 0 }) {
       if (this.#items.has(id)) throw new Error('Пункт меню уже зарегистрирован: ' + id);
@@ -829,7 +894,11 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         }
         node.children.push({ ...item, enabled: typeof item.enabled === 'function' ? !!item.enabled(context) : !!item.enabled });
       }
-      const sort = node => { node.children.sort((a, b) => a.order - b.order); for (const child of node.children) if (child.group) sort(child); };
+      const sort = node => {
+        const rank = item => { const index = this.#rootOrder.indexOf(item.label); return index < 0 ? this.#rootOrder.length : index; };
+        node.children.sort((a, b) => (node === rootNode && !prefix.length ? rank(a) - rank(b) : 0) || a.order - b.order);
+        for (const child of node.children) if (child.group) sort(child);
+      };
       sort(rootNode); return rootNode.children;
     }
     #changed() { this.close(); this.#renderBar(); this.emit('change', { menu: this }); }
@@ -1206,7 +1275,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       new ResizeObserver(() => { if (this.ready) { this.constrain(); this.transform(); } }).observe(this.element);
     }
     async load() {
-      const generation = ++this.#loadGeneration; this.ready = false;
+      const generation = ++this.#loadGeneration; this.ready = false; this.topology = null; this.topologyIndex = null;
       const map = this.state.map, original = new Image(); original.src = map.original.dataURL;
       const image = this.baseStyle === 'light' && map.displayImage ? new Image() : original;
       if (image !== original) image.src = map.displayImage;
@@ -1220,6 +1289,18 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     async setBaseStyle(style) { this.baseStyle = style; const camera = [this.scale, this.tx, this.ty], selected = this.selectedId; await this.load(); [this.scale, this.tx, this.ty] = camera; this.transform(); this.select(selected); }
     addOverlay(options) { return this.overlays.add(options); }
     addLayer(options) { return this.addOverlay(options); }
+    getTopology() {
+      if (!this.ready) throw new Error('Дождитесь загрузки карты.');
+      const index = this.state.regionIndex;
+      if (this.topologyIndex !== index) {
+        const source = document.createElement('canvas'); source.width = index.width; source.height = index.height;
+        try {
+          const context = source.getContext('2d', { willReadFrequently: true }); context.drawImage(this.originalImage, 0, 0);
+          this.topology = new root.AtlasCore.ProvinceTopology(index, context.getImageData(0, 0, index.width, index.height).data); this.topologyIndex = index;
+        } finally { source.width = source.height = 1; }
+      }
+      return this.topology;
+    }
     get showIds() { return this.state.overlays.get('ui:province-ids')?.visible || false; }
     set showIds(visible) { this.state.overlays.setVisible('ui:province-ids', visible); }
     exportCanvas() { const out = document.createElement('canvas'); out.width = this.canvas.width; out.height = this.canvas.height; const ctx = out.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.drawImage(this.canvas, 0, 0); this.overlays.exportTo(ctx); return out; }
@@ -1328,6 +1409,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         on: (type, fn) => ui.input.on(type, fn, { signal: scope.signal }),
         action: fn => new root.AtlasUI.ActionHandler(fn, { signal: scope.signal }),
         menu: (menu, item) => menu.register({ ...item, id: id + ':' + item.id, signal: scope.signal }),
+        windowMenu: item => ui.mainMenu.register({ ...item, id: id + ':window:' + item.id, path: ['Вид', 'Окна'], signal: scope.signal }),
         window: options => ui.windows.open({ ...options, id: id + ':' + options.id, windowId: options.windowId ? id + ':' + options.windowId : undefined, signal: scope.signal }),
         overlay: options => ui.viewport.addOverlay({ ...options, id: id + ':' + options.id, source: id, signal: scope.signal }),
         layer: options => ui.viewport.addOverlay({ ...options, id: id + ':' + options.id, source: id, signal: scope.signal }),
@@ -1344,7 +1426,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     #statuses = new Map(); #tooltipProviders = new Map(); #toastTimer;
     constructor(key) {
       super(); if (key !== singletonKey) throw new Error('Используйте AtlasUI.getUI().');
-      this.input = new EventBus(); this.regionClicks = new root.AtlasUI.RegionClicks({ onError: e => this.notify(e.message) }); this.saveStatus = 'Локальная партия'; this.mainMenu = new root.AtlasUI.TreeMenu({ id: 'main', onError: e => this.notify(e.message) }); this.tileMenu = new root.AtlasUI.TreeMenu({ id: 'tile', regionContext: true, onError: e => this.notify(e.message) }); this.extensions = new ExtensionHost(this);
+      this.input = new EventBus(); this.regionClicks = new root.AtlasUI.RegionClicks({ onError: e => this.notify(e.message) }); this.saveStatus = 'Локальная партия'; this.mainMenu = new root.AtlasUI.TreeMenu({ id: 'main', rootOrder: ['Файл', 'Вид', 'Мир', 'Инструменты'], onError: e => this.notify(e.message) }); this.tileMenu = new root.AtlasUI.TreeMenu({ id: 'tile', regionContext: true, onError: e => this.notify(e.message) }); this.extensions = new ExtensionHost(this);
     }
     async mount({ host, state = root.AtlasCore.getGameState() }) {
       if (this.host) return this; this.host = host; this.state = state; host.className = 'atlas-shell';
@@ -1371,13 +1453,18 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       const refreshClicks = () => { this.viewport.element.style.setProperty('--region-click-cursor', this.regionClicks.active?.cursor || 'crosshair'); this.refresh(); };
       this.regionClicks.on('change', refreshClicks); refreshClicks();
       this.input.on('province:click', event => this.regionClicks.dispatch(event, { active: !event.originalEvent?.shiftKey }));
-      this.mainMenu.register({ id: 'ui.clear-selection', path: ['Мир'], label: 'Снять выделение провинций', enabled: () => this.regionSelection.size > 0, handler: () => this.regionSelection.clear() });
+      this.mainMenu.register({ id: 'ui.clear-selection', path: ['Инструменты', 'Выделение'], label: 'Снять выделение', enabled: () => this.regionSelection.size > 0, handler: () => this.regionSelection.clear() });
+      this.mainMenu.register({ id: 'ui.select-all', path: ['Инструменты', 'Выделение'], label: 'Выделить все провинции', enabled: () => state.loaded, handler: () => this.regionSelection.replace([...state.regions.keys()]) });
+      this.mainMenu.register({ id: 'ui.invert-selection', path: ['Инструменты', 'Выделение'], label: 'Инвертировать выделение', enabled: () => state.loaded, handler: () => this.regionSelection.replace([...state.regions.keys()].filter(id => !this.regionSelection.has(id))) });
+      this.mainMenu.register({ id: 'ui.expand-selection', path: ['Инструменты', 'Выделение'], label: 'Добавить соседние провинции', enabled: () => this.regionSelection.size > 0, handler: () => this.regionSelection.replace(this.viewport.getTopology().expand(this.regionSelection.ids)) });
+      this.mainMenu.register({ id: 'ui.erode-selection', path: ['Инструменты', 'Выделение'], label: 'Эрозия выделения', enabled: () => this.regionSelection.size > 0, handler: () => this.regionSelection.replace(this.viewport.getTopology().erode(this.regionSelection.ids)) });
+      this.mainMenu.register({ id: 'ui.stop-editing', path: ['Инструменты', 'Выделение'], label: 'Выключить активное редактирование', enabled: () => !!this.regionClicks.activeId, handler: () => this.regionClicks.clearActive() });
       this.mainMenu.register({ id: 'ui.fit', path: ['Вид'], label: 'Вся карта', handler: () => this.viewport.fit() });
       this.mainMenu.register({ id: 'ui.ids', path: ['Вид'], label: 'Показать / скрыть ID', handler: () => { this.viewport.showIds = !this.viewport.showIds; this.viewport.drawNumbers(); } });
       this.mainMenu.register({ id: 'ui.base', path: ['Вид'], label: 'Сменить светлую / исходную основу', handler: () => this.viewport.setBaseStyle(this.viewport.baseStyle === 'original' ? 'light' : 'original') });
-      this.mainMenu.register({ id: 'ui.modules', path: ['Вид'], label: 'Расширения', handler: () => this.showExtensions() });
-      this.mainMenu.register({ id: 'ui.overlays', path: ['Вид'], label: 'Оверлеи', handler: () => this.showOverlays() });
-      this.mainMenu.register({ id: 'ui.windows-help', path: ['Вид'], label: 'Управление окнами', handler: () => this.showWindowHelp() });
+      this.mainMenu.register({ id: 'ui.modules', path: ['Вид', 'Окна'], label: 'Расширения', handler: () => this.showExtensions() });
+      this.mainMenu.register({ id: 'ui.overlays', path: ['Вид', 'Окна'], label: 'Оверлеи', handler: () => this.showOverlays() });
+      this.mainMenu.register({ id: 'ui.windows-help', path: ['Вид', 'Окна'], label: 'Управление окнами', handler: () => this.showWindowHelp() });
       this.input.on('province:context', e => {
         const regionIds = this.regionSelection.forContext(e.id), id = regionIds.length === 1 ? regionIds[0] : null, region = id ? state.regions.get(id) : null;
         if (id) this.viewport.select(id);
@@ -1773,11 +1860,17 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         } });
       }
       ctx.on('selection:change', event => { selected = event.id; });
-      ctx.menu(ui.mainMenu, { id: 'open', path: ['Мир'], label: 'Нации', handler: openNations });
-      ctx.menu(ui.mainMenu, { id: 'nation-info', path: ['Мир'], label: 'Информация о выбранной нации', enabled: () => !!model.data.items[activeNation], handler: () => openNationInfo() });
-      ctx.menu(ui.mainMenu, { id: 'nation-set', path: ['Мир'], label: 'Добавить территории выбранной нации в набор', enabled: () => !!model.data.items[activeNation], handler: () => addNationToSet(activeNation) });
-      ctx.menu(ui.mainMenu, { id: 'inspect', path: ['Мир'], label: 'Свойства провинции', handler: openInspector });
-      ctx.menu(ui.mainMenu, { id: 'new-nation', path: ['Мир', 'Создать'], label: 'Нация', handler: () => editNation() });
+      ctx.windowMenu({ id: 'list', label: 'Нации', handler: openNations });
+      ctx.windowMenu({ id: 'info', label: 'Информация о выбранной нации', enabled: () => !!model.data.items[activeNation], handler: () => openNationInfo() });
+      ctx.windowMenu({ id: 'inspector', label: 'Свойства провинции', handler: openInspector });
+      ctx.menu(ui.mainMenu, { id: 'open', path: ['Мир', 'Нации'], label: 'Список наций', handler: openNations });
+      ctx.menu(ui.mainMenu, { id: 'new-nation', path: ['Мир', 'Нации'], label: 'Создать нацию', handler: () => editNation() });
+      ctx.menu(ui.mainMenu, { id: 'nation-info', path: ['Мир', 'Нации'], label: 'Информация о выбранной нации', enabled: () => !!model.data.items[activeNation], handler: () => openNationInfo() });
+      ctx.menu(ui.mainMenu, { id: 'nation-edit', path: ['Мир', 'Нации'], label: 'Редактировать выбранную нацию', enabled: () => !!model.data.items[activeNation], handler: () => editNation(activeNation) });
+      ctx.menu(ui.mainMenu, { id: 'assign-selection', path: ['Мир', 'Нации'], label: 'Назначить выделение выбранной нации', enabled: () => !!model.data.items[activeNation] && ui.regionSelection.size > 0, handler: () => model.assign(ui.regionSelection.ids, activeNation) });
+      ctx.menu(ui.mainMenu, { id: 'release-selection', path: ['Мир', 'Нации'], label: 'Освободить выделенные провинции', enabled: () => ui.regionSelection.size > 0, handler: () => model.assign(ui.regionSelection.ids, null) });
+      ctx.menu(ui.mainMenu, { id: 'nation-set', path: ['Мир', 'Нации'], label: 'Добавить территории выбранной нации в набор', enabled: () => !!model.data.items[activeNation], handler: () => addNationToSet(activeNation) });
+      ctx.menu(ui.mainMenu, { id: 'select-nation', path: ['Инструменты', 'Выделение'], label: 'Выделить территории выбранной нации', enabled: () => !!model.data.items[activeNation], handler: () => ui.regionSelection.replace(model.members(activeNation)) });
       ctx.menu(ui.tileMenu, { id: 'assign', path: ['Мир', 'Владения'], label: 'Назначить выбранной нации', batch: true, order: 0, enabled: () => !!model.data.items[activeNation], handler: ids => model.assign(ids, activeNation) });
       ctx.menu(ui.tileMenu, { id: 'release', path: ['Мир', 'Владения'], label: 'Освободить', batch: true, order: 1, handler: ids => model.assign(ids, null) });
       ctx.menu(ui.tileMenu, { id: 'goto', path: ['Мир', 'Владения'], label: 'К нации', order: 2, enabled: e => model.nationsFor([e.id]).length > 0, handler: id => { activeNation = model.data.owners[id]; openNations(); ui.emit('nations:selection', {}); } });
@@ -2041,8 +2134,13 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           state.on('change', draw, { signal: scope.signal }); state.on('map:loaded', draw, { signal: scope.signal }); ui.on('regions:active', draw, { signal: scope.signal }); draw();
         } });
       }
-      ctx.menu(ui.mainMenu, { id: 'open', path: ['Мир'], label: 'Регионы', handler: () => open() });
-      ctx.menu(ui.mainMenu, { id: 'new', path: ['Мир', 'Создать'], label: 'Регион', handler: () => edit() });
+      ctx.windowMenu({ id: 'list', label: 'Регионы', handler: () => open() });
+      ctx.menu(ui.mainMenu, { id: 'open', path: ['Мир', 'Регионы'], label: 'Список регионов', handler: () => open() });
+      ctx.menu(ui.mainMenu, { id: 'new', path: ['Мир', 'Регионы'], label: 'Создать регион из выделения', handler: () => edit() });
+      ctx.menu(ui.mainMenu, { id: 'rename', path: ['Мир', 'Регионы'], label: 'Переименовать выбранный регион', enabled: () => !!model.data.items[activeRegion], handler: () => edit(activeRegion) });
+      ctx.menu(ui.mainMenu, { id: 'assign-selection', path: ['Мир', 'Регионы'], label: 'Добавить выделение в выбранный регион', enabled: () => !!model.data.items[activeRegion] && ui.regionSelection.size > 0, handler: () => model.assign(ui.regionSelection.ids, activeRegion) });
+      ctx.menu(ui.mainMenu, { id: 'clear-selection', path: ['Мир', 'Регионы'], label: 'Исключить выделение из регионов', enabled: () => ui.regionSelection.ids.some(id => !!model.forProvince(id)), handler: () => model.assign(ui.regionSelection.ids, null) });
+      ctx.menu(ui.mainMenu, { id: 'select-region', path: ['Инструменты', 'Выделение'], label: 'Выделить выбранный регион', enabled: () => !!model.data.items[activeRegion], handler: () => selectOnMap(activeRegion) });
       ctx.menu(ui.tileMenu, { id: 'assign', path: ['Мир', 'Регионы'], label: 'Добавить в выбранный регион', batch: true, order: 10, enabled: () => !!model.data.items[activeRegion], handler: ids => model.assign(ids, activeRegion) });
       ctx.menu(ui.tileMenu, { id: 'clear', path: ['Мир', 'Регионы'], label: 'Очистить регион', batch: true, order: 11, enabled: e => e.regionIds.some(id => !!model.forProvince(id)), handler: ids => model.assign(ids, null) });
       ctx.menu(ui.tileMenu, { id: 'select', path: ['Мир', 'Регионы'], label: 'Выделить регион', order: 12, enabled: e => !!model.forProvince(e.id), handler: id => selectOnMap(model.forProvince(id).id) });
@@ -2107,11 +2205,13 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           const input = document.createElement('input'); input.setAttribute('aria-label', 'Имя импортируемой ветки'); input.value = String(bundle.name || 'proposal') + '-импорт'; pane.append(el('p', 'muted', 'Изменения останутся отдельной веткой до слияния в main.'), input, button('Добавить в историю', attempt(() => { state.history.importBranch(bundle, { name: input.value.trim() }); tab.close(); openHistory(); }), { className: 'accent wide' }));
         } });
       }
-      ctx.menu(ui.mainMenu, { id: 'open', path: ['История'], label: 'Ветки и журнал', handler: openHistory });
-      ctx.menu(ui.mainMenu, { id: 'undo', path: ['История'], label: 'Отменить', enabled: () => state.history.canUndo, handler: () => state.history.undo() });
-      ctx.menu(ui.mainMenu, { id: 'redo', path: ['История'], label: 'Повторить', enabled: () => state.history.canRedo, handler: () => state.history.redo() });
-      ctx.menu(ui.mainMenu, { id: 'export', path: ['История', 'Обмен журналами'], label: 'Экспорт активной ветки', handler: exportBranch });
-      ctx.menu(ui.mainMenu, { id: 'import', path: ['История', 'Обмен журналами'], label: 'Импорт ветки', handler: importBranch });
+      ctx.windowMenu({ id: 'branches', label: 'Ветки', handler: openBranches });
+      ctx.windowMenu({ id: 'log', label: 'Журнал действий', handler: openLog });
+      ctx.menu(ui.mainMenu, { id: 'open', path: ['Инструменты', 'История'], label: 'Ветки и журнал', handler: openHistory });
+      ctx.menu(ui.mainMenu, { id: 'undo', path: ['Инструменты', 'История'], label: 'Отменить', enabled: () => state.history.canUndo, handler: () => state.history.undo() });
+      ctx.menu(ui.mainMenu, { id: 'redo', path: ['Инструменты', 'История'], label: 'Повторить', enabled: () => state.history.canRedo, handler: () => state.history.redo() });
+      ctx.menu(ui.mainMenu, { id: 'export', path: ['Инструменты', 'История', 'Обмен журналами'], label: 'Экспорт активной ветки', handler: exportBranch });
+      ctx.menu(ui.mainMenu, { id: 'import', path: ['Инструменты', 'История', 'Обмен журналами'], label: 'Импорт ветки', handler: importBranch });
     }
   };
   Object.assign(root.AtlasExtensions ||= {}, { history: definition });
@@ -2152,6 +2252,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           } });
         }
         ctx.menu(ui.mainMenu, { id: 'settings', path: ['Файл'], label: 'Параметры партии', handler: campaignSettings, order: -100 });
+        ctx.windowMenu({ id: 'settings', label: 'Параметры партии', handler: campaignSettings });
         ctx.menu(ui.mainMenu, { id: 'save', path: ['Файл'], label: 'Сохранить партию · JSON', handler: exportJSON, order: -90 });
         ctx.menu(ui.mainMenu, { id: 'open', path: ['Файл'], label: 'Открыть партию', handler: importJSON, order: -80 });
         ctx.menu(ui.mainMenu, { id: 'png', path: ['Файл', 'Экспорт'], label: 'Карта · PNG', handler: exportPNG, order: -70 });
@@ -2185,6 +2286,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       const highlight = ctx.overlay({ id: 'chosen', title: 'Набор статистики', order: 80, exportable: false });
       const drawChosen = () => drawRegionSet(highlight.context, state.regionIndex, chosen);
       const refreshSet = () => { drawChosen(); ui.emit('metadata:refresh', {}); ui.refresh(); };
+      const clearSet = () => { chosen.clear(); setTitle = ''; mode = 'set'; refreshSet(); };
       const addRegions = ids => { for (const id of ids) if (state.regions.has(id)) chosen.add(id); mode = 'set'; setTitle = ''; openStatistics(); };
       const removeRegions = ids => { for (const id of ids) chosen.delete(id); mode = 'set'; setTitle = ''; openStatistics(); };
       ui.on('map:ready', drawChosen, { signal });
@@ -2254,7 +2356,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             pane.replaceChildren(); const choose = document.createElement('select'); choose.setAttribute('aria-label', 'Область статистики');
             for (const [id, label] of [['current', 'Текущий тайл'], ['set', setTitle || 'Выбранный набор'], ['all', 'Вся карта']]) choose.append(new Option(label, id)); choose.value = mode; choose.onchange = () => { mode = choose.value; draw(); }; pane.append(field('Область', choose));
             const tools = el('div', 'tool-row set-tools');
-            tools.append(createSwitch('Подсветка набора', checked => highlight.setVisible(checked), { checked: highlight.visible, title: 'Показать или скрыть бирюзовую подсветку набора статистики' }), button('Очистить набор', () => { chosen.clear(); setTitle = ''; mode = 'set'; refreshSet(); }, { disabled: !chosen.size })); pane.append(tools, el('p', 'set-count', 'Провинций в наборе: ' + chosen.size));
+            tools.append(createSwitch('Подсветка набора', checked => highlight.setVisible(checked), { checked: highlight.visible, title: 'Показать или скрыть бирюзовую подсветку набора статистики' }), button('Очистить набор', clearSet, { disabled: !chosen.size })); pane.append(tools, el('p', 'set-count', 'Провинций в наборе: ' + chosen.size));
             pane.append(el('p', 'muted', 'Клик выбирает провинцию; Shift + клик добавляет или убирает. Правый клик → Прочее → Статистика: добавить, исключить или задать область.'));
             const ids = mode === 'all' ? [...state.regions.keys()] : mode === 'current' ? state.regions.has(selected) ? [selected] : [] : [...chosen].filter(id => state.regions.has(id));
             if (!ids.length) pane.append(el('p', 'muted', 'Выберите тайл или добавьте регионы в набор.'));
@@ -2269,8 +2371,21 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       ui.on('metadata:open', e => openMetadata(e.regionId), { signal }); ui.on('statistics:open', e => openStatistics(e.regionIds, e.title), { signal });
       ui.on('statistics:add-regions', e => addRegions(e.regionIds), { signal });
       ui.on('statistics:remove-regions', e => removeRegions(e.regionIds), { signal });
-      ctx.menu(ui.mainMenu, { id: 'entries', path: ['Данные'], label: 'Метаданные тайла', handler: () => openMetadata() });
-      ctx.menu(ui.mainMenu, { id: 'statistics', path: ['Данные'], label: 'Статистика регионов', handler: () => openStatistics() });
+      ctx.windowMenu({ id: 'entries', label: 'Метаданные тайла', handler: () => openMetadata() });
+      ctx.windowMenu({ id: 'statistics', label: 'Статистика регионов', handler: () => openStatistics() });
+      ctx.menu(ui.mainMenu, { id: 'entries', path: ['Инструменты', 'Данные', 'Мета'], label: 'Открыть метаданные тайла', handler: () => openMetadata() });
+      ctx.menu(ui.mainMenu, { id: 'add-entry', path: ['Инструменты', 'Данные', 'Мета'], label: 'Добавить запись выбранной провинции', enabled: () => ui.regionSelection.size === 1, handler: () => edit(ui.regionSelection.ids[0]) });
+      ctx.menu(ui.mainMenu, { id: 'selected-entries', path: ['Инструменты', 'Данные', 'Мета'], label: 'Метаданные выбранной провинции', enabled: () => ui.regionSelection.size === 1, handler: () => openMetadata(ui.regionSelection.ids[0]) });
+      ctx.menu(ui.mainMenu, { id: 'statistics', path: ['Инструменты', 'Данные', 'Статистика'], label: 'Открыть статистику', handler: () => openStatistics() });
+      ctx.menu(ui.mainMenu, { id: 'current-statistics', path: ['Инструменты', 'Данные', 'Статистика'], label: 'Статистика выбранной провинции', enabled: () => ui.regionSelection.size === 1, handler: () => { selected = ui.regionSelection.ids[0]; mode = 'current'; openStatistics(); } });
+      ctx.menu(ui.mainMenu, { id: 'all-statistics', path: ['Инструменты', 'Данные', 'Статистика'], label: 'Статистика всей карты', handler: () => { mode = 'all'; openStatistics(); } });
+      ctx.menu(ui.mainMenu, { id: 'set-statistics', path: ['Инструменты', 'Данные', 'Статистика'], label: 'Статистика набора', handler: () => { mode = 'set'; openStatistics(); } });
+      ctx.menu(ui.mainMenu, { id: 'set-add', path: ['Инструменты', 'Данные', 'Статистика'], label: 'Добавить выделение в набор', enabled: () => ui.regionSelection.size > 0, handler: () => addRegions(ui.regionSelection.ids) });
+      ctx.menu(ui.mainMenu, { id: 'set-remove', path: ['Инструменты', 'Данные', 'Статистика'], label: 'Исключить выделение из набора', enabled: () => ui.regionSelection.ids.some(id => chosen.has(id)), handler: () => removeRegions(ui.regionSelection.ids) });
+      ctx.menu(ui.mainMenu, { id: 'set-replace', path: ['Инструменты', 'Данные', 'Статистика'], label: 'Задать набор из выделения', enabled: () => ui.regionSelection.size > 0, handler: () => openStatistics(ui.regionSelection.ids) });
+      ctx.menu(ui.mainMenu, { id: 'set-clear', path: ['Инструменты', 'Данные', 'Статистика'], label: 'Очистить набор', enabled: () => chosen.size > 0, handler: clearSet });
+      ctx.menu(ui.mainMenu, { id: 'set-highlight', path: ['Инструменты', 'Данные', 'Статистика'], label: 'Показать / скрыть набор на карте', handler: () => highlight.setVisible(!highlight.visible) });
+      ctx.menu(ui.mainMenu, { id: 'select-set', path: ['Инструменты', 'Выделение'], label: 'Выделить статистический набор', enabled: () => chosen.size > 0, handler: () => ui.regionSelection.replace(chosen) });
       ctx.menu(ui.tileMenu, { id: 'entries', path: ['Провинция'], label: 'Метаданные', order: 101, handler: id => openMetadata(id) });
       ctx.menu(ui.tileMenu, { id: 'add', path: ['Провинция'], label: 'Добавить запись', order: 102, handler: id => edit(id) });
       ctx.menu(ui.tileMenu, { id: 'statistics', path: ['Провинция'], label: 'Статистика тайла', order: 103, handler: id => { selected = id; mode = 'current'; openStatistics(); } });
@@ -2615,9 +2730,14 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     constructor(ctx, catalog) {
       this.ctx = ctx; this.catalog = catalog; this.target = 'steel'; this.amount = 1; this.choices = {};
       this.protect = fn => (...args) => { try { return fn(...args); } catch (e) { ctx.ui.notify(e.message); } };
-      ctx.menu(ctx.ui.mainMenu, { id: 'blueprints', path: ['Ресурсы'], label: 'Чертежи', handler: () => this.openRecipes() });
-      ctx.menu(ctx.ui.mainMenu, { id: 'goods', path: ['Ресурсы'], label: 'Каталог ресурсов', handler: () => this.openResources() });
-      ctx.menu(ctx.ui.mainMenu, { id: 'resource-tree', path: ['Ресурсы'], label: 'Дерево ресурсов', handler: () => this.openTree() });
+      ctx.windowMenu({ id: 'blueprints', label: 'Чертежи', handler: () => this.openRecipes() });
+      ctx.windowMenu({ id: 'goods', label: 'Каталог ресурсов', handler: () => this.openResources() });
+      ctx.windowMenu({ id: 'resource-tree', label: 'Дерево ресурсов', handler: () => this.openTree() });
+      ctx.menu(ctx.ui.mainMenu, { id: 'blueprints', path: ['Мир', 'Ресурсы'], label: 'Чертежи', handler: () => this.openRecipes() });
+      ctx.menu(ctx.ui.mainMenu, { id: 'goods', path: ['Мир', 'Ресурсы'], label: 'Каталог ресурсов', handler: () => this.openResources() });
+      ctx.menu(ctx.ui.mainMenu, { id: 'resource-tree', path: ['Мир', 'Ресурсы'], label: 'Дерево ресурсов', handler: () => this.openTree() });
+      ctx.menu(ctx.ui.mainMenu, { id: 'new-blueprint', path: ['Мир', 'Ресурсы'], label: 'Создать чертёж', handler: () => this.editRecipe() });
+      ctx.menu(ctx.ui.mainMenu, { id: 'new-good', path: ['Мир', 'Ресурсы'], label: 'Создать ресурс', handler: () => this.editResource() });
       ctx.state.on('map:loaded', () => { this.choices = {}; }, { signal: ctx.signal });
     }
     watch(scope, draw) {
@@ -2891,10 +3011,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         } });
       }
       ctx.on('selection:change', e => { selected = e.id; });
-      ctx.menu(ui.mainMenu, { id: 'open', path: ['Ресурсы'], label: 'Объекты провинции', handler: () => open() });
-      ctx.menu(ui.mainMenu, { id: 'production', path: ['Ресурсы'], label: 'Добавить производство', enabled: () => !!selected, handler: () => edit(selected) });
-      ctx.menu(ui.mainMenu, { id: 'point', path: ['Ресурсы'], label: 'Добавить ресурсную точку', enabled: () => !!selected, handler: () => edit(selected, 'resource-point') });
-      ctx.menu(ui.mainMenu, { id: 'statistics', path: ['Ресурсы'], label: 'Статистика всей карты', handler: () => openData('statistics:open', { regionIds: [...state.regions.keys()], title: 'Вся карта' }) });
+      ctx.windowMenu({ id: 'objects', label: 'Объекты провинции', handler: () => open() });
+      ctx.menu(ui.mainMenu, { id: 'open', path: ['Мир', 'Ресурсы'], label: 'Объекты провинции', handler: () => open() });
+      ctx.menu(ui.mainMenu, { id: 'production', path: ['Мир', 'Ресурсы'], label: 'Добавить производство', enabled: () => ui.regionSelection.size === 1, handler: () => edit(ui.regionSelection.ids[0]) });
+      ctx.menu(ui.mainMenu, { id: 'point', path: ['Мир', 'Ресурсы'], label: 'Добавить ресурсную точку', enabled: () => ui.regionSelection.size === 1, handler: () => edit(ui.regionSelection.ids[0], 'resource-point') });
       ctx.menu(ui.tileMenu, { id: 'open', path: ['Провинция', 'Ресурсы'], label: 'Объекты', order: 104, handler: id => open(id) });
       ctx.menu(ui.tileMenu, { id: 'production', path: ['Провинция', 'Ресурсы'], label: 'Добавить производство', order: 105, handler: id => edit(id) });
       ctx.menu(ui.tileMenu, { id: 'point', path: ['Провинция', 'Ресурсы'], label: 'Добавить ресурсную точку', order: 106, handler: id => edit(id, 'resource-point') });

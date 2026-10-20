@@ -46,3 +46,10 @@ enterprise capacity is separate. The headless catalog and cost expansion live
 in `resource-catalog.js`; UI uses shared data views. Catalog edits are actions
 in `meta.resources.catalog`. Resource cost means consumed resources, without
 money or time. Keep the version 1 base template stable for existing parties.
+
+The top menu order is Файл, Вид, Мир, Инструменты. Window launchers register
+through `ctx.windowMenu` in Вид → Окна; domain commands belong to Мир → Нации /
+Регионы / Ресурсы. Tools are Выделение, История, Данные → Мета / Статистика.
+Keep the province context-menu structure separate. Neighbor selection expands
+by one province layer; erosion removes one boundary layer, including coasts.
+Use headless `ProvinceTopology` and `viewport.getTopology()`; never bridge water.
