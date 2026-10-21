@@ -1371,3 +1371,30 @@ diagonal/reverse/horizontal/vertical. Для чередующихся полос
 У ресурсов отдельно кэшируются расчёт мировой экономики и исходные точки:
 смена фильтров или области обновляет картинку без повторного расчёта. Границы,
 подписи и пиксельные блоки объектов остаются специализированными оверлеями.
+
+
+### Общий выпадающий список
+
+Окна расширений и общие элементы используют нативный
+`AtlasUI.controls.createSelect(items,onChange,options)`:
+
+```js
+const select = AtlasUI.controls.createSelect(
+  [['coal', 'Уголь'], {value: 'oil', label: 'Нефть', disabled: true}],
+  (value, event) => updateResource(value),
+  {value: 'coal', label: 'Ресурс', required: true, signal: scope.signal},
+);
+pane.append(select);
+select.value = 'coal'; // обновление модели без callback
+select.setItems([['coal', 'Каменный уголь'], ['steel', 'Сталь']]); // сохраняет выбор
+select.setItems([['steel', 'Сталь']], {value: 'steel'});          // явный выбор
+```
+
+Пункты задаются парами `[value,label]` или объектами
+`{value,label,disabled,title}`. Значения — уникальные строки/конечные числа;
+подписи текстовые. options также принимает title, className, disabled и name.
+Нативный select сохраняет форму, required и обычный ввод с клавиатуры.
+Без начального value выбирается первый доступный пункт; неизвестный value
+оставляет пустой выбор. setItems сохраняет прежний value, а при его удалении
+не подставляет другой объект. Программные обновления не вызывают onChange;
+signal освобождает пользовательский обработчик. Списки не читают игру сами.

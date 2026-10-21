@@ -52,14 +52,21 @@
     onToggle,
   } = {}) {
     const { el, field } = root.AtlasUI.dom,
-      { button } = root.AtlasUI.controls;
+      { button, createSelect } = root.AtlasUI.controls;
     const { createDataRow, createDataGroup } = root.AtlasUI.dataView;
     const { normalizeOverlayScope } = root.AtlasCore;
     if (!state || !selection || typeof readIds !== 'function' || typeof onChange !== 'function')
       throw new Error('Для области нужны состояние, выделение и обработчики.');
     const group = createDataGroup('Область оверлея', { open, onToggle }),
-      select = el('select');
-    select.setAttribute('aria-label', 'Регион области оверлея');
+      select = createSelect(
+        [],
+        (value) => {
+          if (value === '__world') change(null);
+          else if (value.startsWith('region:') && named.has(value.slice(7)))
+            change([...named.get(value.slice(7)).ids]);
+        },
+        { label: 'Регион области оверлея', signal },
+      );
     const mode = createDataRow('Область', ''),
       count = createDataRow('Провинций в области', ''),
       tools = el('div', 'form-actions');
@@ -72,11 +79,6 @@
     const all = button('Весь мир', () => change(null)),
       take = button('Взять выделение', () => change([...selection.ids]));
     tools.append(all, take);
-    select.onchange = () => {
-      if (select.value === '__world') change(null);
-      else if (select.value.startsWith('region:') && named.has(select.value.slice(7)))
-        change([...named.get(select.value.slice(7)).ids]);
-    };
     function refresh() {
       try {
         current = normalizeOverlayScope(readIds(), state.regionIndex);
@@ -91,16 +93,6 @@
           ])
           .sort(([, a], [, b]) => a.name.localeCompare(b.name, 'ru')),
       );
-      select.replaceChildren(
-        new Option('Весь мир', '__world'),
-        new Option('Текущая область', '__custom'),
-      );
-      for (const [id, r] of named) {
-        const option = new Option(r.name + ' · ' + r.ids.length, 'region:' + id);
-        option.disabled = !r.ids.length;
-        select.append(option);
-      }
-      select.options[1].disabled = true;
       const match =
         current === null || !current.length
           ? null
@@ -108,7 +100,18 @@
               ([, r]) =>
                 r.ids.length === current.length && r.ids.every((id, i) => id === current[i]),
             );
-      select.value = current === null ? '__world' : match ? 'region:' + match[0] : '__custom';
+      select.setItems(
+        [
+          ['__world', 'Весь мир'],
+          { value: '__custom', label: 'Текущая область', disabled: true },
+          ...[...named].map(([id, r]) => ({
+            value: 'region:' + id,
+            label: r.name + ' · ' + r.ids.length,
+            disabled: !r.ids.length,
+          })),
+        ],
+        { value: current === null ? '__world' : match ? 'region:' + match[0] : '__custom' },
+      );
       mode.querySelector('.data-value').textContent =
         current === null ? 'Весь мир' : match ? match[1].name : 'Выбранные провинции';
       count.querySelector('.data-value').textContent = String(

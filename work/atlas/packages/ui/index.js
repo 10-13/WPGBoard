@@ -3,7 +3,7 @@
   const { EventBus } = root.AtlasCore;
   const { ExtensionHost } =
     typeof module !== 'undefined' && module.exports ? require('./extensions.js') : root.AtlasUI;
-  const { button, createSwitch } = root.AtlasUI.controls;
+  const { button, createSwitch, createSelect } = root.AtlasUI.controls;
   const el = (tag, className = '', text = '') => {
     const node = document.createElement(tag);
     node.className = className;
@@ -536,6 +536,6 @@
     Interface,
     ExtensionHost,
     getUI,
-    dom: { el, button, createSwitch, field },
+    dom: { el, button, createSwitch, createSelect, field },
   });
 })(globalThis);

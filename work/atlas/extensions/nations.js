@@ -5,6 +5,7 @@
     { el, button, field } = root.AtlasUI.dom;
   const { NationsModel, EMPTY_NATIONS: EMPTY, validNationColor: validColor } = root.AtlasExtensions;
   const { createDataRow } = root.AtlasUI.dataView;
+  const { createSelect } = root.AtlasUI.controls;
   class NationPainter {
     constructor(ctx, model) {
       this.state = ctx.state;
@@ -279,12 +280,15 @@
                 (n) => n.id !== id && !enemySet.has(n.id),
               );
               if (available.length) {
-                const select = document.createElement('select');
-                select.setAttribute('aria-label', 'Новый противник');
-                select.append(new Option('Выберите нацию', ''));
-                for (const other of available) select.append(new Option(other.name, other.id));
                 if (!available.some((n) => n.id === candidate)) candidate = '';
-                select.value = candidate;
+                const select = createSelect(
+                  [['', 'Выберите нацию'], ...available.map((other) => [other.id, other.name])],
+                  (value) => {
+                    candidate = value;
+                    declare.disabled = !value;
+                  },
+                  { value: candidate, label: 'Новый противник' },
+                );
                 const declare = button(
                   'Объявить войну',
                   protect(() => {
@@ -295,10 +299,6 @@
                   { className: 'danger wide' },
                 );
                 declare.disabled = !select.value;
-                select.onchange = () => {
-                  candidate = select.value;
-                  declare.disabled = !candidate;
-                };
                 pane.append(field('Добавить', select), declare);
               } else
                 pane.append(
@@ -451,13 +451,14 @@
               name.placeholder = 'Без названия';
               name.setAttribute('aria-label', 'Название провинции');
               name.onchange = protect(() => model.setProvince(selected, { name: name.value }));
-              const owner = document.createElement('select');
-              owner.setAttribute('aria-label', 'Владелец провинции');
-              owner.append(new Option('Свободная территория', ''));
-              for (const nation of Object.values(model.data.items))
-                owner.append(new Option(String(nation.name), nation.id));
-              owner.value = model.data.owners[selected] || '';
-              owner.onchange = protect(() => model.assign([selected], owner.value || null));
+              const owner = createSelect(
+                [
+                  ['', 'Свободная территория'],
+                  ...Object.values(model.data.items).map((nation) => [nation.id, nation.name]),
+                ],
+                protect((value) => model.assign([selected], value || null)),
+                { value: model.data.owners[selected] || '', label: 'Владелец провинции' },
+              );
               pane.append(field('Название', name), field('Владелец', owner));
               if (owner.value)
                 pane.append(

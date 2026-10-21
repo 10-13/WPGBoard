@@ -2,6 +2,7 @@
 (function (root) {
   'use strict';
   const { el, button, createSwitch, field } = root.AtlasUI.dom;
+  const { createSelect } = root.AtlasUI.controls;
   const { createDataRow, createDataGroup, renderDataTree } = root.AtlasUI.dataView;
   const format = (value) =>
     typeof value === 'number'
@@ -114,27 +115,30 @@
               const number = ++sequence,
                 node = el('div', 'metadata-stat-row'),
                 key = document.createElement('input'),
-                type = document.createElement('select'),
+                type = createSelect(
+                  [
+                    ['number', 'Число'],
+                    ['string', 'Текст'],
+                    ['boolean', 'Да / нет'],
+                    ['json', 'Данные JSON'],
+                  ],
+                  () => inputForType(),
+                  {
+                    value:
+                      typeof value === 'number'
+                        ? 'number'
+                        : typeof value === 'string'
+                          ? 'string'
+                          : typeof value === 'boolean'
+                            ? 'boolean'
+                            : 'json',
+                    label: 'Тип стата ' + number,
+                  },
+                ),
                 controls = el('div', 'metadata-stat-controls');
               key.value = stat;
               key.placeholder = 'Ключ стата';
               key.setAttribute('aria-label', 'Ключ стата ' + number);
-              for (const [id, label] of [
-                ['number', 'Число'],
-                ['string', 'Текст'],
-                ['boolean', 'Да / нет'],
-                ['json', 'Данные JSON'],
-              ])
-                type.append(new Option(label, id));
-              type.value =
-                typeof value === 'number'
-                  ? 'number'
-                  : typeof value === 'string'
-                    ? 'string'
-                    : typeof value === 'boolean'
-                      ? 'boolean'
-                      : 'json';
-              type.setAttribute('aria-label', 'Тип стата ' + number);
               let input;
               const inputForType = () => {
                 const previous = input
@@ -181,7 +185,6 @@
               );
               controls.append(type, remove);
               inputForType();
-              type.onchange = inputForType;
               node.append(key, controls);
               rows.append(node);
               values.push(record);
@@ -327,19 +330,18 @@
             const expanded = new Map();
             const draw = () => {
               pane.replaceChildren();
-              const choose = document.createElement('select');
-              choose.setAttribute('aria-label', 'Область статистики');
-              for (const [id, label] of [
-                ['current', 'Текущий тайл'],
-                ['set', setTitle || 'Выбранный набор'],
-                ['all', 'Вся карта'],
-              ])
-                choose.append(new Option(label, id));
-              choose.value = mode;
-              choose.onchange = () => {
-                mode = choose.value;
-                draw();
-              };
+              const choose = createSelect(
+                [
+                  ['current', 'Текущий тайл'],
+                  ['set', setTitle || 'Выбранный набор'],
+                  ['all', 'Вся карта'],
+                ],
+                (value) => {
+                  mode = value;
+                  draw();
+                },
+                { value: mode, label: 'Область статистики' },
+              );
               pane.append(field('Область', choose));
               const tools = el('div', 'tool-row set-tools');
               tools.append(

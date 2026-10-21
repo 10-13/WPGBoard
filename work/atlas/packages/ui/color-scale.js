@@ -24,20 +24,15 @@
         const caption = document.createElement('span');
         caption.className = 'field-label';
         caption.textContent = 'Режим';
-        const select = document.createElement('select');
-        select.setAttribute('aria-label', 'Режим: ' + label);
-        for (const [value, title] of [
-          ['linear', 'Линейный'],
-          ['threshold', 'Пороги'],
-          ['spline', 'Кубический сплайн'],
-        ]) {
-          const option = document.createElement('option');
-          option.value = value;
-          option.textContent = title;
-          select.append(option);
-        }
-        select.value = nextModel.mode;
-        select.onchange = () => onModeChange(select.value);
+        const select = root.AtlasUI.controls.createSelect(
+          [
+            ['linear', 'Линейный'],
+            ['threshold', 'Пороги'],
+            ['spline', 'Кубический сплайн'],
+          ],
+          onModeChange,
+          { value: nextModel.mode, label: 'Режим: ' + label },
+        );
         field.append(caption, select);
         element.append(field);
       }

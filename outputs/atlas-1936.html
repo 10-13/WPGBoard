@@ -2570,7 +2570,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 })(globalThis);
 
 ;
-/* Shared native controls. Switch.checked can also be updated by an external model. */
+/* Shared native controls. Model updates do not dispatch user callbacks. */
 (function (root) {
   'use strict';
   function button(
@@ -2605,8 +2605,68 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     node.checked = checked;
     return node;
   }
-  Object.assign((root.AtlasUI ||= {}), { controls: Object.freeze({ button, createSwitch }) });
-  if (typeof module !== 'undefined' && module.exports) module.exports = { button, createSwitch };
+  function createSelect(
+    items = [],
+    onChange,
+    { value, label, title, className = '', disabled = false, required = false, name, signal } = {},
+  ) {
+    if (onChange != null && typeof onChange !== 'function')
+      throw new TypeError('Обработчик выбора должен быть функцией.');
+    const node = document.createElement('select');
+    node.className = ['atlas-select', className].filter(Boolean).join(' ');
+    node.disabled = disabled;
+    node.required = required;
+    if (label !== undefined) node.setAttribute('aria-label', label);
+    if (title !== undefined) node.title = title;
+    if (name !== undefined) node.name = name;
+    // Replacing items is a model update: keep the value, never invoke onChange.
+    node.setItems = (nextItems, selection = {}) => {
+      if (!Array.isArray(nextItems)) throw new TypeError('Пункты списка должны быть массивом.');
+      const values = new Set(),
+        rows = nextItems.map((item) => {
+          const row = Array.isArray(item) ? { value: item[0], label: item[1] } : item;
+          if (
+            !row ||
+            !['string', 'number'].includes(typeof row.value) ||
+            (typeof row.value === 'number' && !Number.isFinite(row.value)) ||
+            row.label == null
+          )
+            throw new TypeError('Пункт списка содержит value и label.');
+          const value = String(row.value);
+          if (values.has(value)) throw new Error('Повторяющееся значение списка: ' + value);
+          values.add(value);
+          return { ...row, value };
+        });
+      const selected = Object.hasOwn(selection, 'value') ? selection.value : node.value;
+      const options = rows.map((row) => {
+        const option = document.createElement('option');
+        option.value = row.value;
+        option.textContent = String(row.label);
+        option.disabled = !!row.disabled;
+        if (row.title !== undefined) option.title = String(row.title);
+        return option;
+      });
+      node.replaceChildren(...options);
+      node.value =
+        selected === undefined
+          ? rows.find((row) => !row.disabled)?.value || ''
+          : String(selected ?? '');
+      return node;
+    };
+    node.setItems(items, { value });
+    if (onChange)
+      node.addEventListener(
+        'change',
+        (event) => onChange(node.value, event),
+        signal ? { signal } : undefined,
+      );
+    return node;
+  }
+  Object.assign((root.AtlasUI ||= {}), {
+    controls: Object.freeze({ button, createSwitch, createSelect }),
+  });
+  if (typeof module !== 'undefined' && module.exports)
+    module.exports = { button, createSwitch, createSelect };
 })(globalThis);
 
 ;
@@ -2778,20 +2838,15 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         const caption = document.createElement('span');
         caption.className = 'field-label';
         caption.textContent = 'Режим';
-        const select = document.createElement('select');
-        select.setAttribute('aria-label', 'Режим: ' + label);
-        for (const [value, title] of [
-          ['linear', 'Линейный'],
-          ['threshold', 'Пороги'],
-          ['spline', 'Кубический сплайн'],
-        ]) {
-          const option = document.createElement('option');
-          option.value = value;
-          option.textContent = title;
-          select.append(option);
-        }
-        select.value = nextModel.mode;
-        select.onchange = () => onModeChange(select.value);
+        const select = root.AtlasUI.controls.createSelect(
+          [
+            ['linear', 'Линейный'],
+            ['threshold', 'Пороги'],
+            ['spline', 'Кубический сплайн'],
+          ],
+          onModeChange,
+          { value: nextModel.mode, label: 'Режим: ' + label },
+        );
         field.append(caption, select);
         element.append(field);
       }
@@ -4315,14 +4370,21 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     onToggle,
   } = {}) {
     const { el, field } = root.AtlasUI.dom,
-      { button } = root.AtlasUI.controls;
+      { button, createSelect } = root.AtlasUI.controls;
     const { createDataRow, createDataGroup } = root.AtlasUI.dataView;
     const { normalizeOverlayScope } = root.AtlasCore;
     if (!state || !selection || typeof readIds !== 'function' || typeof onChange !== 'function')
       throw new Error('Для области нужны состояние, выделение и обработчики.');
     const group = createDataGroup('Область оверлея', { open, onToggle }),
-      select = el('select');
-    select.setAttribute('aria-label', 'Регион области оверлея');
+      select = createSelect(
+        [],
+        (value) => {
+          if (value === '__world') change(null);
+          else if (value.startsWith('region:') && named.has(value.slice(7)))
+            change([...named.get(value.slice(7)).ids]);
+        },
+        { label: 'Регион области оверлея', signal },
+      );
     const mode = createDataRow('Область', ''),
       count = createDataRow('Провинций в области', ''),
       tools = el('div', 'form-actions');
@@ -4335,11 +4397,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     const all = button('Весь мир', () => change(null)),
       take = button('Взять выделение', () => change([...selection.ids]));
     tools.append(all, take);
-    select.onchange = () => {
-      if (select.value === '__world') change(null);
-      else if (select.value.startsWith('region:') && named.has(select.value.slice(7)))
-        change([...named.get(select.value.slice(7)).ids]);
-    };
     function refresh() {
       try {
         current = normalizeOverlayScope(readIds(), state.regionIndex);
@@ -4354,16 +4411,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           ])
           .sort(([, a], [, b]) => a.name.localeCompare(b.name, 'ru')),
       );
-      select.replaceChildren(
-        new Option('Весь мир', '__world'),
-        new Option('Текущая область', '__custom'),
-      );
-      for (const [id, r] of named) {
-        const option = new Option(r.name + ' · ' + r.ids.length, 'region:' + id);
-        option.disabled = !r.ids.length;
-        select.append(option);
-      }
-      select.options[1].disabled = true;
       const match =
         current === null || !current.length
           ? null
@@ -4371,7 +4418,18 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
               ([, r]) =>
                 r.ids.length === current.length && r.ids.every((id, i) => id === current[i]),
             );
-      select.value = current === null ? '__world' : match ? 'region:' + match[0] : '__custom';
+      select.setItems(
+        [
+          ['__world', 'Весь мир'],
+          { value: '__custom', label: 'Текущая область', disabled: true },
+          ...[...named].map(([id, r]) => ({
+            value: 'region:' + id,
+            label: r.name + ' · ' + r.ids.length,
+            disabled: !r.ids.length,
+          })),
+        ],
+        { value: current === null ? '__world' : match ? 'region:' + match[0] : '__custom' },
+      );
       mode.querySelector('.data-value').textContent =
         current === null ? 'Весь мир' : match ? match[1].name : 'Выбранные провинции';
       count.querySelector('.data-value').textContent = String(
@@ -4709,7 +4767,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   const { EventBus } = root.AtlasCore;
   const { ExtensionHost } =
     typeof module !== 'undefined' && module.exports ? require('./extensions.js') : root.AtlasUI;
-  const { button, createSwitch } = root.AtlasUI.controls;
+  const { button, createSwitch, createSelect } = root.AtlasUI.controls;
   const el = (tag, className = '', text = '') => {
     const node = document.createElement(tag);
     node.className = className;
@@ -5242,7 +5300,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     Interface,
     ExtensionHost,
     getUI,
-    dom: { el, button, createSwitch, field },
+    dom: { el, button, createSwitch, createSelect, field },
   });
 })(globalThis);
 
@@ -5930,6 +5988,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     { el, button, field } = root.AtlasUI.dom;
   const { NationsModel, EMPTY_NATIONS: EMPTY, validNationColor: validColor } = root.AtlasExtensions;
   const { createDataRow } = root.AtlasUI.dataView;
+  const { createSelect } = root.AtlasUI.controls;
   class NationPainter {
     constructor(ctx, model) {
       this.state = ctx.state;
@@ -6204,12 +6263,15 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                 (n) => n.id !== id && !enemySet.has(n.id),
               );
               if (available.length) {
-                const select = document.createElement('select');
-                select.setAttribute('aria-label', 'Новый противник');
-                select.append(new Option('Выберите нацию', ''));
-                for (const other of available) select.append(new Option(other.name, other.id));
                 if (!available.some((n) => n.id === candidate)) candidate = '';
-                select.value = candidate;
+                const select = createSelect(
+                  [['', 'Выберите нацию'], ...available.map((other) => [other.id, other.name])],
+                  (value) => {
+                    candidate = value;
+                    declare.disabled = !value;
+                  },
+                  { value: candidate, label: 'Новый противник' },
+                );
                 const declare = button(
                   'Объявить войну',
                   protect(() => {
@@ -6220,10 +6282,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                   { className: 'danger wide' },
                 );
                 declare.disabled = !select.value;
-                select.onchange = () => {
-                  candidate = select.value;
-                  declare.disabled = !candidate;
-                };
                 pane.append(field('Добавить', select), declare);
               } else
                 pane.append(
@@ -6376,13 +6434,14 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
               name.placeholder = 'Без названия';
               name.setAttribute('aria-label', 'Название провинции');
               name.onchange = protect(() => model.setProvince(selected, { name: name.value }));
-              const owner = document.createElement('select');
-              owner.setAttribute('aria-label', 'Владелец провинции');
-              owner.append(new Option('Свободная территория', ''));
-              for (const nation of Object.values(model.data.items))
-                owner.append(new Option(String(nation.name), nation.id));
-              owner.value = model.data.owners[selected] || '';
-              owner.onchange = protect(() => model.assign([selected], owner.value || null));
+              const owner = createSelect(
+                [
+                  ['', 'Свободная территория'],
+                  ...Object.values(model.data.items).map((nation) => [nation.id, nation.name]),
+                ],
+                protect((value) => model.assign([selected], value || null)),
+                { value: model.data.owners[selected] || '', label: 'Владелец провинции' },
+              );
               pane.append(field('Название', name), field('Владелец', owner));
               if (owner.value)
                 pane.append(
@@ -7811,6 +7870,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 (function (root) {
   'use strict';
   const { el, button, createSwitch, field } = root.AtlasUI.dom;
+  const { createSelect } = root.AtlasUI.controls;
   const { createDataRow, createDataGroup, renderDataTree } = root.AtlasUI.dataView;
   const format = (value) =>
     typeof value === 'number'
@@ -7923,27 +7983,30 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
               const number = ++sequence,
                 node = el('div', 'metadata-stat-row'),
                 key = document.createElement('input'),
-                type = document.createElement('select'),
+                type = createSelect(
+                  [
+                    ['number', 'Число'],
+                    ['string', 'Текст'],
+                    ['boolean', 'Да / нет'],
+                    ['json', 'Данные JSON'],
+                  ],
+                  () => inputForType(),
+                  {
+                    value:
+                      typeof value === 'number'
+                        ? 'number'
+                        : typeof value === 'string'
+                          ? 'string'
+                          : typeof value === 'boolean'
+                            ? 'boolean'
+                            : 'json',
+                    label: 'Тип стата ' + number,
+                  },
+                ),
                 controls = el('div', 'metadata-stat-controls');
               key.value = stat;
               key.placeholder = 'Ключ стата';
               key.setAttribute('aria-label', 'Ключ стата ' + number);
-              for (const [id, label] of [
-                ['number', 'Число'],
-                ['string', 'Текст'],
-                ['boolean', 'Да / нет'],
-                ['json', 'Данные JSON'],
-              ])
-                type.append(new Option(label, id));
-              type.value =
-                typeof value === 'number'
-                  ? 'number'
-                  : typeof value === 'string'
-                    ? 'string'
-                    : typeof value === 'boolean'
-                      ? 'boolean'
-                      : 'json';
-              type.setAttribute('aria-label', 'Тип стата ' + number);
               let input;
               const inputForType = () => {
                 const previous = input
@@ -7990,7 +8053,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
               );
               controls.append(type, remove);
               inputForType();
-              type.onchange = inputForType;
               node.append(key, controls);
               rows.append(node);
               values.push(record);
@@ -8136,19 +8198,18 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             const expanded = new Map();
             const draw = () => {
               pane.replaceChildren();
-              const choose = document.createElement('select');
-              choose.setAttribute('aria-label', 'Область статистики');
-              for (const [id, label] of [
-                ['current', 'Текущий тайл'],
-                ['set', setTitle || 'Выбранный набор'],
-                ['all', 'Вся карта'],
-              ])
-                choose.append(new Option(label, id));
-              choose.value = mode;
-              choose.onchange = () => {
-                mode = choose.value;
-                draw();
-              };
+              const choose = createSelect(
+                [
+                  ['current', 'Текущий тайл'],
+                  ['set', setTitle || 'Выбранный набор'],
+                  ['all', 'Вся карта'],
+                ],
+                (value) => {
+                  mode = value;
+                  draw();
+                },
+                { value: mode, label: 'Область статистики' },
+              );
               pane.append(field('Область', choose));
               const tools = el('div', 'tool-row set-tools');
               tools.append(
@@ -9583,6 +9644,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   'use strict';
   const { el, button, field } = root.AtlasUI.dom,
     { createDataRow, createDataGroup } = root.AtlasUI.dataView;
+  const { createSelect } = root.AtlasUI.controls;
   const format = (n) => n.toLocaleString('ru-RU', { maximumSignificantDigits: 8 });
   class ResourceCatalogUI {
     constructor(ctx, catalog) {
@@ -9852,7 +9914,14 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             name = document.createElement('input'),
             category = document.createElement('input'),
             unit = document.createElement('input'),
-            kind = document.createElement('select'),
+            kind = createSelect(
+              [
+                ['raw', 'Природный ресурс'],
+                ['product', 'Продукт переработки'],
+              ],
+              undefined,
+              { value: original?.kind || 'product', label: 'Тип ресурса' },
+            ),
             description = document.createElement('textarea');
           const color = document.createElement('input'),
             colorHex = document.createElement('input'),
@@ -9867,12 +9936,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             node.maxLength = limit;
             node.setAttribute('aria-label', label);
           }
-          kind.append(
-            new Option('Природный ресурс', 'raw'),
-            new Option('Продукт переработки', 'product'),
-          );
-          kind.value = original?.kind || 'product';
-          kind.setAttribute('aria-label', 'Тип ресурса');
           description.value = original?.description || '';
           description.maxLength = 4000;
           description.rows = 4;
@@ -9964,20 +10027,27 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             const add = (initial = {}) => {
               const n = ++sequence,
                 row = el('div', 'resource-input-row'),
-                resource = document.createElement('select'),
+                resource = createSelect(
+                  [
+                    ['', 'Выберите ресурс'],
+                    ...Object.values(this.catalog.data.resources).map((good) => [
+                      good.id,
+                      good.name,
+                    ]),
+                  ],
+                  () => showUnit(),
+                  {
+                    value: initial.resourceId || '',
+                    required: true,
+                    label: label + ': ресурс ' + n,
+                  },
+                ),
                 amount = document.createElement('input'),
                 controls = el('div', 'resource-input-controls'),
                 unit = el('span', 'muted');
-              resource.append(new Option('Выберите ресурс', ''));
-              for (const good of Object.values(this.catalog.data.resources))
-                resource.append(new Option(good.name, good.id));
-              resource.value = initial.resourceId || '';
-              resource.required = true;
-              resource.setAttribute('aria-label', label + ': ресурс ' + n);
               const showUnit = () => {
                 unit.textContent = this.catalog.data.resources[resource.value]?.unit || '';
               };
-              resource.onchange = showUnit;
               showUnit();
               amount.type = 'number';
               amount.min = '0';
@@ -10056,10 +10126,19 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         render: (pane, scope) => {
           const expanded = new Map();
           this.navigation(pane);
-          const resource = document.createElement('select'),
+          const resource = createSelect(
+              [],
+              (value) => {
+                this.target = value;
+                draw();
+              },
+              {
+                label: 'Ресурс дерева',
+                signal: scope.signal,
+              },
+            ),
             amount = document.createElement('input'),
             body = el('div', 'atlas-data-scope');
-          resource.setAttribute('aria-label', 'Ресурс дерева');
           amount.type = 'number';
           amount.min = '0';
           amount.step = 'any';
@@ -10074,11 +10153,13 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           );
           const draw = () => {
             const data = this.catalog.data;
-            resource.replaceChildren();
-            for (const good of Object.values(data.resources))
-              resource.append(new Option(good.name, good.id));
             if (!data.resources[this.target]) this.target = Object.keys(data.resources)[0];
-            resource.value = this.target || '';
+            resource.setItems(
+              Object.values(data.resources).map((good) => [good.id, good.name]),
+              {
+                value: this.target || '',
+              },
+            );
             body.replaceChildren();
             let plan;
             try {
@@ -10134,16 +10215,21 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                 variants.length > 1 ||
                 (!node.recipeId && variants.length)
               ) {
-                const choice = document.createElement('select');
-                choice.setAttribute('aria-label', 'Чертёж для ' + good.name);
-                if (good.kind === 'raw') choice.append(new Option('Природный ресурс', ''));
-                else if (!node.recipeId) choice.append(new Option('Выберите чертёж', ''));
-                for (const recipe of variants) choice.append(new Option(recipe.name, recipe.id));
-                choice.value = node.recipeId || '';
-                choice.onchange = () => {
-                  this.choices[good.id] = choice.value || null;
-                  draw();
-                };
+                const choice = createSelect(
+                  [
+                    ...(good.kind === 'raw'
+                      ? [['', 'Природный ресурс']]
+                      : !node.recipeId
+                        ? [['', 'Выберите чертёж']]
+                        : []),
+                    ...variants.map((recipe) => [recipe.id, recipe.name]),
+                  ],
+                  (value) => {
+                    this.choices[good.id] = value || null;
+                    draw();
+                  },
+                  { value: node.recipeId || '', label: 'Чертёж для ' + good.name },
+                );
                 group.body.append(field('Источник', choice));
               }
               if (node.status !== 'recipe') {
@@ -10189,10 +10275,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
               if (path !== 'chain') costs(node, group.body, key + ':cost', false);
             };
             render(plan, body, 'chain');
-          };
-          resource.onchange = () => {
-            this.target = resource.value;
-            draw();
           };
           amount.oninput = () => {
             this.amount = Number(amount.value);
@@ -11056,7 +11138,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     open() {
       const { ctx } = this,
         { el, field } = root.AtlasUI.dom,
-        { createSwitch, button } = root.AtlasUI.controls,
+        { createSwitch, button, createSelect } = root.AtlasUI.controls,
         { createDataRow, createDataGroup } = root.AtlasUI.dataView;
       this.selectedId = ctx.ui.viewport.selectedId;
       return ctx.window({
@@ -11087,31 +11169,33 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                 'Штриховка отмечает провинции с ресурсными точками. Цвет — ресурс, белый — общий бонус. Несколько цветов чередуются.',
               ),
             );
-            const resource = document.createElement('select');
-            resource.setAttribute('aria-label', 'Ресурс бонусных точек');
-            resource.append(
-              new Option('Все ресурсные точки', ''),
-              new Option('Только общие бонусы', '*'),
-            );
-            for (const item of this.sources.resources)
-              resource.append(new Option(item.name + ' + общие', item.key));
+            const resourceItems = [
+              ['', 'Все ресурсные точки'],
+              ['*', 'Только общие бонусы'],
+              ...this.sources.resources.map((item) => [item.key, item.name + ' + общие']),
+            ];
             if (
               this.options.resource &&
               this.options.resource !== '*' &&
               !this.sources.resources.some((item) => item.key === this.options.resource)
             )
-              resource.append(
-                new Option(this.options.resource + ' · нет точек', this.options.resource),
-              );
-            resource.value = this.options.resource || '';
-            resource.onchange = () => this.setOptions({ resource: resource.value });
-            const type = document.createElement('select');
-            type.setAttribute('aria-label', 'Тип бонуса точек');
-            type.append(new Option('Все типы бонусов', ''));
-            for (const [id, spec] of Object.entries(bonuses))
-              type.append(new Option(spec.label, id));
-            type.value = this.options.type || '';
-            type.onchange = () => this.setOptions({ type: type.value });
+              resourceItems.push([this.options.resource, this.options.resource + ' · нет точек']);
+            const resource = createSelect(
+              resourceItems,
+              (resource) => this.setOptions({ resource }),
+              {
+                value: this.options.resource || '',
+                label: 'Ресурс бонусных точек',
+              },
+            );
+            const type = createSelect(
+              [
+                ['', 'Все типы бонусов'],
+                ...Object.entries(bonuses).map(([id, spec]) => [id, spec.label]),
+              ],
+              (type) => this.setOptions({ type }),
+              { value: this.options.type || '', label: 'Тип бонуса точек' },
+            );
             pane.append(
               field('Ресурс', resource),
               field('Бонус', type),
@@ -11240,6 +11324,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     RESOURCE_BONUSES: bonuses,
   } = root.AtlasExtensions;
   const { drawResourceMarkers } = root.AtlasExtensions;
+  const { createSelect } = root.AtlasUI.controls;
   const { createDataRow, createDataGroup } = root.AtlasUI.dataView;
   const format = (n) => n.toLocaleString('ru-RU', { maximumFractionDigits: 4 });
   const definition = {
@@ -11331,7 +11416,14 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
               title = document.createElement('input'),
               description = document.createElement('textarea'),
               resource = document.createElement('input'),
-              activity = document.createElement('select'),
+              activity = createSelect(
+                [...(point ? [['*', 'Все виды']] : []), ...Object.entries(activities)],
+                undefined,
+                {
+                  value: initial?.activity || (point ? '*' : 'extraction'),
+                  label: 'Вид производства',
+                },
+              ),
               unit = document.createElement('input');
             title.value =
               initial?.title || (point ? 'Новая ресурсная точка' : 'Новое производство');
@@ -11352,11 +11444,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             for (const good of Object.values(catalog.data.resources))
               examples.append(new Option(good.name));
             resource.setAttribute('list', examples.id);
-            if (point) activity.append(new Option('Все виды', '*'));
-            for (const [id, label] of Object.entries(activities))
-              activity.append(new Option(label, id));
-            activity.value = initial?.activity || (point ? '*' : 'extraction');
-            activity.setAttribute('aria-label', 'Вид производства');
             unit.value = initial?.unit === '*' ? '' : initial?.unit || (point ? '' : 'ед./ход');
             unit.placeholder = point ? 'Пусто — любые единицы' : 'ед./ход';
             unit.maxLength = 40;
@@ -11456,12 +11543,12 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
               const rows = el('div');
               const addBuff = (buff = { type: 'province-percent', value: 50 }) => {
                 const row = el('div', 'resource-buff-row'),
-                  type = document.createElement('select'),
+                  type = createSelect(
+                    Object.entries(bonuses).map(([id, spec]) => [id, spec.label]),
+                    () => updateFilters(),
+                    { value: buff.type, label: 'Тип баффа' },
+                  ),
                   value = document.createElement('input');
-                for (const [id, spec] of Object.entries(bonuses))
-                  type.append(new Option(spec.label, id));
-                type.value = buff.type;
-                type.setAttribute('aria-label', 'Тип баффа');
                 value.type = 'number';
                 value.min = 0;
                 value.step = 'any';
@@ -11485,7 +11572,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                 const updateFilters = () => {
                   filters.hidden = !bonuses[type.value].efficiency;
                 };
-                type.onchange = updateFilters;
                 updateFilters();
                 const item = { type, value, inputResource, inputUnit },
                   controls = el('div', 'metadata-stat-controls');
@@ -12505,14 +12591,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   };
   let editorSerial = 0;
 
-  function selectControl(entries, value, onChange, label) {
-    const select = document.createElement('select');
-    for (const [id, title] of entries) select.append(new Option(title, id));
-    select.value = value;
-    select.setAttribute('aria-label', label);
-    select.onchange = () => onChange(select.value);
-    return select;
-  }
+  const { createSelect } =
+    typeof module !== 'undefined' && module.exports
+      ? require('../packages/ui/controls.js')
+      : root.AtlasUI.controls;
   function nameOf(state, id) {
     return '#' + id + (state.meta.nations?.names?.[id] ? ' · ' + state.meta.nations.names[id] : '');
   }
@@ -12644,16 +12726,15 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             if (Array.isArray(spec) || spec === 'text')
               form.append(field(labels[key], makeInput(original, labels[key], spec !== 'text')));
             else {
-              const input = selectControl(
+              const input = createSelect(
                 [
                   ['', 'Выберите значение'],
                   ...Object.entries(types[spec]).map(([id, type]) => [id, type.label]),
                 ],
-                original || '',
                 () => {
                   toggle.checked = true;
                 },
-                labels[key],
+                { value: original || '', label: labels[key] },
               );
               inputs.push(input);
               form.append(field(labels[key], input));
@@ -12895,26 +12976,23 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
               pane.append(
                 field(
                   'Показатель',
-                  selectControl(
-                    metricNames,
-                    this.options.metric || 'annual',
-                    (metric) => this.setOptions({ metric }),
-                    'Показатель: ' + spec.title,
-                  ),
+                  createSelect(metricNames, (metric) => this.setOptions({ metric }), {
+                    value: this.options.metric || 'annual',
+                    label: 'Показатель: ' + spec.title,
+                  }),
                 ),
               );
               if (this.theme === 'pressure')
                 pane.append(
                   field(
                     'Приведение',
-                    selectControl(
+                    createSelect(
                       [
                         ['sea', 'У уровня моря'],
                         ['surface', 'У поверхности'],
                       ],
-                      this.options.reference || 'sea',
                       (reference) => this.setOptions({ reference }),
-                      'Приведение давления',
+                      { value: this.options.reference || 'sea', label: 'Приведение давления' },
                     ),
                   ),
                 );

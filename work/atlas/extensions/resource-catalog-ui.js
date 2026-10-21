@@ -3,6 +3,7 @@
   'use strict';
   const { el, button, field } = root.AtlasUI.dom,
     { createDataRow, createDataGroup } = root.AtlasUI.dataView;
+  const { createSelect } = root.AtlasUI.controls;
   const format = (n) => n.toLocaleString('ru-RU', { maximumSignificantDigits: 8 });
   class ResourceCatalogUI {
     constructor(ctx, catalog) {
@@ -272,7 +273,14 @@
             name = document.createElement('input'),
             category = document.createElement('input'),
             unit = document.createElement('input'),
-            kind = document.createElement('select'),
+            kind = createSelect(
+              [
+                ['raw', 'Природный ресурс'],
+                ['product', 'Продукт переработки'],
+              ],
+              undefined,
+              { value: original?.kind || 'product', label: 'Тип ресурса' },
+            ),
             description = document.createElement('textarea');
           const color = document.createElement('input'),
             colorHex = document.createElement('input'),
@@ -287,12 +295,6 @@
             node.maxLength = limit;
             node.setAttribute('aria-label', label);
           }
-          kind.append(
-            new Option('Природный ресурс', 'raw'),
-            new Option('Продукт переработки', 'product'),
-          );
-          kind.value = original?.kind || 'product';
-          kind.setAttribute('aria-label', 'Тип ресурса');
           description.value = original?.description || '';
           description.maxLength = 4000;
           description.rows = 4;
@@ -384,20 +386,27 @@
             const add = (initial = {}) => {
               const n = ++sequence,
                 row = el('div', 'resource-input-row'),
-                resource = document.createElement('select'),
+                resource = createSelect(
+                  [
+                    ['', 'Выберите ресурс'],
+                    ...Object.values(this.catalog.data.resources).map((good) => [
+                      good.id,
+                      good.name,
+                    ]),
+                  ],
+                  () => showUnit(),
+                  {
+                    value: initial.resourceId || '',
+                    required: true,
+                    label: label + ': ресурс ' + n,
+                  },
+                ),
                 amount = document.createElement('input'),
                 controls = el('div', 'resource-input-controls'),
                 unit = el('span', 'muted');
-              resource.append(new Option('Выберите ресурс', ''));
-              for (const good of Object.values(this.catalog.data.resources))
-                resource.append(new Option(good.name, good.id));
-              resource.value = initial.resourceId || '';
-              resource.required = true;
-              resource.setAttribute('aria-label', label + ': ресурс ' + n);
               const showUnit = () => {
                 unit.textContent = this.catalog.data.resources[resource.value]?.unit || '';
               };
-              resource.onchange = showUnit;
               showUnit();
               amount.type = 'number';
               amount.min = '0';
@@ -476,10 +485,19 @@
         render: (pane, scope) => {
           const expanded = new Map();
           this.navigation(pane);
-          const resource = document.createElement('select'),
+          const resource = createSelect(
+              [],
+              (value) => {
+                this.target = value;
+                draw();
+              },
+              {
+                label: 'Ресурс дерева',
+                signal: scope.signal,
+              },
+            ),
             amount = document.createElement('input'),
             body = el('div', 'atlas-data-scope');
-          resource.setAttribute('aria-label', 'Ресурс дерева');
           amount.type = 'number';
           amount.min = '0';
           amount.step = 'any';
@@ -494,11 +512,13 @@
           );
           const draw = () => {
             const data = this.catalog.data;
-            resource.replaceChildren();
-            for (const good of Object.values(data.resources))
-              resource.append(new Option(good.name, good.id));
             if (!data.resources[this.target]) this.target = Object.keys(data.resources)[0];
-            resource.value = this.target || '';
+            resource.setItems(
+              Object.values(data.resources).map((good) => [good.id, good.name]),
+              {
+                value: this.target || '',
+              },
+            );
             body.replaceChildren();
             let plan;
             try {
@@ -554,16 +574,21 @@
                 variants.length > 1 ||
                 (!node.recipeId && variants.length)
               ) {
-                const choice = document.createElement('select');
-                choice.setAttribute('aria-label', 'Чертёж для ' + good.name);
-                if (good.kind === 'raw') choice.append(new Option('Природный ресурс', ''));
-                else if (!node.recipeId) choice.append(new Option('Выберите чертёж', ''));
-                for (const recipe of variants) choice.append(new Option(recipe.name, recipe.id));
-                choice.value = node.recipeId || '';
-                choice.onchange = () => {
-                  this.choices[good.id] = choice.value || null;
-                  draw();
-                };
+                const choice = createSelect(
+                  [
+                    ...(good.kind === 'raw'
+                      ? [['', 'Природный ресурс']]
+                      : !node.recipeId
+                        ? [['', 'Выберите чертёж']]
+                        : []),
+                    ...variants.map((recipe) => [recipe.id, recipe.name]),
+                  ],
+                  (value) => {
+                    this.choices[good.id] = value || null;
+                    draw();
+                  },
+                  { value: node.recipeId || '', label: 'Чертёж для ' + good.name },
+                );
                 group.body.append(field('Источник', choice));
               }
               if (node.status !== 'recipe') {
@@ -609,10 +634,6 @@
               if (path !== 'chain') costs(node, group.body, key + ':cost', false);
             };
             render(plan, body, 'chain');
-          };
-          resource.onchange = () => {
-            this.target = resource.value;
-            draw();
           };
           amount.oninput = () => {
             this.amount = Number(amount.value);

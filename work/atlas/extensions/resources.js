@@ -10,6 +10,7 @@
     RESOURCE_BONUSES: bonuses,
   } = root.AtlasExtensions;
   const { drawResourceMarkers } = root.AtlasExtensions;
+  const { createSelect } = root.AtlasUI.controls;
   const { createDataRow, createDataGroup } = root.AtlasUI.dataView;
   const format = (n) => n.toLocaleString('ru-RU', { maximumFractionDigits: 4 });
   const definition = {
@@ -101,7 +102,14 @@
               title = document.createElement('input'),
               description = document.createElement('textarea'),
               resource = document.createElement('input'),
-              activity = document.createElement('select'),
+              activity = createSelect(
+                [...(point ? [['*', 'Все виды']] : []), ...Object.entries(activities)],
+                undefined,
+                {
+                  value: initial?.activity || (point ? '*' : 'extraction'),
+                  label: 'Вид производства',
+                },
+              ),
               unit = document.createElement('input');
             title.value =
               initial?.title || (point ? 'Новая ресурсная точка' : 'Новое производство');
@@ -122,11 +130,6 @@
             for (const good of Object.values(catalog.data.resources))
               examples.append(new Option(good.name));
             resource.setAttribute('list', examples.id);
-            if (point) activity.append(new Option('Все виды', '*'));
-            for (const [id, label] of Object.entries(activities))
-              activity.append(new Option(label, id));
-            activity.value = initial?.activity || (point ? '*' : 'extraction');
-            activity.setAttribute('aria-label', 'Вид производства');
             unit.value = initial?.unit === '*' ? '' : initial?.unit || (point ? '' : 'ед./ход');
             unit.placeholder = point ? 'Пусто — любые единицы' : 'ед./ход';
             unit.maxLength = 40;
@@ -226,12 +229,12 @@
               const rows = el('div');
               const addBuff = (buff = { type: 'province-percent', value: 50 }) => {
                 const row = el('div', 'resource-buff-row'),
-                  type = document.createElement('select'),
+                  type = createSelect(
+                    Object.entries(bonuses).map(([id, spec]) => [id, spec.label]),
+                    () => updateFilters(),
+                    { value: buff.type, label: 'Тип баффа' },
+                  ),
                   value = document.createElement('input');
-                for (const [id, spec] of Object.entries(bonuses))
-                  type.append(new Option(spec.label, id));
-                type.value = buff.type;
-                type.setAttribute('aria-label', 'Тип баффа');
                 value.type = 'number';
                 value.min = 0;
                 value.step = 'any';
@@ -255,7 +258,6 @@
                 const updateFilters = () => {
                   filters.hidden = !bonuses[type.value].efficiency;
                 };
-                type.onchange = updateFilters;
                 updateFilters();
                 const item = { type, value, inputResource, inputUnit },
                   controls = el('div', 'metadata-stat-controls');

@@ -2,8 +2,9 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { ColorScale } = require('../packages/ui/color-scale-model.js');
+require('../packages/ui/controls.js');
 const { createColorScale } = require('../packages/ui/color-scale.js');
-class Node {
+class Node extends EventTarget {
   children = [];
   attributes = new Map();
   style = {};
@@ -94,7 +95,7 @@ test('one view delegates mode selection and can be updated with the same points 
   const select = view.children[0].children[1];
   assert.equal(select.value, 'linear');
   select.value = 'threshold';
-  select.onchange();
+  select.dispatchEvent(new Event('change'));
   assert.deepEqual(selected, ['threshold']);
   assert.equal(view.children[0].children[1].value, 'threshold');
   assert.equal(

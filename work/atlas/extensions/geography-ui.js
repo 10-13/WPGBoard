@@ -79,14 +79,10 @@
   };
   let editorSerial = 0;
 
-  function selectControl(entries, value, onChange, label) {
-    const select = document.createElement('select');
-    for (const [id, title] of entries) select.append(new Option(title, id));
-    select.value = value;
-    select.setAttribute('aria-label', label);
-    select.onchange = () => onChange(select.value);
-    return select;
-  }
+  const { createSelect } =
+    typeof module !== 'undefined' && module.exports
+      ? require('../packages/ui/controls.js')
+      : root.AtlasUI.controls;
   function nameOf(state, id) {
     return '#' + id + (state.meta.nations?.names?.[id] ? ' · ' + state.meta.nations.names[id] : '');
   }
@@ -218,16 +214,15 @@
             if (Array.isArray(spec) || spec === 'text')
               form.append(field(labels[key], makeInput(original, labels[key], spec !== 'text')));
             else {
-              const input = selectControl(
+              const input = createSelect(
                 [
                   ['', 'Выберите значение'],
                   ...Object.entries(types[spec]).map(([id, type]) => [id, type.label]),
                 ],
-                original || '',
                 () => {
                   toggle.checked = true;
                 },
-                labels[key],
+                { value: original || '', label: labels[key] },
               );
               inputs.push(input);
               form.append(field(labels[key], input));
@@ -469,26 +464,23 @@
               pane.append(
                 field(
                   'Показатель',
-                  selectControl(
-                    metricNames,
-                    this.options.metric || 'annual',
-                    (metric) => this.setOptions({ metric }),
-                    'Показатель: ' + spec.title,
-                  ),
+                  createSelect(metricNames, (metric) => this.setOptions({ metric }), {
+                    value: this.options.metric || 'annual',
+                    label: 'Показатель: ' + spec.title,
+                  }),
                 ),
               );
               if (this.theme === 'pressure')
                 pane.append(
                   field(
                     'Приведение',
-                    selectControl(
+                    createSelect(
                       [
                         ['sea', 'У уровня моря'],
                         ['surface', 'У поверхности'],
                       ],
-                      this.options.reference || 'sea',
                       (reference) => this.setOptions({ reference }),
-                      'Приведение давления',
+                      { value: this.options.reference || 'sea', label: 'Приведение давления' },
                     ),
                   ),
                 );

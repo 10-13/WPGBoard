@@ -128,7 +128,7 @@
     open() {
       const { ctx } = this,
         { el, field } = root.AtlasUI.dom,
-        { createSwitch, button } = root.AtlasUI.controls,
+        { createSwitch, button, createSelect } = root.AtlasUI.controls,
         { createDataRow, createDataGroup } = root.AtlasUI.dataView;
       this.selectedId = ctx.ui.viewport.selectedId;
       return ctx.window({
@@ -159,31 +159,33 @@
                 'Штриховка отмечает провинции с ресурсными точками. Цвет — ресурс, белый — общий бонус. Несколько цветов чередуются.',
               ),
             );
-            const resource = document.createElement('select');
-            resource.setAttribute('aria-label', 'Ресурс бонусных точек');
-            resource.append(
-              new Option('Все ресурсные точки', ''),
-              new Option('Только общие бонусы', '*'),
-            );
-            for (const item of this.sources.resources)
-              resource.append(new Option(item.name + ' + общие', item.key));
+            const resourceItems = [
+              ['', 'Все ресурсные точки'],
+              ['*', 'Только общие бонусы'],
+              ...this.sources.resources.map((item) => [item.key, item.name + ' + общие']),
+            ];
             if (
               this.options.resource &&
               this.options.resource !== '*' &&
               !this.sources.resources.some((item) => item.key === this.options.resource)
             )
-              resource.append(
-                new Option(this.options.resource + ' · нет точек', this.options.resource),
-              );
-            resource.value = this.options.resource || '';
-            resource.onchange = () => this.setOptions({ resource: resource.value });
-            const type = document.createElement('select');
-            type.setAttribute('aria-label', 'Тип бонуса точек');
-            type.append(new Option('Все типы бонусов', ''));
-            for (const [id, spec] of Object.entries(bonuses))
-              type.append(new Option(spec.label, id));
-            type.value = this.options.type || '';
-            type.onchange = () => this.setOptions({ type: type.value });
+              resourceItems.push([this.options.resource, this.options.resource + ' · нет точек']);
+            const resource = createSelect(
+              resourceItems,
+              (resource) => this.setOptions({ resource }),
+              {
+                value: this.options.resource || '',
+                label: 'Ресурс бонусных точек',
+              },
+            );
+            const type = createSelect(
+              [
+                ['', 'Все типы бонусов'],
+                ...Object.entries(bonuses).map(([id, spec]) => [id, spec.label]),
+              ],
+              (type) => this.setOptions({ type }),
+              { value: this.options.type || '', label: 'Тип бонуса точек' },
+            );
             pane.append(
               field('Ресурс', resource),
               field('Бонус', type),

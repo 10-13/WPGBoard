@@ -150,7 +150,7 @@ test('shared controls snapshot selection or provider areas, restore world and re
     selection.emit('change', {});
     assert.deepEqual(value, [3], 'selection changes do not move the clipped area');
     select.value = 'region:regions:__world';
-    select.onchange();
+    select.dispatchEvent(new Event('change'));
     assert.deepEqual(value, [1, 2]);
     assert.match(control.textContent, /ОбластьNorth/);
     named('Весь мир').dispatchEvent(new Event('click'));
