@@ -2346,6 +2346,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     #listeners = new Map();
     #activeId = null;
     #generation = 0;
+    #stroke = null;
     constructor({ onError = (error) => console.error(error) } = {}) {
       super();
       this.onError = onError;
@@ -2369,6 +2370,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         mode = 'passive',
         cursor = 'crosshair',
         enabled = () => true,
+        stroke,
         signal,
       } = {},
     ) {
@@ -2380,11 +2382,14 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         !['passive', 'active'].includes(mode) ||
         typeof label !== 'string' ||
         typeof enabled !== 'function' ||
-        typeof cursor !== 'string'
+        typeof cursor !== 'string' ||
+        (stroke !== undefined &&
+          (!stroke ||
+            ['start', 'move', 'end', 'cancel'].some((key) => typeof stroke[key] !== 'function')))
       )
         throw new Error('Нужны уникальный ID, режим и обработчик клика по региону.');
       let registered = !signal?.aborted;
-      const record = { id, label, mode, cursor, handler, enabled },
+      const record = { id, label, mode, cursor, handler, enabled, stroke },
         owner = this;
       const dispose = () => {
         if (!registered) return;
@@ -2415,6 +2420,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       if (!listener || listener.mode !== 'active' || !listener.enabled())
         throw new Error('Активный обработчик недоступен.');
       if (this.#activeId === id) return;
+      this.cancelStroke();
       const previousId = this.#activeId;
       this.#activeId = id;
       this.#generation++;
@@ -2422,6 +2428,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     }
     clearActive() {
       if (this.#activeId === null) return;
+      this.cancelStroke();
       const previousId = this.#activeId;
       this.#activeId = null;
       this.#generation++;
@@ -2433,6 +2440,74 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         result?.catch?.((error) => this.onError(error));
       } catch (error) {
         this.onError(error);
+      }
+    }
+    get strokeActive() {
+      return this.#stroke !== null;
+    }
+    beginStroke(event) {
+      const record = this.#listeners.get(this.#activeId),
+        generation = this.#generation;
+      if (!record?.stroke || event.originalEvent?.shiftKey) return false;
+      try {
+        if (!record.enabled()) {
+          this.clearActive();
+          return false;
+        }
+        // Observers receive the initial province, but cannot replace the editor for this gesture.
+        this.dispatch(event, { active: false });
+        if (generation !== this.#generation || this.#listeners.get(record.id) !== record)
+          return false;
+        this.#stroke = { record, generation };
+        record.stroke.start(event);
+        return true;
+      } catch (error) {
+        this.cancelStroke();
+        this.onError(error);
+        return false;
+      }
+    }
+    moveStroke(event) {
+      const current = this.#stroke;
+      if (!current) return;
+      try {
+        if (current.generation !== this.#generation || !current.record.enabled()) {
+          this.cancelStroke();
+          return;
+        }
+        current.record.stroke.move(event);
+      } catch (error) {
+        this.cancelStroke();
+        this.onError(error);
+      }
+    }
+    endStroke(event) {
+      const current = this.#stroke;
+      if (!current) return;
+      try {
+        if (current.generation !== this.#generation || !current.record.enabled()) {
+          this.cancelStroke();
+          return;
+        }
+        this.#stroke = null;
+        current.record.stroke.end(event);
+      } catch (error) {
+        this.#stroke = null;
+        try {
+          current.record.stroke.cancel();
+        } catch (_) {}
+        this.onError(error);
+      }
+    }
+    cancelStroke() {
+      const current = this.#stroke;
+      this.#stroke = null;
+      if (current) {
+        try {
+          current.record.stroke.cancel();
+        } catch (error) {
+          this.onError(error);
+        }
       }
     }
     dispatch(event, { active: allowActive = true } = {}) {
@@ -3911,11 +3986,12 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   const { EventBus } = root.AtlasCore;
   class MapViewport extends EventBus {
     #loadGeneration = 0;
-    constructor(host, state, input) {
+    constructor(host, state, input, regionClicks = null) {
       super();
       this.host = host;
       this.state = state;
       this.input = input;
+      this.regionClicks = regionClicks;
       this.scale = 1;
       this.tx = 0;
       this.ty = 0;
@@ -3971,6 +4047,11 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       this.element.addEventListener('pointermove', (e) => this.move(e));
       this.element.addEventListener('pointerup', (e) => this.up(e));
       this.element.addEventListener('pointercancel', () => this.cancel());
+      window.addEventListener('blur', () => this.cancel());
+      window.addEventListener('pagehide', () => this.cancel());
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) this.cancel();
+      });
       this.element.addEventListener('lostpointercapture', (e) => {
         if (this.pointers.has(e.pointerId)) this.cancel();
       });
@@ -4135,8 +4216,16 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       this.pointers.set(e.pointerId, p);
       this.element.setPointerCapture(e.pointerId);
       if (this.pointers.size === 1)
-        this.gesture = { start: p, last: p, moved: false, multi: false };
+        this.gesture = { start: p, last: p, moved: false, multi: false, stroke: false };
+      if (this.pointers.size === 1 && e.button === 0 && !this.panOnly && !e.shiftKey) {
+        if (this.regionClicks?.beginStroke(this.regionEvent(e))) {
+          this.gesture.stroke = true;
+          this.select(this.regionEvent(e).id, { fromClick: true });
+        }
+      }
       if (this.pointers.size === 2) {
+        this.regionClicks?.cancelStroke();
+        this.gesture.stroke = false;
         this.gesture.multi = true;
         const [a, b] = [...this.pointers.values()];
         this.pinch = {
@@ -4147,13 +4236,35 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       }
       this.setHover(null);
     }
+    regionEvent(e) {
+      const p = this.world(this.local(e)),
+        region = this.state.regionIndex.at(p.x, p.y);
+      return {
+        id: region?.id || null,
+        region,
+        province: region,
+        x: p.x,
+        y: p.y,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        originalEvent: e,
+      };
+    }
     move(e) {
       if (!this.ready) return;
       const p = this.local(e),
         world = this.world(p);
       this.input.emit('pointer:move', { ...world, clientX: e.clientX, clientY: e.clientY });
       if (this.pointers.has(e.pointerId)) {
+        if (this.gesture?.stroke && e.pointerType !== 'touch' && e.buttons === 0) {
+          this.cancel();
+          return;
+        }
         this.pointers.set(e.pointerId, p);
+        if (this.gesture?.stroke) {
+          this.regionClicks?.moveStroke(this.regionEvent(e));
+          return;
+        }
         if (this.pointers.size === 2 && this.pinch) {
           const [a, b] = [...this.pointers.values()],
             cx = (a.x + b.x) / 2,
@@ -4191,6 +4302,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     up(e) {
       if (!this.pointers.has(e.pointerId)) return;
       const gesture = this.gesture;
+      if (gesture?.stroke) this.regionClicks?.endStroke(this.regionEvent(e));
       this.pointers.delete(e.pointerId);
       if (this.element.hasPointerCapture(e.pointerId))
         this.element.releasePointerCapture(e.pointerId);
@@ -4198,7 +4310,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         this.element.classList.remove('dragging');
         this.pinch = null;
       }
-      if (!gesture.moved && !gesture.multi && !this.panOnly && e.button === 0) {
+      if (!gesture.stroke && !gesture.moved && !gesture.multi && !this.panOnly && e.button === 0) {
         const p = this.world(this.local(e)),
           region = this.state.regionIndex.at(p.x, p.y);
         this.select(region?.id || null, { fromClick: true });
@@ -4217,6 +4329,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       }
     }
     cancel() {
+      this.regionClicks?.cancelStroke();
       this.pointers.clear();
       this.gesture = null;
       this.pinch = null;
@@ -4314,6 +4427,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     }
   }
   Object.assign((root.AtlasUI ||= {}), { MapViewport });
+  if (typeof module !== 'undefined' && module.exports) module.exports = { MapViewport };
 })(globalThis);
 
 ;
@@ -4922,7 +5036,12 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       const menuRow = el('div', 'shell-menu-row');
       menuRow.append(menubar);
       host.replaceChildren(menuRow, this.workspace, this.footer, this.toast, this.busyOverlay);
-      this.viewport = new root.AtlasUI.MapViewport(this.mapHost, state, this.input);
+      this.viewport = new root.AtlasUI.MapViewport(
+        this.mapHost,
+        state,
+        this.input,
+        this.regionClicks,
+      );
       this.windows = new root.AtlasUI.WindowManager(this.windowHost, {
         regionClicks: this.regionClicks,
       });
@@ -5939,8 +6058,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 (function (root) {
   'use strict';
   const validColor = (color) => /^#[\da-f]{6}$/i.test(color);
-  const { isAtWar } = root.AtlasExtensions;
-  const WAR_BORDER_COLOR = '#ff3b30';
   const darkenColor = (color) =>
     validColor(color)
       ? '#' +
@@ -6039,12 +6156,9 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         ? new Set([...changedIds].flatMap((id) => [...(this.byRegion.get(Number(id)) || [])]))
         : this.groups;
       for (const group of groups) {
-        const owner = nations.owners?.[group.regions[0]],
-          owners = [...new Set(group.regions.map((id) => nations.owners?.[id]).filter(Boolean))];
-        const war = owners.some((a, i) => owners.slice(i + 1).some((b) => isAtWar(nations, a, b)));
-        const color = war
-          ? WAR_BORDER_COLOR
-          : owner && group.regions.every((id) => nations.owners?.[id] === owner)
+        const owner = nations.owners?.[group.regions[0]];
+        const color =
+          owner && group.regions.every((id) => nations.owners?.[id] === owner)
             ? darkenColor(nations.items?.[owner]?.color)
             : null;
         if (color) context.fillStyle = color;
@@ -6059,9 +6173,652 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       }
     }
   }
-  Object.assign((root.AtlasExtensions ||= {}), { NationBorders, darkenColor, WAR_BORDER_COLOR });
+  Object.assign((root.AtlasExtensions ||= {}), { NationBorders, darkenColor });
   if (typeof module !== 'undefined' && module.exports)
-    module.exports = { NationBorders, darkenColor, WAR_BORDER_COLOR };
+    module.exports = { NationBorders, darkenColor };
+})(globalThis);
+
+;
+/* Pixel control is separate from legal ownership and province/resource metadata. */
+(function (root) {
+  'use strict';
+  const SIZE = 64,
+    AREA = SIZE * SIZE,
+    LIMIT = 1000000;
+  const EMPTY = Object.freeze({});
+  function controlChunks(meta) {
+    const data = meta.territorialControl;
+    if (!data) return EMPTY;
+    if (
+      data.version !== 1 ||
+      data.chunkSize !== SIZE ||
+      !data.chunks ||
+      typeof data.chunks !== 'object' ||
+      Array.isArray(data.chunks)
+    )
+      throw new Error('Неизвестный формат карты контроля.');
+    return data.chunks;
+  }
+  function controlChunkPosition(key, index) {
+    if (!/^(0|[1-9]\d*),(0|[1-9]\d*)$/.test(key)) throw new Error('Некорректный блок контроля.');
+    const [cx, cy] = key.split(',').map(Number),
+      x = cx * SIZE,
+      y = cy * SIZE;
+    if (
+      !Number.isSafeInteger(x) ||
+      !Number.isSafeInteger(y) ||
+      x >= index.width ||
+      y >= index.height
+    )
+      throw new Error('Блок контроля выходит за пределы карты.');
+    return { x, y };
+  }
+  function decodeControlChunk(runs = []) {
+    if (!Array.isArray(runs) || runs.length > AREA)
+      throw new Error('Некорректные полосы контроля.');
+    const values = Array(AREA).fill(null);
+    let end = 0;
+    for (const run of runs) {
+      if (!Array.isArray(run) || run.length !== 3) throw new Error('Некорректная полоса контроля.');
+      const [start, length, nation] = run;
+      if (
+        !Number.isInteger(start) ||
+        !Number.isInteger(length) ||
+        start < end ||
+        length < 1 ||
+        start + length > AREA ||
+        typeof nation !== 'string' ||
+        !nation ||
+        nation.length > 150
+      )
+        throw new Error('Некорректная полоса контроля.');
+      values.fill(nation, start, start + length);
+      end = start + length;
+    }
+    return values;
+  }
+  function encodeControlChunk(values) {
+    if (values.length !== AREA) throw new Error('Некорректный размер блока контроля.');
+    const runs = [];
+    for (let p = 0; p < AREA; ) {
+      const value = values[p];
+      if (value == null) {
+        p++;
+        continue;
+      }
+      let end = p + 1;
+      while (end < AREA && values[end] === value) end++;
+      runs.push([p, end - p, value]);
+      p = end;
+    }
+    return runs;
+  }
+  class ControlStroke {
+    constructor(index, chunks, nations, nationId, radius = 4) {
+      if (
+        !Number.isInteger(radius) ||
+        radius < 0 ||
+        radius > 64 ||
+        (nationId !== null && !Object.hasOwn(nations.items || {}, nationId))
+      )
+        throw new Error('Выберите нацию и радиус кисти от 0 до 64 пикселей.');
+      Object.assign(this, { index, sourceChunks: chunks, nations, nationId, radius });
+      this.buffers = new Map();
+      this.masks = new Map();
+      this.pixelCount = 0;
+      this.last = null;
+    }
+    move(x, y) {
+      if (!Number.isFinite(x) || !Number.isFinite(y))
+        throw new Error('Некорректная позиция кисти.');
+      // Captured pointers can leave the canvas; bound the walk and preserve edge clipping.
+      const bound = (n, max) => Math.max(-64, Math.min(max + 63, Math.floor(n)));
+      x = bound(x, this.index.width);
+      y = bound(y, this.index.height);
+      let [xx, yy] = this.last || [x, y];
+      const dx = Math.abs(x - xx),
+        dy = -Math.abs(y - yy),
+        sx = xx < x ? 1 : -1,
+        sy = yy < y ? 1 : -1;
+      let error = dx + dy;
+      const dirty = new Set();
+      while (true) {
+        this.stamp(xx, yy, dirty);
+        if (xx === x && yy === y) break;
+        const twice = 2 * error;
+        if (twice >= dy) {
+          error += dy;
+          xx += sx;
+        }
+        if (twice <= dx) {
+          error += dx;
+          yy += sy;
+        }
+      }
+      this.last = [x, y];
+      return dirty;
+    }
+    stamp(cx, cy, dirty) {
+      const { radius: r, index } = this;
+      for (let y = Math.max(0, cy - r); y <= Math.min(index.height - 1, cy + r); y++)
+        for (let x = Math.max(0, cx - r); x <= Math.min(index.width - 1, cx + r); x++) {
+          if ((x - cx) ** 2 + (y - cy) ** 2 > r * r) continue;
+          const province = index.idAt(x, y);
+          if (!province) continue;
+          const key = Math.floor(x / SIZE) + ',' + Math.floor(y / SIZE),
+            p = (y % SIZE) * SIZE + (x % SIZE);
+          if (!this.buffers.has(key)) {
+            this.buffers.set(key, decodeControlChunk(this.sourceChunks[key]));
+            this.masks.set(key, new Uint8Array(AREA));
+          }
+          const values = this.buffers.get(key),
+            mask = this.masks.get(key);
+          const value = this.nationId === this.nations.owners?.[province] ? null : this.nationId;
+          if (values[p] === value) continue;
+          values[p] = value;
+          if (!mask[p]) {
+            mask[p] = 1;
+            this.pixelCount++;
+          }
+          if (this.pixelCount > LIMIT)
+            throw new Error('Мазок слишком большой. Разделите его на несколько мазков.');
+          dirty.add(key);
+        }
+    }
+    payload() {
+      const chunks = [];
+      for (const [key, mask] of this.masks) {
+        const runs = [];
+        for (let p = 0; p < AREA; ) {
+          if (!mask[p]) {
+            p++;
+            continue;
+          }
+          let end = p + 1;
+          while (end < AREA && mask[end]) end++;
+          runs.push([p, end - p]);
+          p = end;
+        }
+        if (runs.length) chunks.push({ key, runs });
+      }
+      return { nationId: this.nationId, chunks };
+    }
+  }
+  class TerritorialControlModel {
+    constructor(state) {
+      this.state = state;
+    }
+    get chunks() {
+      return controlChunks(this.state.meta);
+    }
+    begin(nationId, radius) {
+      return new ControlStroke(
+        this.state.regionIndex,
+        this.chunks,
+        this.state.meta.nations || EMPTY,
+        nationId,
+        radius,
+      );
+    }
+    commit(stroke) {
+      if (!stroke.pixelCount) return null;
+      if (
+        stroke.index !== this.state.regionIndex ||
+        stroke.sourceChunks !== this.chunks ||
+        stroke.nations !== (this.state.meta.nations || EMPTY)
+      )
+        throw new Error('Карта изменилась во время мазка. Повторите его.');
+      return this.state.dispatch('territorial-control.stroke', stroke.payload(), {
+        source: 'nations:control',
+        label:
+          stroke.nationId === null
+            ? 'Восстановить юридический контроль'
+            : 'Мазок контроля территории',
+      });
+    }
+    registerActions(signal) {
+      this.state.actions.register(
+        'territorial-control.stroke',
+        {
+          label: 'Контроль территории',
+          reduce(draft, payload, { regionIndex: index }) {
+            const { nationId, chunks } = payload;
+            if (
+              (nationId !== null && !Object.hasOwn(draft.meta.nations?.items || {}, nationId)) ||
+              !Array.isArray(chunks) ||
+              chunks.length > Math.ceil(index.width / SIZE) * Math.ceil(index.height / SIZE)
+            )
+              throw new Error('Некорректный мазок контроля.');
+            const old = controlChunks(draft.meta),
+              next = { ...old },
+              seen = new Set();
+            let count = 0;
+            for (const change of chunks) {
+              const { key, runs } = change,
+                origin = controlChunkPosition(key, index);
+              if (seen.has(key) || !Array.isArray(runs) || runs.length > AREA)
+                throw new Error('Некорректный мазок контроля.');
+              seen.add(key);
+              const values = decodeControlChunk(old[key]);
+              let end = 0;
+              for (const run of runs) {
+                if (!Array.isArray(run) || run.length !== 2)
+                  throw new Error('Некорректная полоса кисти.');
+                const [start, length] = run;
+                if (
+                  !Number.isInteger(start) ||
+                  !Number.isInteger(length) ||
+                  start < end ||
+                  length < 1 ||
+                  start + length > AREA
+                )
+                  throw new Error('Некорректная полоса кисти.');
+                count += length;
+                if (count > LIMIT) throw new Error('Мазок слишком большой.');
+                for (let p = start; p < start + length; p++) {
+                  const id = index.idAt(origin.x + (p % SIZE), origin.y + Math.floor(p / SIZE));
+                  if (!id) throw new Error('Кисть может менять только пиксели суши.');
+                  values[p] = nationId === draft.meta.nations?.owners?.[id] ? null : nationId;
+                }
+                end = start + length;
+              }
+              const encoded = encodeControlChunk(values);
+              if (encoded.length) next[key] = encoded;
+              else delete next[key];
+            }
+            if (count)
+              draft.meta.territorialControl = { version: 1, chunkSize: SIZE, chunks: next };
+          },
+        },
+        { signal },
+      );
+    }
+  }
+  function controlChunkPixels(index, key, values, nations) {
+    const origin = controlChunkPosition(key, index),
+      rgba = new Uint8ClampedArray(AREA * 4);
+    for (let p = 0; p < AREA; p++) {
+      const controller = values[p],
+        color = nations.items?.[controller]?.color;
+      if (!controller || !/^#[\da-f]{6}$/i.test(color || '')) continue;
+      const id = index.idAt(origin.x + (p % SIZE), origin.y + Math.floor(p / SIZE));
+      if (!id || nations.owners?.[id] === controller) continue;
+      rgba[p * 4] = parseInt(color.slice(1, 3), 16);
+      rgba[p * 4 + 1] = parseInt(color.slice(3, 5), 16);
+      rgba[p * 4 + 2] = parseInt(color.slice(5, 7), 16);
+      rgba[p * 4 + 3] = 255;
+    }
+    return rgba;
+  }
+  const api = {
+    CONTROL_CHUNK_SIZE: SIZE,
+    controlChunks,
+    controlChunkPosition,
+    decodeControlChunk,
+    encodeControlChunk,
+    controlChunkPixels,
+    ControlStroke,
+    TerritorialControlModel,
+  };
+  Object.assign((root.AtlasExtensions ||= {}), api);
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(globalThis);
+
+;
+/* A scoped pixel brush and a sparse, screen-space control overlay. */
+(function (root) {
+  'use strict';
+  const { equal } = root.AtlasCore;
+  const {
+    CONTROL_CHUNK_SIZE: SIZE,
+    controlChunkPosition,
+    decodeControlChunk,
+    controlChunkPixels,
+    TerritorialControlModel,
+  } = root.AtlasExtensions;
+  const { el, field, button, createSwitch, createSelect, createNumberInput } =
+    root.AtlasUI.components;
+  class TerritorialControlPainter {
+    constructor(ctx, model) {
+      Object.assign(this, {
+        ctx,
+        model,
+        viewport: ctx.ui.viewport,
+        cache: new Map(),
+        stroke: null,
+      });
+      this.overlay = ctx.overlay({
+        id: 'control',
+        title: 'Контроль территорий',
+        order: 12,
+        visible: true,
+        space: 'screen',
+        exportDraw: (context) => this.drawTo(context, false),
+      });
+      this.viewport.on('camera:change', () => this.requestDraw(), { signal: ctx.signal });
+      ctx.state.overlays.on(
+        'change',
+        () => {
+          if (!this.overlay.visible) ctx.ui.regionClicks.cancelStroke();
+          this.requestDraw();
+        },
+        { signal: ctx.signal },
+      );
+      ctx.state.on(
+        'change',
+        ({ before, after }) => {
+          ctx.ui.regionClicks.cancelStroke();
+          if (
+            !equal(before.meta.nations?.owners, after.meta.nations?.owners) ||
+            !equal(before.meta.nations?.items, after.meta.nations?.items)
+          )
+            this.clearCache();
+          this.requestDraw();
+        },
+        { signal: ctx.signal },
+      );
+      ctx.ui.on(
+        'map:ready',
+        () => {
+          ctx.ui.regionClicks.cancelStroke();
+          this.clearCache();
+          this.requestDraw();
+        },
+        { signal: ctx.signal },
+      );
+      ctx.scope.defer(() => {
+        this.disposed = true;
+        cancelAnimationFrame(this.frame);
+        this.clearCache();
+        this.overlay.canvas.width = this.overlay.canvas.height = 1;
+      });
+      this.requestDraw();
+    }
+    invalidate(keys) {
+      for (const key of keys) {
+        const tile = this.cache.get(key);
+        if (tile) tile.canvas.width = tile.canvas.height = 1;
+        this.cache.delete(key);
+      }
+      this.requestDraw();
+    }
+    clearCache() {
+      this.invalidate([...this.cache.keys()]);
+    }
+    setStroke(stroke) {
+      if (this.stroke) this.invalidate(this.stroke.buffers.keys());
+      this.stroke = stroke;
+      this.requestDraw();
+    }
+    moveStroke(event) {
+      if (this.stroke) this.invalidate(this.stroke.move(event.x, event.y));
+    }
+    requestDraw() {
+      if (this.disposed || this.frame) return;
+      this.frame = requestAnimationFrame(() => {
+        this.frame = null;
+        if (!this.disposed) this.draw();
+      });
+    }
+    tile(key, chunks, preview) {
+      const buffer = preview ? this.stroke?.buffers.get(key) : null,
+        runs = chunks[key] || [];
+      const old = this.cache.get(key);
+      if (old && (buffer ? old.buffer === buffer : !old.buffer && equal(old.runs, runs)))
+        return old;
+      const index = this.ctx.state.regionIndex,
+        origin = controlChunkPosition(key, index);
+      const canvas = old?.canvas || document.createElement('canvas');
+      canvas.width = canvas.height = SIZE;
+      const context = canvas.getContext('2d'),
+        image = context.createImageData(SIZE, SIZE);
+      image.data.set(
+        controlChunkPixels(
+          index,
+          key,
+          buffer || decodeControlChunk(runs),
+          this.ctx.state.meta.nations || {},
+        ),
+      );
+      context.putImageData(image, 0, 0);
+      const tile = { canvas, runs, buffer, ...origin };
+      this.cache.set(key, tile);
+      return tile;
+    }
+    drawTo(context, preview, camera = null) {
+      let chunks;
+      try {
+        chunks = this.model.chunks;
+      } catch (error) {
+        if (this.lastError !== error.message) {
+          this.lastError = error.message;
+          this.ctx.ui.notify(error.message);
+        }
+        return;
+      }
+      const keys = new Set(Object.keys(chunks));
+      if (preview && this.stroke) for (const key of this.stroke.buffers.keys()) keys.add(key);
+      context.imageSmoothingEnabled = false;
+      for (const key of keys) {
+        try {
+          const origin = controlChunkPosition(key, this.ctx.state.regionIndex);
+          if (
+            camera &&
+            (origin.x + SIZE < camera.left ||
+              origin.x > camera.right ||
+              origin.y + SIZE < camera.top ||
+              origin.y > camera.bottom)
+          )
+            continue;
+          const tile = this.tile(key, chunks, preview);
+          if (camera) {
+            // Adjacent tiles share device-pixel edges even at fractional zoom.
+            const round = (value) => Math.round(value * camera.dpr) / camera.dpr;
+            const x = round(camera.tx + tile.x * camera.scale);
+            const y = round(camera.ty + tile.y * camera.scale);
+            const right = round(camera.tx + (tile.x + SIZE) * camera.scale);
+            const bottom = round(camera.ty + (tile.y + SIZE) * camera.scale);
+            context.drawImage(tile.canvas, x, y, right - x, bottom - y);
+          } else context.drawImage(tile.canvas, tile.x, tile.y);
+        } catch (error) {
+          if (this.lastError !== error.message) {
+            this.lastError = error.message;
+            this.ctx.ui.notify(error.message);
+          }
+        }
+      }
+      for (const key of [...this.cache.keys()]) if (!keys.has(key)) this.invalidate([key]);
+    }
+    draw() {
+      const { canvas, context } = this.overlay,
+        view = this.viewport;
+      if (
+        !this.overlay.visible ||
+        !view.ready ||
+        (!Object.keys(this.ctx.state.meta.territorialControl?.chunks || {}).length &&
+          !this.stroke?.pixelCount)
+      ) {
+        canvas.width = canvas.height = 1;
+        return;
+      }
+      const width = view.element.clientWidth,
+        height = view.element.clientHeight;
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+      }
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      context.clearRect(0, 0, width, height);
+      this.drawTo(context, true, {
+        tx: view.tx,
+        ty: view.ty,
+        scale: view.scale,
+        dpr,
+        left: -view.tx / view.scale,
+        top: -view.ty / view.scale,
+        right: (width - view.tx) / view.scale,
+        bottom: (height - view.ty) / view.scale,
+      });
+    }
+  }
+  const definition = {
+    id: 'control',
+    name: 'Контроль территорий',
+    description: 'Кисть фактического контроля без изменения юридических владений и ресурсов.',
+    start(ctx) {
+      const { ui, state } = ctx,
+        parent = ctx.require('nations');
+      const model = new TerritorialControlModel(state);
+      model.registerActions(ctx.signal);
+      const painter = new TerritorialControlPainter(ctx, model);
+      let nationId = null,
+        radius = 4;
+      function open(options = {}) {
+        if (options.nationId) nationId = options.nationId;
+        if (!state.meta.nations?.items?.[nationId])
+          nationId = parent.activeNation || Object.keys(state.meta.nations?.items || {})[0] || '';
+        return ctx.window({
+          id: 'brush',
+          title: 'Контроль территорий',
+          x: 285,
+          y: 36,
+          width: 310,
+          height: 250,
+          render(pane, scope, tab) {
+            const pick = createSelect(
+              [],
+              (value) => {
+                ui.regionClicks.cancelStroke();
+                nationId = value;
+                refresh();
+              },
+              { label: 'Нация контроля' },
+            );
+            const size = createNumberInput({
+              value: radius,
+              min: 0,
+              max: 64,
+              step: 1,
+              label: 'Радиус кисти, пиксели карты',
+              onChange: () => {
+                ui.regionClicks.cancelStroke();
+                if (size.validity.valid && Number.isInteger(size.valueAsNumber))
+                  radius = size.valueAsNumber;
+              },
+            });
+            const hooks = (erase) => ({
+              start(event) {
+                const stroke = model.begin(erase ? null : nationId, size.valueAsNumber);
+                painter.setStroke(stroke);
+                painter.moveStroke(event);
+              },
+              move: (event) => painter.moveStroke(event),
+              end(event) {
+                painter.moveStroke(event);
+                const stroke = painter.stroke;
+                painter.setStroke(null);
+                if (stroke) model.commit(stroke);
+              },
+              cancel: () => painter.setStroke(null),
+            });
+            const paint = tab.onRegionClick(() => {}, {
+              id: ctx.id + ':paint',
+              mode: 'active',
+              label: 'Кисть контроля',
+              enabled: () => !!state.meta.nations?.items?.[nationId] && painter.overlay.visible,
+              stroke: hooks(false),
+            });
+            const erase = tab.onRegionClick(() => {}, {
+              id: ctx.id + ':erase',
+              mode: 'active',
+              label: 'Ластик контроля',
+              enabled: () => painter.overlay.visible,
+              stroke: hooks(true),
+            });
+            const choose = (listener, enabled) => {
+              if (enabled) {
+                painter.overlay.setVisible(true);
+                listener.activate();
+              } else listener.deactivate();
+            };
+            const paintSwitch = createSwitch('Кисть', (on) => choose(paint, on));
+            const eraseSwitch = createSwitch('Вернуть владельцу', (on) => choose(erase, on));
+            const visible = createSwitch('Слой контроля', (on) => {
+              if (!on) {
+                paint.deactivate();
+                erase.deactivate();
+              }
+              painter.overlay.setVisible(on);
+            });
+            const tools = el('div', 'form-actions');
+            tools.append(paintSwitch, eraseSwitch, visible);
+            const info = el('div');
+            pane.append(
+              field('Нация', pick),
+              field('Радиус, пкс', size),
+              tools,
+              el(
+                'p',
+                'muted',
+                '0 — один пиксель. Мазок — одно действие истории. Юридические владения и ресурсы не меняются.',
+              ),
+              el(
+                'p',
+                'muted',
+                'Левой кнопкой или одним пальцем — рисовать. Средней кнопкой или двумя пальцами — двигать карту.',
+              ),
+              button('Нации', parent.openNations),
+              info,
+            );
+            function refresh() {
+              const nations = Object.values(state.meta.nations?.items || {});
+              if (!nations.some((n) => n.id === nationId)) {
+                nationId = nations[0]?.id || '';
+                paint.deactivate();
+              }
+              pick.setItems(
+                nations.length
+                  ? nations.map((n) => [n.id, n.name])
+                  : [['', 'Сначала создайте нацию']],
+                { value: nationId },
+              );
+              paintSwitch.disabled = !nationId;
+              paintSwitch.checked = paint.selected;
+              eraseSwitch.checked = erase.selected;
+              visible.checked = painter.overlay.visible;
+              info.replaceChildren(
+                root.AtlasUI.components.createDataRow(
+                  'Режим',
+                  paint.selected ? 'Кисть' : erase.selected ? 'Возврат владельцу' : 'Просмотр',
+                ),
+              );
+            }
+            ui.regionClicks.on('change', refresh, { signal: scope.signal });
+            state.on('change', refresh, { signal: scope.signal });
+            state.on('map:loaded', refresh, { signal: scope.signal });
+            state.overlays.on('change', refresh, { signal: scope.signal });
+            refresh();
+          },
+        });
+      }
+      ctx.windowMenu({ id: 'brush', label: 'Контроль территорий', handler: () => open() });
+      ctx.menu(ui.mainMenu, {
+        id: 'brush',
+        path: ['Мир', 'Нации'],
+        label: 'Кисть контроля территорий',
+        handler: () => open(),
+      });
+      ui.on('territorial-control:open', open, { signal: ctx.signal });
+      ctx.provide({ model, open });
+    },
+  };
+  Object.assign((root.AtlasExtensions ||= {}), {
+    TerritorialControlPainter,
+    territorialControl: definition,
+  });
 })(globalThis);
 
 ;
@@ -6139,17 +6896,14 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           changed.push(Number(id));
         }
       }
-      this.borders?.redraw(
-        this.borderLayer.context,
-        next,
-        equal(old.wars || {}, next.wars || {}) ? changed : null,
-      );
+      this.borders?.redraw(this.borderLayer.context, next, changed);
     }
   }
   const definition = {
     id: 'nations',
     name: 'Нации и территории',
-    description: 'Нации, территории, войны, информация и раскраска границ.',
+    description: 'Нации, юридические территории, отношения и фактический контроль.',
+    children: [root.AtlasExtensions.territorialControl],
     start(ctx) {
       const { ui, state, signal } = ctx,
         model = new NationsModel(state);
@@ -6382,7 +7136,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                 el(
                   'p',
                   'muted small',
-                  'Война взаимна. Общая граница с противником выделена красным.',
+                  'Война взаимна. Фактический контроль задаётся отдельной кистью.',
                 ),
               );
             };
@@ -6436,7 +7190,14 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                 tool.setAttribute('aria-pressed', String(mode() === key));
                 tools.append(tool);
               }
-              pane.append(tools);
+              pane.append(
+                tools,
+                button('Кисть контроля территорий', () => {
+                  if (ui.extensions.isEnabled('nations:control'))
+                    ui.emit('territorial-control:open', { nationId: activeNation });
+                  else ui.notify('Включите расширение «Контроль территорий».');
+                }),
+              );
               const counts = {};
               for (const id of Object.values(model.data.owners)) counts[id] = (counts[id] || 0) + 1;
               for (const nation of Object.values(model.data.items)) {
@@ -6713,6 +7474,13 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             : ''),
         { signal },
       );
+      ctx.provide({
+        model,
+        openNations,
+        get activeNation() {
+          return activeNation;
+        },
+      });
       openNations();
       openInspector();
     },

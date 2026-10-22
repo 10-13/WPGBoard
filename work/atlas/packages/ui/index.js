@@ -66,7 +66,12 @@
       const menuRow = el('div', 'shell-menu-row');
       menuRow.append(menubar);
       host.replaceChildren(menuRow, this.workspace, this.footer, this.toast, this.busyOverlay);
-      this.viewport = new root.AtlasUI.MapViewport(this.mapHost, state, this.input);
+      this.viewport = new root.AtlasUI.MapViewport(
+        this.mapHost,
+        state,
+        this.input,
+        this.regionClicks,
+      );
       this.windows = new root.AtlasUI.WindowManager(this.windowHost, {
         regionClicks: this.regionClicks,
       });

@@ -27,6 +27,12 @@ Region input uses `ui.regionClicks`: many passive observers and at most one
 active handler. Bind window listeners through `tab.onRegionClick` so closing
 the tab releases them. Do not restore application keyboard shortcuts, the
 click-mode selector, or the removed header; the top contains only the menu.
+Continuous brushes use the same active subscription with optional
+`stroke: {start,move,end,cancel}` hooks. Preview until release; one stroke is
+one game action. Closing/switching the editor, losing focus or adding a second
+touch cancels the preview. Pixel control belongs to `nations:control`, stored
+separately from legal province ownership in `meta.territorialControl` as sparse
+64 px chunks. Do not alter resources or restore red war borders.
 
 Common province selection belongs to `ui.regionSelection`: click selects one,
 Shift-click toggles a province without invoking the active editor. This mouse

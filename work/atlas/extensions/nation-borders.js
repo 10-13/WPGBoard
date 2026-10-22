@@ -2,8 +2,6 @@
 (function (root) {
   'use strict';
   const validColor = (color) => /^#[\da-f]{6}$/i.test(color);
-  const { isAtWar } = root.AtlasExtensions;
-  const WAR_BORDER_COLOR = '#ff3b30';
   const darkenColor = (color) =>
     validColor(color)
       ? '#' +
@@ -102,12 +100,9 @@
         ? new Set([...changedIds].flatMap((id) => [...(this.byRegion.get(Number(id)) || [])]))
         : this.groups;
       for (const group of groups) {
-        const owner = nations.owners?.[group.regions[0]],
-          owners = [...new Set(group.regions.map((id) => nations.owners?.[id]).filter(Boolean))];
-        const war = owners.some((a, i) => owners.slice(i + 1).some((b) => isAtWar(nations, a, b)));
-        const color = war
-          ? WAR_BORDER_COLOR
-          : owner && group.regions.every((id) => nations.owners?.[id] === owner)
+        const owner = nations.owners?.[group.regions[0]];
+        const color =
+          owner && group.regions.every((id) => nations.owners?.[id] === owner)
             ? darkenColor(nations.items?.[owner]?.color)
             : null;
         if (color) context.fillStyle = color;
@@ -122,7 +117,7 @@
       }
     }
   }
-  Object.assign((root.AtlasExtensions ||= {}), { NationBorders, darkenColor, WAR_BORDER_COLOR });
+  Object.assign((root.AtlasExtensions ||= {}), { NationBorders, darkenColor });
   if (typeof module !== 'undefined' && module.exports)
-    module.exports = { NationBorders, darkenColor, WAR_BORDER_COLOR };
+    module.exports = { NationBorders, darkenColor };
 })(globalThis);

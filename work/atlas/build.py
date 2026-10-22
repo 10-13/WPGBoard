@@ -33,6 +33,8 @@ FILES = [
     'extensions/nation-relations.js',
     'extensions/nations-model.js',
     'extensions/nation-borders.js',
+    'extensions/territorial-control-model.js',
+    'extensions/territorial-control.js',
     'extensions/nations.js',
     'extensions/regions-model.js',
     'extensions/region-geometry.js',

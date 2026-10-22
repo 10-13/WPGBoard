@@ -6,6 +6,7 @@
     #listeners = new Map();
     #activeId = null;
     #generation = 0;
+    #stroke = null;
     constructor({ onError = (error) => console.error(error) } = {}) {
       super();
       this.onError = onError;
@@ -29,6 +30,7 @@
         mode = 'passive',
         cursor = 'crosshair',
         enabled = () => true,
+        stroke,
         signal,
       } = {},
     ) {
@@ -40,11 +42,14 @@
         !['passive', 'active'].includes(mode) ||
         typeof label !== 'string' ||
         typeof enabled !== 'function' ||
-        typeof cursor !== 'string'
+        typeof cursor !== 'string' ||
+        (stroke !== undefined &&
+          (!stroke ||
+            ['start', 'move', 'end', 'cancel'].some((key) => typeof stroke[key] !== 'function')))
       )
         throw new Error('Нужны уникальный ID, режим и обработчик клика по региону.');
       let registered = !signal?.aborted;
-      const record = { id, label, mode, cursor, handler, enabled },
+      const record = { id, label, mode, cursor, handler, enabled, stroke },
         owner = this;
       const dispose = () => {
         if (!registered) return;
@@ -75,6 +80,7 @@
       if (!listener || listener.mode !== 'active' || !listener.enabled())
         throw new Error('Активный обработчик недоступен.');
       if (this.#activeId === id) return;
+      this.cancelStroke();
       const previousId = this.#activeId;
       this.#activeId = id;
       this.#generation++;
@@ -82,6 +88,7 @@
     }
     clearActive() {
       if (this.#activeId === null) return;
+      this.cancelStroke();
       const previousId = this.#activeId;
       this.#activeId = null;
       this.#generation++;
@@ -93,6 +100,74 @@
         result?.catch?.((error) => this.onError(error));
       } catch (error) {
         this.onError(error);
+      }
+    }
+    get strokeActive() {
+      return this.#stroke !== null;
+    }
+    beginStroke(event) {
+      const record = this.#listeners.get(this.#activeId),
+        generation = this.#generation;
+      if (!record?.stroke || event.originalEvent?.shiftKey) return false;
+      try {
+        if (!record.enabled()) {
+          this.clearActive();
+          return false;
+        }
+        // Observers receive the initial province, but cannot replace the editor for this gesture.
+        this.dispatch(event, { active: false });
+        if (generation !== this.#generation || this.#listeners.get(record.id) !== record)
+          return false;
+        this.#stroke = { record, generation };
+        record.stroke.start(event);
+        return true;
+      } catch (error) {
+        this.cancelStroke();
+        this.onError(error);
+        return false;
+      }
+    }
+    moveStroke(event) {
+      const current = this.#stroke;
+      if (!current) return;
+      try {
+        if (current.generation !== this.#generation || !current.record.enabled()) {
+          this.cancelStroke();
+          return;
+        }
+        current.record.stroke.move(event);
+      } catch (error) {
+        this.cancelStroke();
+        this.onError(error);
+      }
+    }
+    endStroke(event) {
+      const current = this.#stroke;
+      if (!current) return;
+      try {
+        if (current.generation !== this.#generation || !current.record.enabled()) {
+          this.cancelStroke();
+          return;
+        }
+        this.#stroke = null;
+        current.record.stroke.end(event);
+      } catch (error) {
+        this.#stroke = null;
+        try {
+          current.record.stroke.cancel();
+        } catch (_) {}
+        this.onError(error);
+      }
+    }
+    cancelStroke() {
+      const current = this.#stroke;
+      this.#stroke = null;
+      if (current) {
+        try {
+          current.record.stroke.cancel();
+        } catch (error) {
+          this.onError(error);
+        }
       }
     }
     dispatch(event, { active: allowActive = true } = {}) {

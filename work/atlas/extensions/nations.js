@@ -72,17 +72,14 @@
           changed.push(Number(id));
         }
       }
-      this.borders?.redraw(
-        this.borderLayer.context,
-        next,
-        equal(old.wars || {}, next.wars || {}) ? changed : null,
-      );
+      this.borders?.redraw(this.borderLayer.context, next, changed);
     }
   }
   const definition = {
     id: 'nations',
     name: 'Нации и территории',
-    description: 'Нации, территории, войны, информация и раскраска границ.',
+    description: 'Нации, юридические территории, отношения и фактический контроль.',
+    children: [root.AtlasExtensions.territorialControl],
     start(ctx) {
       const { ui, state, signal } = ctx,
         model = new NationsModel(state);
@@ -315,7 +312,7 @@
                 el(
                   'p',
                   'muted small',
-                  'Война взаимна. Общая граница с противником выделена красным.',
+                  'Война взаимна. Фактический контроль задаётся отдельной кистью.',
                 ),
               );
             };
@@ -369,7 +366,14 @@
                 tool.setAttribute('aria-pressed', String(mode() === key));
                 tools.append(tool);
               }
-              pane.append(tools);
+              pane.append(
+                tools,
+                button('Кисть контроля территорий', () => {
+                  if (ui.extensions.isEnabled('nations:control'))
+                    ui.emit('territorial-control:open', { nationId: activeNation });
+                  else ui.notify('Включите расширение «Контроль территорий».');
+                }),
+              );
               const counts = {};
               for (const id of Object.values(model.data.owners)) counts[id] = (counts[id] || 0) + 1;
               for (const nation of Object.values(model.data.items)) {
@@ -646,6 +650,13 @@
             : ''),
         { signal },
       );
+      ctx.provide({
+        model,
+        openNations,
+        get activeNation() {
+          return activeNation;
+        },
+      });
       openNations();
       openInspector();
     },

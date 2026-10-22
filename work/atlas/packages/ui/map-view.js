@@ -3,11 +3,12 @@
   const { EventBus } = root.AtlasCore;
   class MapViewport extends EventBus {
     #loadGeneration = 0;
-    constructor(host, state, input) {
+    constructor(host, state, input, regionClicks = null) {
       super();
       this.host = host;
       this.state = state;
       this.input = input;
+      this.regionClicks = regionClicks;
       this.scale = 1;
       this.tx = 0;
       this.ty = 0;
@@ -63,6 +64,11 @@
       this.element.addEventListener('pointermove', (e) => this.move(e));
       this.element.addEventListener('pointerup', (e) => this.up(e));
       this.element.addEventListener('pointercancel', () => this.cancel());
+      window.addEventListener('blur', () => this.cancel());
+      window.addEventListener('pagehide', () => this.cancel());
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) this.cancel();
+      });
       this.element.addEventListener('lostpointercapture', (e) => {
         if (this.pointers.has(e.pointerId)) this.cancel();
       });
@@ -227,8 +233,16 @@
       this.pointers.set(e.pointerId, p);
       this.element.setPointerCapture(e.pointerId);
       if (this.pointers.size === 1)
-        this.gesture = { start: p, last: p, moved: false, multi: false };
+        this.gesture = { start: p, last: p, moved: false, multi: false, stroke: false };
+      if (this.pointers.size === 1 && e.button === 0 && !this.panOnly && !e.shiftKey) {
+        if (this.regionClicks?.beginStroke(this.regionEvent(e))) {
+          this.gesture.stroke = true;
+          this.select(this.regionEvent(e).id, { fromClick: true });
+        }
+      }
       if (this.pointers.size === 2) {
+        this.regionClicks?.cancelStroke();
+        this.gesture.stroke = false;
         this.gesture.multi = true;
         const [a, b] = [...this.pointers.values()];
         this.pinch = {
@@ -239,13 +253,35 @@
       }
       this.setHover(null);
     }
+    regionEvent(e) {
+      const p = this.world(this.local(e)),
+        region = this.state.regionIndex.at(p.x, p.y);
+      return {
+        id: region?.id || null,
+        region,
+        province: region,
+        x: p.x,
+        y: p.y,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        originalEvent: e,
+      };
+    }
     move(e) {
       if (!this.ready) return;
       const p = this.local(e),
         world = this.world(p);
       this.input.emit('pointer:move', { ...world, clientX: e.clientX, clientY: e.clientY });
       if (this.pointers.has(e.pointerId)) {
+        if (this.gesture?.stroke && e.pointerType !== 'touch' && e.buttons === 0) {
+          this.cancel();
+          return;
+        }
         this.pointers.set(e.pointerId, p);
+        if (this.gesture?.stroke) {
+          this.regionClicks?.moveStroke(this.regionEvent(e));
+          return;
+        }
         if (this.pointers.size === 2 && this.pinch) {
           const [a, b] = [...this.pointers.values()],
             cx = (a.x + b.x) / 2,
@@ -283,6 +319,7 @@
     up(e) {
       if (!this.pointers.has(e.pointerId)) return;
       const gesture = this.gesture;
+      if (gesture?.stroke) this.regionClicks?.endStroke(this.regionEvent(e));
       this.pointers.delete(e.pointerId);
       if (this.element.hasPointerCapture(e.pointerId))
         this.element.releasePointerCapture(e.pointerId);
@@ -290,7 +327,7 @@
         this.element.classList.remove('dragging');
         this.pinch = null;
       }
-      if (!gesture.moved && !gesture.multi && !this.panOnly && e.button === 0) {
+      if (!gesture.stroke && !gesture.moved && !gesture.multi && !this.panOnly && e.button === 0) {
         const p = this.world(this.local(e)),
           region = this.state.regionIndex.at(p.x, p.y);
         this.select(region?.id || null, { fromClick: true });
@@ -309,6 +346,7 @@
       }
     }
     cancel() {
+      this.regionClicks?.cancelStroke();
       this.pointers.clear();
       this.gesture = null;
       this.pinch = null;
@@ -406,4 +444,5 @@
     }
   }
   Object.assign((root.AtlasUI ||= {}), { MapViewport });
+  if (typeof module !== 'undefined' && module.exports) module.exports = { MapViewport };
 })(globalThis);
