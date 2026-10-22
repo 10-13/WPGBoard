@@ -1,0 +1,52 @@
+name: Publish map releases
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'work/atlas/**'
+      - 'outputs/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Test application and release builders
+        run: |
+          node --test work/atlas/tests/*.test.cjs
+          python3 -B work/atlas/tests/releases_test.py
+          python3 -B work/atlas/tests/pages_test.py
+      - name: Build four releases and the download page
+        run: python3 work/atlas/tools/build-pages.py
+      - name: Upload Pages site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: .local/pages/site
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

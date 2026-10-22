@@ -16,6 +16,20 @@ TerraMirabilis основана на [TerraMirabilisPublic](https://github.com/N
 Это отдельная расстановка: собственная мировая экономика в неё не добавляется.
 Сохранить игру в JSON вместе с историей и метаданными можно через меню «Файл».
 
+## Онлайн через GitHub Pages
+
+Страница выбора карт: [10-13.github.io/WPGBoard](https://10-13.github.io/WPGBoard/).
+На ней можно открыть каждый релиз или скачать его HTML и исходный JSON.
+Изменения игры сохраняются локально в браузере пользователя.
+
+Workflow `.github/workflows/pages.yml` проверяет приложение, собирает четыре
+карты из исходных JSON и публикует их при изменениях в `main`.
+Разовая настройка репозитория: Settings → Pages → Source → GitHub Actions.
+Ручной повторный запуск доступен в Actions → Publish map releases → Run workflow.
+Сборка сайта локально: `python3 work/atlas/tools/build-pages.py`;
+временный сайт находится в `.local/pages/site/`, а `outputs/` содержит только
+четыре автономных карты.
+
 ## Разработка
 
 - `work/atlas/` — исходники, тесты, оригинал карты и документация API.

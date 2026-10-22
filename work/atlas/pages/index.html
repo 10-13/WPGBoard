@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Четыре карты WPGBoard: пустая, географическая, с мировой экономикой и TerraMirabilis.">
+  <title>WPGBoard — карты для ВПИ</title>
+  <style>/*__CSS__*/</style>
+  <style>
+    body { overflow:auto; background:var(--surface) }
+    main { width:min(100%, 800px); margin:auto; padding:calc(2 * var(--atlas-step)) var(--atlas-step) }
+    h1,h2 { margin:0; font-size:inherit; font-weight:600 }
+    header,section,footer { margin:0 0 calc(2 * var(--atlas-step)) }
+    header p,section p { margin:0 0 var(--atlas-step) }
+    a { color:var(--focus); overflow-wrap:anywhere }
+    a:focus-visible { outline:1px solid var(--focus); outline-offset:2px }
+    .pages-button { display:inline-block; min-height:var(--atlas-step); padding:0 6px; color:var(--text); background:var(--raised); box-shadow:inset 0 0 0 1px var(--line); text-decoration:none }
+    .pages-button:hover { background:#34464f }
+    .pages-open { color:var(--accent) }
+    footer p { margin:0 0 var(--atlas-step) }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>WPGBoard — карты для ВПИ</h1>
+      <p class="muted">Каждая карта работает в браузере и доступна одним автономным HTML.</p>
+    </header>
+    <nav aria-label="Релизы карт">
+      <!--__RELEASES__-->
+    </nav>
+    <footer>
+      <p>Игра сохраняется в вашем браузере. Для обмена партиями используйте меню «Файл».</p>
+      <p class="muted">JSON содержит карту, метаданные и историю действий. Его можно открыть в редакторе через «Файл».</p>
+      <a href="https://github.com/10-13/WPGBoard">Исходники и документация на GitHub</a>
+    </footer>
+  </main>
+</body>
+</html>

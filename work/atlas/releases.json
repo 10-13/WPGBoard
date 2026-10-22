@@ -1,6 +1,6 @@
 [
-  {"id": "empty", "file": "atlas-empty.html", "title": "Пустая карта"},
-  {"id": "geography", "file": "atlas-geography.html", "title": "Карта с географией"},
-  {"id": "geography-resources", "file": "atlas-geography-resources.html", "title": "География и мировая экономика"},
-  {"id": "terra-mirabilis", "file": "atlas-terra-mirabilis.html", "title": "TerraMirabilis"}
+  {"id": "empty", "file": "atlas-empty.html", "title": "Пустая карта", "description": "Исходные 4587 провинций, без расставленных объектов. Основа для своей игры."},
+  {"id": "geography", "file": "atlas-geography.html", "title": "Карта с географией", "description": "Названия всех провинций, 162 региона, рельеф, климат и часовые пояса."},
+  {"id": "geography-resources", "file": "atlas-geography-resources.html", "title": "География и мировая экономика", "description": "Географическая основа с базовым выпуском ресурсов, предприятиями и промышленными центрами по всему миру."},
+  {"id": "terra-mirabilis", "file": "atlas-terra-mirabilis.html", "title": "TerraMirabilis", "description": "Названия, регионы и география. Точный каталог восьми ресурсов TerraMirabilis и 69 исходных ресурсных точек."}
 ]
