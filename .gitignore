@@ -2,10 +2,14 @@
 __pycache__/
 *.py[cod]
 
+# Local reports, previews, trial builds, caches and archived working files.
+# Applies at every directory level.
+.local/
+
 # Only application sources are versioned under the scratch directory.
 /work/*
 !/work/atlas/
 
-# Rebuildable distribution archives; HTML, JSON and previews remain versioned.
+# Release archives are local build products, never deliverables.
 /outputs/*.zip
 /outputs/*.tar.gz

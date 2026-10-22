@@ -1,16 +1,25 @@
 # Workspace
 
 The application source is in `work/atlas/`. Read `work/atlas/AGENTS.md` before
-changing it. User-facing deliverables belong in `outputs/`; use `work/` for
-temporary files and isolated test parties.
+changing it. `outputs/` contains exactly the four standalone HTML releases from
+`work/atlas/releases.json`: empty, geography, geography with the world economy,
+and TerraMirabilis (including province names, named regions and geography).
+The four authored JSON parties live in `work/atlas/releases/` under Git; a fresh
+clone must build the HTML from these without any `.local` files. Ordinary UI
+builds preserve their data and autosave keys; conflicting HTML/JSON must be
+reconciled explicitly.
+All temporary reports, screenshots, previews, trial builds, QA parties, caches
+and archives belong in `.local/` directories, ignored at every nesting level.
+`work/atlas/` contains maintained sources only. Do not force-add `.local` files.
 
 The Git repository is rooted in this workspace, not in `work/atlas/`. Keep
 application sources, instructions and user-facing outputs versioned. Scratch
 files, isolated QA parties and generated archives are ignored; do not force-add
 them. The existing source history is preserved on `main`.
 
-The approved UI reference is `outputs/statistics-tree-preview.html`. Its rules
-are recorded in the application instructions and now apply to the entire UI:
+The approved UI reference was `statistics-tree-preview.html` (retained in Git
+history and the local cleanup archive). Its rules are recorded in the
+application instructions and apply to the entire UI:
 one monospace family, one 10 px text size, and a 16 px vertical rhythm. Reuse
 the application tokens and shared data-view primitives in future extensions.
 

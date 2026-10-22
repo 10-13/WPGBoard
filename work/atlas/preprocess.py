@@ -68,7 +68,9 @@ def main():
     (ROOT / 'default-project.json').write_text(json.dumps(project, ensure_ascii=False, separators=(',', ':')))
     (ROOT / 'assets').mkdir(exist_ok=True)
     (ROOT / 'assets' / 'original-map.png').write_bytes(original_bytes)
-    Image.fromarray(styled).resize((1872,1000)).save(ROOT / 'map-preview.png')
+    previews = ROOT.parent.parent / '.local/previews'
+    previews.mkdir(parents=True, exist_ok=True)
+    Image.fromarray(styled).resize((1872,1000)).save(previews / 'map-preview.png')
     print(f'{count} provinces, {original.width}×{original.height}; land coverage {int(mask.sum()):,} pixels')
     assert sum(p['area'] for p in provinces) == int(mask.sum())
     assert set(np.unique(labels)) == set(range(count+1))

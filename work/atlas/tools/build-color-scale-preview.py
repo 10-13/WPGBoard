@@ -1,5 +1,8 @@
 """A standalone preview made from the actual shared UI sources, without game data."""
 from pathlib import Path
+import sys
+sys.dont_write_bytecode = True
+from release_layout import LOCAL, write_changed
 
 ROOT = Path(__file__).resolve().parents[1]
 files = [
@@ -28,7 +31,6 @@ html = f'''<!doctype html><html lang="ru"><meta charset="utf-8">
 <title>АТЛАС — цветовые шкалы</title><style>{styles}</style>
 <nav id="menubar" class="shell-menubar"></nav><main id="workspace"></main>
 <script>{code}</script></html>'''
-target = ROOT.parent.parent / 'outputs/color-scales-preview.html'
-target.write_text(html)
-(ROOT / 'dist/color-scales-preview.html').write_text(html)
-print(f'Built {target.name}: {len(html.encode()):,} bytes')
+target = LOCAL / 'previews/color-scales-preview.html'
+write_changed(target, html)
+print(f'Built {target}: {len(html.encode()):,} bytes')

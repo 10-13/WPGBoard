@@ -1,5 +1,8 @@
 """Build the actual UI foundation in isolation: no game code, map or party data."""
 from pathlib import Path
+import sys
+sys.dont_write_bytecode = True
+from release_layout import LOCAL, write_changed
 ROOT = Path(__file__).resolve().parents[1]
 files = ['packages/ui/controls.js', 'packages/ui/color-scale-model.js',
          'packages/ui/color-scale.js', 'packages/ui/data-view.js',
@@ -18,7 +21,6 @@ html = f'''<!doctype html><html lang="ru"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>АТЛАС — базовые компоненты интерфейса</title><style>{styles}</style>
 <main id="components" class="atlas-data-scope"></main><script>{code}</script></html>'''
-target = ROOT.parent.parent / 'outputs/ui-components-preview.html'
-target.write_text(html)
-(ROOT / 'dist/ui-components-preview.html').write_text(html)
-print(f'Built {target.name}: {len(html.encode()):,} bytes')
+target = LOCAL / 'previews/ui-components-preview.html'
+write_changed(target, html)
+print(f'Built {target}: {len(html.encode()):,} bytes')

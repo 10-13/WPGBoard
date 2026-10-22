@@ -2,9 +2,9 @@
 """Generate editable province geography from cached public reference data.
 
 Requires Python 3.9+, numpy, scipy and h5py. Example from the workspace root:
-  PYTHONPATH=work/geography-environment/deps python3 work/atlas/tools/generate-environment.py
+  PYTHONPATH=.local/work/geography-environment/deps python3 work/atlas/tools/generate-environment.py
 Use --download to populate missing source files (about 75 MB). Source grids and
-dependencies stay in work/, never in the distributable. This is a broad game
+dependencies stay in .local/, never in the distributable. This is a broad game
 foundation, not a surveyed soil map or a reconstruction of climate in 1936.
 """
 
@@ -28,7 +28,7 @@ from scipy.spatial import cKDTree
 try:
     import h5py
 except ImportError as exc:
-    raise SystemExit("Install h5py in an isolated work/ dependency directory; see this tool's docstring.") from exc
+    raise SystemExit("Install h5py in an isolated .local/ dependency directory; see this tool's docstring.") from exc
 
 
 SOURCE = Path(__file__).resolve().parents[1]
@@ -426,10 +426,10 @@ def generate(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--data-dir", type=Path, default=WORKSPACE / "work/geography-environment/data")
+    parser.add_argument("--data-dir", type=Path, default=WORKSPACE / ".local/work/geography-environment/data")
     parser.add_argument("--geography", type=Path, default=SOURCE / "assets/geography-1936.json")
     parser.add_argument("--map", type=Path, default=SOURCE / "default-project.json")
-    parser.add_argument("--cities", type=Path, default=WORKSPACE / "work/geography-1936/data/cities.zip")
+    parser.add_argument("--cities", type=Path, default=WORKSPACE / ".local/work/geography-1936/data/cities.zip")
     parser.add_argument("--output", type=Path, default=SOURCE / "assets/environment-geography.json")
-    parser.add_argument("--download", action="store_true", help="Download missing public source grids into work/")
+    parser.add_argument("--download", action="store_true", help="Download missing public source grids into .local/")
     generate(parser.parse_args())
