@@ -2343,11 +2343,89 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       );
     return node;
   }
-  Object.assign((root.AtlasUI ||= {}), {
-    controls: Object.freeze({ button, createSwitch, createSelect }),
-  });
-  if (typeof module !== 'undefined' && module.exports)
-    module.exports = { button, createSwitch, createSelect };
+  function valueInput(tag, type, options) {
+    const { value = '', label, className = '', onInput, onChange, signal } = options;
+    for (const callback of [onInput, onChange])
+      if (callback != null && typeof callback !== 'function')
+        throw new TypeError('Обработчик поля ввода должен быть функцией.');
+    const node = document.createElement(tag);
+    if (type) node.type = type;
+    node.className = [tag === 'textarea' ? 'atlas-textarea' : 'atlas-input', className]
+      .filter(Boolean)
+      .join(' ');
+    for (const key of [
+      'id',
+      'name',
+      'title',
+      'placeholder',
+      'required',
+      'disabled',
+      'readOnly',
+      'minLength',
+      'maxLength',
+      'pattern',
+      'min',
+      'max',
+      'step',
+      'rows',
+      'cols',
+      'autocomplete',
+      'inputMode',
+      'spellcheck',
+      'wrap',
+    ])
+      if (options[key] !== undefined) node[key] = options[key];
+    if (label !== undefined) node.setAttribute('aria-label', label);
+    if (options.list !== undefined) node.setAttribute('list', options.list);
+    node.value = value == null ? '' : String(value);
+    for (const [event, callback] of [
+      ['input', onInput],
+      ['change', onChange],
+    ])
+      if (callback)
+        node.addEventListener(
+          event,
+          (event) => callback(node.value, event),
+          signal ? { signal } : undefined,
+        );
+    return node;
+  }
+  function createTextInput({ type = 'text', ...options } = {}) {
+    if (!['text', 'search', 'email', 'url', 'tel', 'password'].includes(type))
+      throw new TypeError(
+        'Текстовое поле поддерживает text, search, email, url, tel или password.',
+      );
+    return valueInput('input', type, options);
+  }
+  function createNumberInput(options = {}) {
+    return valueInput('input', 'number', options);
+  }
+  function createTextArea(options = {}) {
+    return valueInput('textarea', null, options);
+  }
+  function el(tag, className = '', text = '') {
+    const node = document.createElement(tag);
+    node.className = className;
+    node.textContent = text;
+    return node;
+  }
+  function field(label, input) {
+    const node = el('label', 'field');
+    node.append(el('span', 'field-label', label), input);
+    return node;
+  }
+  const api = {
+    button,
+    createSwitch,
+    createSelect,
+    createTextInput,
+    createNumberInput,
+    createTextArea,
+    el,
+    field,
+  };
+  Object.assign((root.AtlasUI ||= {}), { controls: Object.freeze(api) });
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);
 
 ;
@@ -2715,9 +2793,23 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     parent.append(tree);
     return tree;
   }
-  Object.assign((root.AtlasUI ||= {}), {
-    dataView: { createDataRow, createDataGroup, renderDataTree },
-  });
+  const api = { createDataRow, createDataGroup, renderDataTree };
+  Object.assign((root.AtlasUI ||= {}), { dataView: api });
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(globalThis);
+
+;
+/* Public UI foundation: no game state, map, extension host or startup side effects. */
+(function (root) {
+  'use strict';
+  const commonJS = typeof module !== 'undefined' && module.exports;
+  const controls = commonJS ? require('./controls.js') : root.AtlasUI.controls;
+  const dataView = commonJS ? require('./data-view.js') : root.AtlasUI.dataView;
+  const { ColorScale } = commonJS ? require('./color-scale-model.js') : root.AtlasUI;
+  const { createColorScale } = commonJS ? require('./color-scale.js') : root.AtlasUI;
+  const api = Object.freeze({ ...controls, ...dataView, ColorScale, createColorScale });
+  Object.assign((root.AtlasUI ||= {}), { components: api });
+  if (commonJS) module.exports = api;
 })(globalThis);
 
 ;
@@ -3155,15 +3247,17 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 /* Isolated UI preview: uses the production model, controls, menus and windows. */
 (function () {
   'use strict';
-  const { ColorScale, WindowManager, TreeMenu, controls, dataView } = AtlasUI;
-  const { button, createColorScale } = controls;
-  const { createDataRow, createDataGroup } = dataView;
-  const el = (tag, className = '', text = '') => {
-    const node = document.createElement(tag);
-    node.className = className;
-    node.textContent = text;
-    return node;
-  };
+  const { WindowManager, TreeMenu } = AtlasUI;
+  const {
+    ColorScale,
+    button,
+    createColorScale,
+    createDataRow,
+    createDataGroup,
+    createNumberInput,
+    el,
+    field,
+  } = AtlasUI.components;
   const windows = new WindowManager(document.getElementById('workspace'));
   let points = [
     { value: 0, color: '#264caa' },
@@ -3188,11 +3282,15 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         const comparison = el('div');
         const error = el('p', 'form-error');
         error.setAttribute('role', 'status');
-        const probe = document.createElement('input');
-        probe.type = 'number';
-        probe.step = 'any';
-        probe.value = sample;
-        probe.setAttribute('aria-label', 'Значение для проверки цвета');
+        const probe = createNumberInput({
+          step: 'any',
+          value: sample,
+          label: 'Значение для проверки цвета',
+          onInput: (_, event) => {
+            sample = event.currentTarget.valueAsNumber;
+            update();
+          },
+        });
         const raw = createDataGroup('Сырые точки', { open: false });
         const rawText = el('pre', 'scale-preview-json');
         raw.body.append(rawText);
@@ -3230,15 +3328,15 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           editor.body.replaceChildren();
           for (const [i, point] of points.entries()) {
             const row = el('div', 'scale-preview-point');
-            const value = document.createElement('input');
-            value.type = 'number';
-            value.step = 'any';
-            value.value = point.value;
-            value.setAttribute('aria-label', 'Значение точки ' + (i + 1));
-            value.oninput = () => {
-              point.value = value.valueAsNumber;
-              update();
-            };
+            const value = createNumberInput({
+              step: 'any',
+              value: point.value,
+              label: 'Значение точки ' + (i + 1),
+              onInput: (_, event) => {
+                point.value = event.currentTarget.valueAsNumber;
+                update();
+              },
+            });
             const color = document.createElement('input');
             color.type = 'color';
             color.value = point.color;
@@ -3270,12 +3368,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             }),
           );
         };
-        probe.oninput = () => {
-          sample = probe.valueAsNumber;
-          update();
-        };
-        const field = el('label', 'field');
-        field.append(el('span', 'field-label', 'Проверить значение'), probe);
         content.append(
           el(
             'p',
@@ -3284,7 +3376,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           ),
           editor.element,
           error,
-          field,
+          field('Проверить значение', probe),
           comparison,
           raw.element,
           el(

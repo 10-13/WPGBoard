@@ -67,7 +67,7 @@
       this.selectedId = regionId;
       const { ctx } = this,
         { el, field } = root.AtlasUI.dom,
-        { button, createSwitch } = root.AtlasUI.controls,
+        { button, createSwitch, createTextInput, createNumberInput } = root.AtlasUI.components,
         { createDataRow, createDataGroup } = root.AtlasUI.dataView;
       return ctx.window({
         id: 'time',
@@ -94,8 +94,8 @@
             current = createDataGroup('Выбранная провинция', { open: true }),
             currentData = el('div'),
             editor = createDataGroup('Изменить часовой пояс', { open: false }),
-            offset = el('input'),
-            zoneName = el('input'),
+            offset = createNumberInput({ min: -840, max: 840, step: 1 }),
+            zoneName = createTextInput({ maxLength: 100 }),
             editorTarget = el('p', 'muted'),
             pins = createDataGroup('Местное время', { open: true }),
             clockRows = el('div'),
@@ -128,12 +128,6 @@
                 throw new Error('Укажите дату и время UTC между 1800 и 2200 годами.');
               this.setUTC(utc.value + 'Z');
             });
-          offset.type = 'number';
-          offset.min = '-840';
-          offset.max = '840';
-          offset.step = '1';
-          zoneName.type = 'text';
-          zoneName.maxLength = 100;
           const stop = () => {
             if (timer !== null) clearInterval(timer);
             timer = null;

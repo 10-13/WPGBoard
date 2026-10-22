@@ -2,6 +2,7 @@
   'use strict';
   const { el, button, field } = root.AtlasUI.dom,
     { download, chooseFile, safeName, createProject } = root.AtlasPlatform;
+  const { createTextInput, createNumberInput } = root.AtlasUI.components;
   function createFilesExtension(services) {
     return {
       id: 'files',
@@ -66,10 +67,11 @@
             width: 300,
             height: 180,
             render(pane, scope, tab) {
-              const input = document.createElement('input');
-              input.value = title();
-              input.maxLength = 80;
-              input.setAttribute('aria-label', 'Название партии');
+              const input = createTextInput({
+                value: title(),
+                maxLength: 80,
+                label: 'Название партии',
+              });
               pane.append(
                 field('Название партии', input),
                 button(
@@ -111,12 +113,12 @@
               color.type = 'color';
               color.value = '#808080';
               color.setAttribute('aria-label', 'Цвет суши');
-              const tolerance = document.createElement('input');
-              tolerance.type = 'number';
-              tolerance.min = 0;
-              tolerance.max = 80;
-              tolerance.value = 12;
-              tolerance.setAttribute('aria-label', 'Допуск цвета');
+              const tolerance = createNumberInput({
+                min: 0,
+                max: 80,
+                value: 12,
+                label: 'Допуск цвета',
+              });
               const submit = button('Разобрать карту', () => {}, { className: 'accent wide' });
               submit.type = 'submit';
               form.append(

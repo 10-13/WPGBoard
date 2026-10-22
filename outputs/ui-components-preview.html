@@ -1,0 +1,909 @@
+<!doctype html><html lang="ru"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>АТЛАС — базовые компоненты интерфейса</title><style>:root {
+  color-scheme:dark;
+  --surface:#1b252c; --raised:#26323a; --line:#415058; --text:#d3dcdf;
+  --muted:#82959d; --accent:#b9a270; --focus:#93b4c2;
+  --atlas-font:Menlo,Consolas,"Liberation Mono",monospace;
+  --atlas-font-size:10px; --atlas-step:16px;
+  font-family:var(--atlas-font); font-size:var(--atlas-font-size);
+  line-height:var(--atlas-step); color:var(--text); background:#243c48;
+  font-synthesis:none;
+}
+:where(*,::before,::after) { box-sizing:border-box; font-family:inherit; font-size:inherit; font-style:normal; line-height:inherit }
+body { margin:0; overflow:hidden }
+button,input,select,textarea { font:inherit; color:inherit }
+button {
+  --control-line:#4b5960; cursor:pointer; background:#28353d; border:0;
+  box-shadow:inset 0 0 0 1px var(--control-line); border-radius:1px;
+  min-height:var(--atlas-step); max-width:100%; padding:0 6px;
+  line-height:var(--atlas-step); text-align:center; white-space:normal; overflow-wrap:anywhere;
+}
+button:hover { background:#34464f; --control-line:#6b818c }
+button:disabled { opacity:.35; cursor:default }
+button:focus-visible,[role=tab]:focus-visible,[role=separator]:focus-visible,summary:focus-visible { outline:1px solid var(--focus); outline-offset:0 }
+button.accent { color:#dfd0ac; --control-line:#81704e; background:#3d3c32 }
+button.accent:hover { background:#514a37 }
+button.danger { background:#572e2b; --control-line:#9c514a; color:#f0b4aa }
+button.danger:hover { background:#743b35; --control-line:#c9796f }
+.active { --control-line:#a5bbc4!important; background:#394c57!important; color:#edf4f6!important }
+.atlas-switch[aria-checked=true] { --control-line:#71cfd7; background:#28505c; color:#d7f7fa }
+.atlas-switch[aria-checked=true]:hover { background:#32606a }
+[hidden] { display:none!important }
+input,select,textarea { background:#111c23; border:1px solid #42515a; border-radius:1px; min-width:0; width:100% }
+input,select { height:var(--atlas-step); padding:0 4px; line-height:calc(var(--atlas-step) - 2px) }
+input:focus,select:focus,textarea:focus { outline:1px solid #7c9aa8; outline-offset:0 }
+input[type=color] { padding:1px; width:68px; cursor:pointer }
+input[type=checkbox] { width:12px; height:12px; accent-color:#aebcb9; margin:2px 0; flex-shrink:0 }
+input[type=file] { height:calc(2 * var(--atlas-step)); padding:7px 4px }
+input::file-selector-button { font:inherit; border:0; padding:0 4px; background:#28353d; color:inherit }
+textarea { resize:vertical; height:calc(4 * var(--atlas-step)); min-height:calc(4 * var(--atlas-step)); padding:7px 5px; line-height:var(--atlas-step) }
+p { margin:0; padding:0; overflow-wrap:anywhere }
+strong { font-weight:600 }
+small,.small,.mono { font-size:inherit; font-family:inherit }
+.muted { color:var(--muted) }
+.wide { display:block; width:100%; margin-top:var(--atlas-step) }
+.field { display:flex; align-items:flex-start; gap:8px; min-height:var(--atlas-step); margin:0 }
+.field-label { color:#9badb4; flex:0 1 auto; min-width:72px; max-width:45%; overflow-wrap:anywhere }
+.field>input,.field>select,.field>textarea { flex:1; min-width:0 }
+.form-actions,.tool-row { display:flex; flex-wrap:wrap; align-items:flex-start; column-gap:4px; row-gap:0; margin:0 }
+.tool-row { margin-bottom:var(--atlas-step) }
+.tool-row>button { flex:1 1 auto }
+.inline-form { display:flex; align-items:flex-start; gap:4px; margin-top:var(--atlas-step) }
+.inline-form input { flex:1; min-width:0 }
+.inline-form button { flex-shrink:0 }
+.icon-button { width:var(--atlas-step); min-width:var(--atlas-step); padding:0; flex-shrink:0 }
+
+/* Application chrome uses the same type and 16 px rhythm as the data views. */
+.atlas-shell { display:grid; grid-template-rows:auto minmax(0,1fr) auto; height:100dvh; overflow:hidden }
+.shell-menu-row { display:flex; align-items:flex-start; min-width:0; background:#18242c; box-shadow:inset 0 -1px #4b5a60; z-index:100 }
+.shell-menubar { display:flex; flex-wrap:wrap; align-items:stretch; flex:1; min-width:0; padding:0 6px }
+.menubar-item { background:none; box-shadow:none; padding:0 8px; color:#bac9cf }
+.menubar-item:hover { background:#304550 }
+.shell-footer { display:flex; align-items:flex-start; min-height:var(--atlas-step); padding:0 11px; color:#8ea4b0; background:#15242d; box-shadow:inset 0 1px #4b5d67; z-index:100 }
+.status-text { flex:1; min-width:0; overflow-wrap:anywhere }
+.coordinates { margin-left:auto; white-space:nowrap; padding-left:8px; flex-shrink:0 }
+
+/* Pixel map and its controls. */
+.workspace { position:relative; min-height:0; min-width:0; overflow:hidden; isolation:isolate }
+.map-host,.map-viewport { position:absolute; inset:0 }
+.map-viewport { overflow:hidden; isolation:isolate; touch-action:none; outline:none; background:#304f5e; cursor:var(--region-click-cursor,crosshair) }
+.map-viewport.dragging { cursor:grabbing }
+.map-stage { position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform }
+.map-stage>canvas,.map-overlay-world>canvas { position:absolute; top:0; left:0; image-rendering:crisp-edges; image-rendering:pixelated }
+.map-overlay-plane { position:absolute; inset:0; pointer-events:none }
+.map-overlay-world { position:absolute; top:0; left:0; transform-origin:0 0 }
+.map-overlay-screen { position:absolute; inset:0 }
+.map-base { z-index:0; display:block }
+.map-layer,.map-highlight { pointer-events:none }
+.map-numbers { position:absolute; inset:0; pointer-events:none }
+.window-host { position:absolute; inset:0; z-index:50; pointer-events:none }
+.map-navigation { position:absolute; right:var(--atlas-step); bottom:var(--atlas-step); display:flex; align-items:center; z-index:40; box-shadow:inset 0 0 0 1px #5b707a,0 2px 8px #0c1b2350; background:#192b34ed }
+.map-navigation button { width:calc(2 * var(--atlas-step)); padding:0; background:none; box-shadow:inset 1px 0 #445b68 }
+.map-navigation button:first-child { box-shadow:none }
+.zoom-label { min-width:45px; text-align:center }
+.map-tooltip { position:absolute; z-index:40; pointer-events:none; padding:8px; max-width:min(300px,calc(100% - 10px)); background:#18272fee; box-shadow:inset 0 0 0 1px #647d89,0 3px 15px #071b2360; overflow-wrap:anywhere }
+.map-tooltip strong { display:block; color:#d2e1e7 }
+.map-tooltip div { color:#9aafb7 }
+.busy-overlay { position:absolute; inset:0; background:#182d37ed; z-index:10000; display:flex; align-items:center; justify-content:center }
+.toast { position:fixed; bottom:calc(2 * var(--atlas-step)); left:50%; transform:translateX(-50%); background:#142731f5; color:#c6d8df; box-shadow:inset 0 0 0 1px #728a93,0 6px 30px #0a1c2666; padding:8px 16px; max-width:min(580px,90vw); overflow-wrap:anywhere; z-index:200000 }
+
+/* Resizable windows: titles can wrap without hiding their names. */
+.overlay-window { position:absolute; display:flex; flex-direction:column; pointer-events:auto; background:#1b252cf5; border:1px solid #4b5b64; box-shadow:0 6px 22px #06151d70; min-width:160px; min-height:90px; color:#c5d0d5 }
+.overlay-window.focused { border-color:#80929c }
+.window-chrome { min-height:var(--atlas-step); display:flex; flex-shrink:0; align-items:flex-start; background:linear-gradient(#36434b,#253139); box-shadow:inset 0 -1px #0f1d25; user-select:none; touch-action:none }
+.window-grip { display:flex; align-items:center; justify-content:center; min-width:var(--atlas-step); color:#748e9a; cursor:move }
+.window-tabs { display:flex; flex-wrap:wrap; align-items:stretch; flex:1; min-width:0; gap:0 1px; cursor:move }
+.window-tab { display:flex; align-items:flex-start; gap:4px; min-width:0; max-width:min(220px,100%); margin:0; border:0; padding:0 4px 0 0; cursor:move; color:#a3b5bf; user-select:none; touch-action:none }
+.window-tab.active { background:#1e2a32!important; box-shadow:inset 1px 0 #52636c,inset -1px 0 #52636c; color:#dce6eb!important }
+.tab-label { display:block; min-width:0; padding-inline-start:calc(var(--atlas-step) / 2); white-space:normal; overflow-wrap:anywhere; pointer-events:none }
+.tab-close,.window-close { background:none; box-shadow:none; color:#8aa1ac; padding:0; width:var(--atlas-step); min-width:var(--atlas-step); flex-shrink:0 }
+.tab-close:hover,.window-close:hover { background:#71413d; color:#f2cebd }
+.window-close { box-shadow:inset 1px 0 #455962 }
+.window-body { position:relative; min-height:0; flex:1; display:flex; flex-direction:column }
+.window-pane { padding:8px; overflow:auto; min-height:0; flex:1; scrollbar-width:thin; scrollbar-color:#51616b #1b252c }
+.window-resize { position:absolute; right:0; bottom:0; width:13px; height:13px; cursor:nwse-resize; touch-action:none; z-index:1; background:repeating-linear-gradient(135deg,transparent,transparent 3px,#768b9455 3px,#768b9455 4px); clip-path:polygon(100% 0,100% 100%,0 100%) }
+.dragging-window { opacity:.85 }
+.drop-target { outline:2px solid #a7bcbf; outline-offset:2px }
+.drop-target::after { content:'Объединить вкладки'; position:absolute; inset:var(--atlas-step) 0 0; display:flex; align-items:center; justify-content:center; color:#d9e9ee; background:#51738677; pointer-events:none }
+.tab-drag-ghost { position:fixed; z-index:150000; pointer-events:none; box-shadow:inset 0 0 0 1px #95acb4; background:#263c47; padding:8px; color:#dfebee; max-width:300px; overflow-wrap:anywhere }
+
+/* Public menus share the same dimensions, including submenus and context menus. */
+.tree-menu-root { position:fixed; inset:0; z-index:200001; pointer-events:none }
+.tree-menu-panel { position:fixed; pointer-events:auto; min-width:200px; max-width:min(360px,calc(100vw - 8px)); max-height:calc(100dvh - 8px); overflow:auto; background:#1e2b34; padding:8px; box-shadow:inset 0 0 0 1px #657b86,0 6px 24px #08192580 }
+.tree-menu-item { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; width:100%; background:none; box-shadow:none; padding:0 8px; text-align:left; color:#cfdbdf }
+.tree-menu-item>span { min-width:0; overflow-wrap:anywhere }
+.tree-menu-item small { color:#8da3af; white-space:nowrap; flex-shrink:0 }
+.tree-menu-item:hover { background:#3d5360 }
+.tree-menu-item:disabled:hover { background:none }
+.extension-row { display:flex; align-items:flex-start; gap:8px; padding:0; margin:0 0 var(--atlas-step); cursor:pointer }
+.extension-row>span { flex:1; min-width:0; overflow-wrap:anywhere }
+.extension-row strong,.extension-row small { display:block }
+.extension-row small { color:#839ca8 }
+.extension-node>summary>button { flex:0 0 auto; margin:0 }
+.overlay-row { display:flex; align-items:flex-start; gap:4px; min-height:var(--atlas-step) }
+.overlay-toggle { flex:1; min-width:0; text-align:left; padding:0 4px }
+.overlay-toggle .data-name { max-width:none }
+.overlay-toggle .data-value { flex-shrink:0; max-width:none }
+.file-input-proxy { position:fixed; left:-9999px; top:0; width:1px; height:1px; opacity:0 }
+
+/* Domain lists and forms use the shared row rhythm instead of separator bars. */
+.nation-row { display:flex; gap:4px; align-items:flex-start; margin:0; background:#24333b4d }
+.nation-row.selected { box-shadow:inset 0 0 0 1px #657e89; background:#31465188 }
+.nation-select { flex:1; min-width:0; display:flex; align-items:flex-start; gap:4px; background:none; box-shadow:none; text-align:left; padding:0 4px }
+.nation-select:hover { background:#344b5766 }
+.nation-select>.atlas-data-row { flex:1; min-width:0 }
+.nation-select>.atlas-data-row>.data-name,.region-select>.atlas-data-row>.data-name { max-width:none }
+.nation-select>.atlas-data-row>.data-value,.region-select>.atlas-data-row>.data-value { flex-shrink:0; max-width:none }
+.region-select { display:block; width:100%; padding:0 4px; text-align:left; background:none; box-shadow:none }
+.nation-swatch { width:8px; height:var(--atlas-step); display:block; box-shadow:inset 0 0 0 1px #b8c8ca33; flex-shrink:0 }
+.resource-legend-swatch { display:inline-block; width:10px; height:10px; margin:0 6px 0 0; vertical-align:middle; box-shadow:inset 0 0 0 1px #d3dcdf55 }
+.resource-color-controls { display:flex; flex:1; min-width:0; gap:4px }
+.resource-color-controls>input[type=color] { flex:0 0 32px; width:32px }
+.resource-color-controls>input:not([type=color]) { flex:1; min-width:0 }
+.nation-row>.icon-button { background:none; box-shadow:none; color:#9eafb6 }
+.section-line { min-height:var(--atlas-step); margin:0; padding:0; display:flex; align-items:flex-start; gap:6px; color:#c5ba9d; overflow-wrap:anywhere }
+.section-line>span { min-width:0 }
+.section-line::after { content:''; flex:1 0 10px; min-width:10px; height:3px; margin-top:7px; border-top:1px solid currentColor; border-bottom:1px solid currentColor; opacity:.5 }
+.section-line>button { order:2 }
+.branch-row,.nation-enemy-row { display:flex; align-items:flex-start; gap:4px; min-height:var(--atlas-step); padding:0; margin:0 }
+.nation-enemy-name { flex:1; min-width:0; text-align:left; background:none; box-shadow:none; padding:0 }
+.inspector-id { color:#d0c196; margin:0; overflow-wrap:anywhere }
+.branch-description { flex:1; min-width:0 }
+.branch-description strong,.branch-description small { display:block; margin:0; overflow-wrap:anywhere }
+.branch-row button { flex-shrink:0 }
+.log-row { margin:0 0 var(--atlas-step); padding:0; overflow-wrap:anywhere }
+.log-row strong,.log-row small { display:block; margin:0 }
+.conflict-path { padding:0; overflow-wrap:anywhere; color:#d3b7a3 }
+.nation-info-header { display:flex; align-items:flex-start; gap:6px; margin:0 }
+.nation-info-name { overflow-wrap:anywhere; min-width:0 }
+.nation-diplomacy-status { padding:0 8px; box-shadow:inset 0 0 0 1px #476357; background:#273c3433; color:#a3bcae }
+.nation-diplomacy-status.at-war { box-shadow:inset 0 0 0 1px #9c514a; background:#6a302d44; color:#f29b91 }
+.nation-enemy-name .data-name { color:#dbaaa2 }
+.metadata-description { white-space:pre-wrap; overflow-wrap:anywhere; color:#a2b5bf }
+.metadata-stat-row,.resource-buff-row,.resource-input-row { padding:0; margin:0 0 var(--atlas-step) }
+.metadata-stat-controls,.resource-input-controls { display:flex; align-items:flex-start; gap:4px; min-height:var(--atlas-step); margin:0 }
+.metadata-stat-controls>select { width:90px; flex-shrink:0 }
+.metadata-stat-controls>input,.resource-input-controls>input { flex:1; min-width:0 }
+.metadata-stat-controls>input[type=checkbox] { flex:none; width:12px }
+.form-error { color:#edaa9e; overflow-wrap:anywhere }
+.set-count { color:#83d9df; margin:0 }
+.set-tools>button { flex:1 1 100px }
+@media(max-width:720px) {
+  .shell-menu-row .menubar-item { padding-left:6px; padding-right:6px }
+}
+@media(max-width:600px) {
+  .shell-menubar { padding-left:3px }
+  .coordinates { display:none }
+  .overlay-window { box-shadow:0 4px 14px #06151d66 }
+  .tree-menu-panel { min-width:180px }
+  .map-navigation { right:8px; bottom:8px }
+}
+
+/* Resource intensity uses the common font and full 16 px rows. */
+.resource-legend-toggle { display:block; text-align:left; padding:0 4px }
+.resource-legend-item { margin:0 0 var(--atlas-step) }
+.resource-legend-item[data-enabled=false] .resource-legend-scale { opacity:.35 }
+.resource-legend-scale { display:flex; gap:1px; align-items:flex-start }
+.resource-legend-step { flex:1 1 0; min-width:0; line-height:var(--atlas-step); overflow-wrap:anywhere }
+.resource-legend-step>span { display:block; min-height:var(--atlas-step) }
+.resource-legend-step>.resource-legend-patch { height:var(--atlas-step); box-shadow:inset 0 0 0 1px #d3dcdf33 }
+
+/* Domain-free data primitives; typography comes from the application's tokens. */
+:root { --atlas-data-font:var(--atlas-font); --atlas-data-font-size:var(--atlas-font-size); --atlas-data-step:var(--atlas-step) }
+.atlas-data-row,.atlas-data-group { --data-step:var(--atlas-data-step) }
+.atlas-data-row { display:flex; align-items:flex-start; gap:6px; min-height:var(--data-step); padding:0; margin:0; border:0; line-height:var(--data-step) }
+.atlas-data-row>.data-name { flex:0 1 auto; min-width:0; max-width:65%; white-space:pre-wrap; overflow-wrap:anywhere; color:#c2d0d7 }
+.atlas-data-row>.data-leader { flex:1 0 10px; min-width:10px; border-top:1px solid #435964; margin-top:8px; opacity:.75 }
+.atlas-data-row>.data-value { flex:0 1 auto; min-width:0; max-width:60%; white-space:pre-wrap; overflow-wrap:anywhere; text-align:right; font-weight:400; color:#d7e3e8 }
+.atlas-data-row>.data-value:empty { display:none }
+.atlas-data-group { margin:0; padding:0; border:0 }
+.atlas-data-group>summary { display:flex; align-items:flex-start; gap:6px; min-height:var(--data-step); margin:0; padding:0; list-style:none; cursor:pointer; color:#a7bdc8; user-select:none }
+.atlas-data-group>summary::-webkit-details-marker { display:none }
+.atlas-data-group>summary::marker { content:'' }
+.atlas-data-group>summary::before { content:none }
+.atlas-data-group>summary::after { content:''; flex:1 0 12px; min-width:12px; height:3px; margin-top:7px; border-top:1px solid currentColor; border-bottom:1px solid currentColor; opacity:.5 }
+.atlas-data-group>summary>.data-group-name { flex:0 1 auto; min-width:0; max-width:calc(100% - 18px); white-space:pre-wrap; overflow-wrap:anywhere }
+.atlas-data-group[open]>summary { color:#c5ba9d }
+.atlas-data-group>.data-children { margin:0 0 0 3px; padding:0 0 0 17px; border-left:1px solid #354b56 }
+
+/* Labels wrap in full rows and inherit the application typography. */
+.atlas-color-scale { min-width:0; line-height:var(--atlas-step) }
+.atlas-color-scale-bar { position:relative; height:var(--atlas-step); box-shadow:inset 0 0 0 1px #d3dcdf33 }
+.atlas-color-scale-tick { position:absolute; bottom:0; width:1px; height:4px; background:#101c22 }
+.atlas-color-scale-end { position:absolute; right:0; top:0; width:1px; height:100% }
+.atlas-color-scale-grades { display:grid; gap:0 1px }
+.atlas-color-scale-grade { min-width:0; overflow-wrap:anywhere }
+.atlas-color-scale-grade>span { display:block; min-height:var(--atlas-step) }
+.atlas-color-scale-patch { height:var(--atlas-step); box-shadow:inset 0 0 0 1px #d3dcdf33 }
+.resource-legend-item[data-enabled=false] .atlas-color-scale { opacity:.35 }
+
+body { overflow:auto; background:#17262e }
+#components { padding:16px; max-width:1280px; margin:auto }
+.component-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr)); gap:16px; margin-top:16px; align-items:start }
+.component-grid>.atlas-data-group { min-width:0 }
+.component-grid .data-children { min-width:0 }
+</style>
+<main id="components" class="atlas-data-scope"></main><script>/* Shared native controls. Model updates do not dispatch user callbacks. */
+(function (root) {
+  'use strict';
+  function button(
+    label,
+    callback,
+    { signal, className = '', title = label, disabled = false } = {},
+  ) {
+    const node = document.createElement('button');
+    node.type = 'button';
+    node.className = ['atlas-button', className].filter(Boolean).join(' ');
+    node.textContent = label;
+    node.title = title;
+    node.disabled = disabled;
+    node.addEventListener('click', callback, signal ? { signal } : undefined);
+    return node;
+  }
+  function createSwitch(label, onChange, { checked = false, ...options } = {}) {
+    const node = button(
+      label,
+      (event) => {
+        node.checked = !node.checked;
+        onChange?.(node.checked, event);
+      },
+      options,
+    );
+    node.classList.add('atlas-switch');
+    node.setAttribute('role', 'switch');
+    Object.defineProperty(node, 'checked', {
+      get: () => node.getAttribute('aria-checked') === 'true',
+      set: (value) => node.setAttribute('aria-checked', String(!!value)),
+    });
+    node.checked = checked;
+    return node;
+  }
+  function createSelect(
+    items = [],
+    onChange,
+    { value, label, title, className = '', disabled = false, required = false, name, signal } = {},
+  ) {
+    if (onChange != null && typeof onChange !== 'function')
+      throw new TypeError('Обработчик выбора должен быть функцией.');
+    const node = document.createElement('select');
+    node.className = ['atlas-select', className].filter(Boolean).join(' ');
+    node.disabled = disabled;
+    node.required = required;
+    if (label !== undefined) node.setAttribute('aria-label', label);
+    if (title !== undefined) node.title = title;
+    if (name !== undefined) node.name = name;
+    // Replacing items is a model update: keep the value, never invoke onChange.
+    node.setItems = (nextItems, selection = {}) => {
+      if (!Array.isArray(nextItems)) throw new TypeError('Пункты списка должны быть массивом.');
+      const values = new Set(),
+        rows = nextItems.map((item) => {
+          const row = Array.isArray(item) ? { value: item[0], label: item[1] } : item;
+          if (
+            !row ||
+            !['string', 'number'].includes(typeof row.value) ||
+            (typeof row.value === 'number' && !Number.isFinite(row.value)) ||
+            row.label == null
+          )
+            throw new TypeError('Пункт списка содержит value и label.');
+          const value = String(row.value);
+          if (values.has(value)) throw new Error('Повторяющееся значение списка: ' + value);
+          values.add(value);
+          return { ...row, value };
+        });
+      const selected = Object.hasOwn(selection, 'value') ? selection.value : node.value;
+      const options = rows.map((row) => {
+        const option = document.createElement('option');
+        option.value = row.value;
+        option.textContent = String(row.label);
+        option.disabled = !!row.disabled;
+        if (row.title !== undefined) option.title = String(row.title);
+        return option;
+      });
+      node.replaceChildren(...options);
+      node.value =
+        selected === undefined
+          ? rows.find((row) => !row.disabled)?.value || ''
+          : String(selected ?? '');
+      return node;
+    };
+    node.setItems(items, { value });
+    if (onChange)
+      node.addEventListener(
+        'change',
+        (event) => onChange(node.value, event),
+        signal ? { signal } : undefined,
+      );
+    return node;
+  }
+  function valueInput(tag, type, options) {
+    const { value = '', label, className = '', onInput, onChange, signal } = options;
+    for (const callback of [onInput, onChange])
+      if (callback != null && typeof callback !== 'function')
+        throw new TypeError('Обработчик поля ввода должен быть функцией.');
+    const node = document.createElement(tag);
+    if (type) node.type = type;
+    node.className = [tag === 'textarea' ? 'atlas-textarea' : 'atlas-input', className]
+      .filter(Boolean)
+      .join(' ');
+    for (const key of [
+      'id',
+      'name',
+      'title',
+      'placeholder',
+      'required',
+      'disabled',
+      'readOnly',
+      'minLength',
+      'maxLength',
+      'pattern',
+      'min',
+      'max',
+      'step',
+      'rows',
+      'cols',
+      'autocomplete',
+      'inputMode',
+      'spellcheck',
+      'wrap',
+    ])
+      if (options[key] !== undefined) node[key] = options[key];
+    if (label !== undefined) node.setAttribute('aria-label', label);
+    if (options.list !== undefined) node.setAttribute('list', options.list);
+    node.value = value == null ? '' : String(value);
+    for (const [event, callback] of [
+      ['input', onInput],
+      ['change', onChange],
+    ])
+      if (callback)
+        node.addEventListener(
+          event,
+          (event) => callback(node.value, event),
+          signal ? { signal } : undefined,
+        );
+    return node;
+  }
+  function createTextInput({ type = 'text', ...options } = {}) {
+    if (!['text', 'search', 'email', 'url', 'tel', 'password'].includes(type))
+      throw new TypeError(
+        'Текстовое поле поддерживает text, search, email, url, tel или password.',
+      );
+    return valueInput('input', type, options);
+  }
+  function createNumberInput(options = {}) {
+    return valueInput('input', 'number', options);
+  }
+  function createTextArea(options = {}) {
+    return valueInput('textarea', null, options);
+  }
+  function el(tag, className = '', text = '') {
+    const node = document.createElement(tag);
+    node.className = className;
+    node.textContent = text;
+    return node;
+  }
+  function field(label, input) {
+    const node = el('label', 'field');
+    node.append(el('span', 'field-label', label), input);
+    return node;
+  }
+  const api = {
+    button,
+    createSwitch,
+    createSelect,
+    createTextInput,
+    createNumberInput,
+    createTextArea,
+    el,
+    field,
+  };
+  Object.assign((root.AtlasUI ||= {}), { controls: Object.freeze(api) });
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(globalThis);
+
+;
+/* Headless value/color points, shared by legends and map projections. */
+(function (root) {
+  'use strict';
+  const modes = Object.freeze(['linear', 'threshold', 'spline']);
+  const finite = (value) => typeof value === 'number' && Number.isFinite(value);
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+  function checkMode(mode) {
+    if (!modes.includes(mode)) throw new Error('Неизвестный режим цветовой шкалы: ' + mode);
+    return mode;
+  }
+  function rgb(color) {
+    if (typeof color !== 'string' || !/^#[\da-f]{6}$/i.test(color))
+      throw new Error('Цвет точки шкалы должен иметь вид #RRGGBB.');
+    return [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16));
+  }
+  function hex(channels) {
+    return (
+      '#' +
+      channels
+        .map((n) =>
+          Math.round(clamp(n, 0, 255))
+            .toString(16)
+            .padStart(2, '0'),
+        )
+        .join('')
+    );
+  }
+  // Natural cubic spline, independently for R/G/B, on nonuniform value intervals.
+  // Work in a normalized domain to keep large and small physical units stable.
+  function secondDerivatives(xs, ys) {
+    const n = xs.length,
+      diagonal = new Array(n).fill(0),
+      rhs = new Array(n).fill(0);
+    const result = new Array(n).fill(0);
+    diagonal[0] = diagonal[n - 1] = 1;
+    for (let i = 1; i < n - 1; i++) {
+      const left = xs[i] - xs[i - 1],
+        right = xs[i + 1] - xs[i];
+      const factor = left / diagonal[i - 1];
+      diagonal[i] = 2 * (left + right) - factor * (i === 1 ? 0 : left);
+      rhs[i] = 6 * ((ys[i + 1] - ys[i]) / right - (ys[i] - ys[i - 1]) / left) - factor * rhs[i - 1];
+    }
+    for (let i = n - 2; i > 0; i--)
+      result[i] = (rhs[i] - (xs[i + 1] - xs[i]) * result[i + 1]) / diagonal[i];
+    return result;
+  }
+  class ColorScale {
+    #points;
+    #channels;
+    #xs;
+    #seconds;
+    constructor(points = [], { mode = 'linear' } = {}) {
+      if (!Array.isArray(points)) throw new Error('Точки шкалы должны быть массивом.');
+      this.mode = checkMode(mode);
+      this.#points = Object.freeze(
+        points
+          .map((point) => {
+            if (!point || !finite(point.value))
+              throw new Error('Значение точки должно быть конечным числом.');
+            rgb(point.color);
+            return Object.freeze({ value: point.value, color: point.color.toLowerCase() });
+          })
+          .sort((a, b) => a.value - b.value),
+      );
+      for (let i = 1; i < this.#points.length; i++)
+        if (this.#points[i].value === this.#points[i - 1].value)
+          throw new Error('Значения точек шкалы не должны повторяться.');
+      const min = this.#points[0]?.value,
+        max = this.#points.at(-1)?.value;
+      if (this.#points.length > 1 && !finite(max - min))
+        throw new Error('Диапазон цветовой шкалы слишком велик.');
+      this.#channels = this.#points.map((point) => rgb(point.color));
+      this.#xs = this.#points.map((point) => (min === max ? 0 : (point.value - min) / (max - min)));
+      if (this.#xs.some((x, i) => i && x <= this.#xs[i - 1]))
+        throw new Error('Точки шкалы слишком близки для расчёта.');
+      this.#seconds =
+        this.#points.length > 1
+          ? [0, 1, 2].map((channel) =>
+              secondDerivatives(
+                this.#xs,
+                this.#channels.map((c) => c[channel]),
+              ),
+            )
+          : [];
+      if (this.#seconds.some((channel) => channel.some((value) => !finite(value))))
+        throw new Error('Точки шкалы слишком близки для расчёта сплайна.');
+      Object.freeze(this);
+    }
+    get points() {
+      return this.#points;
+    }
+    color(value, mode = this.mode) {
+      checkMode(mode);
+      const points = this.#points,
+        n = points.length;
+      if (!finite(value) || !n) return null;
+      if (value <= points[0].value) return points[0].color;
+      if (value >= points[n - 1].value) return points[n - 1].color;
+      let low = 0,
+        high = n - 1;
+      while (high - low > 1) {
+        const mid = (low + high) >> 1;
+        if (value < points[mid].value) high = mid;
+        else low = mid;
+      }
+      if (mode === 'threshold' || value === points[low].value) return points[low].color;
+      const width = this.#xs[high] - this.#xs[low];
+      const b = (value - points[low].value) / (points[high].value - points[low].value),
+        a = 1 - b;
+      return hex(
+        this.#channels[low].map((channel, i) => {
+          const linear = a * channel + b * this.#channels[high][i];
+          if (mode === 'linear') return linear;
+          return (
+            linear +
+            (((a ** 3 - a) * this.#seconds[i][low] + (b ** 3 - b) * this.#seconds[i][high]) *
+              width ** 2) /
+              6
+          );
+        }),
+      );
+    }
+    grades(count = 5) {
+      if (!Number.isInteger(count) || count < 2 || count > 100)
+        throw new Error('Число делений шкалы должно быть от 2 до 100.');
+      if (this.mode === 'threshold' || this.#points.length < 2) return this.points;
+      const min = this.#points[0].value,
+        max = this.#points.at(-1).value;
+      return Object.freeze(
+        Array.from({ length: count }, (_, i) => {
+          const value = i === count - 1 ? max : min + ((max - min) * i) / (count - 1);
+          return Object.freeze({ value, color: this.color(value) });
+        }),
+      );
+    }
+  }
+  const api = { ColorScale, COLOR_SCALE_MODES: modes };
+  Object.assign((root.AtlasUI ||= {}), api);
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(globalThis);
+
+;
+/* A color scale view. Its model is also the source of colors for map renderers. */
+(function (root) {
+  'use strict';
+  function createColorScale(
+    model,
+    {
+      label = 'Цветовая шкала',
+      formatValue = (value) => value.toLocaleString('ru-RU', { maximumFractionDigits: 1 }),
+      steps = 5,
+      sampleStyle,
+      onModeChange,
+    } = {},
+  ) {
+    const element = document.createElement('div');
+    element.className = 'atlas-color-scale';
+    element.setAttribute('role', 'group');
+    element.setAttribute('aria-label', label);
+    const update = (nextModel) => {
+      const points = nextModel.points;
+      element.replaceChildren();
+      if (onModeChange) {
+        const field = document.createElement('label');
+        field.className = 'field';
+        const caption = document.createElement('span');
+        caption.className = 'field-label';
+        caption.textContent = 'Режим';
+        const select = root.AtlasUI.controls.createSelect(
+          [
+            ['linear', 'Линейный'],
+            ['threshold', 'Пороги'],
+            ['spline', 'Кубический сплайн'],
+          ],
+          onModeChange,
+          { value: nextModel.mode, label: 'Режим: ' + label },
+        );
+        field.append(caption, select);
+        element.append(field);
+      }
+      if (!points.length) {
+        const empty = document.createElement('span');
+        empty.className = 'muted';
+        empty.textContent = 'Нет данных для шкалы';
+        element.append(empty);
+        return;
+      }
+      const min = points[0].value,
+        max = points.at(-1).value;
+      const bar = document.createElement('div');
+      bar.className = 'atlas-color-scale-bar';
+      bar.setAttribute('aria-hidden', 'true');
+      if (min === max) bar.style.backgroundColor = points[0].color;
+      else if (nextModel.mode === 'threshold') {
+        bar.style.backgroundImage =
+          'linear-gradient(to right, ' +
+          points
+            .slice(0, -1)
+            .map((point, i) => {
+              const start = (100 * (point.value - min)) / (max - min);
+              const end = (100 * (points[i + 1].value - min)) / (max - min);
+              return point.color + ' ' + start + '%, ' + point.color + ' ' + end + '%';
+            })
+            .join(', ') +
+          ')';
+      } else {
+        const samples =
+          nextModel.mode === 'linear'
+            ? points
+            : [
+                ...new Map(
+                  [...nextModel.grades(100), ...points].map((point) => [point.value, point]),
+                ).values(),
+              ].sort((a, b) => a.value - b.value);
+        bar.style.backgroundImage =
+          'linear-gradient(to right, ' +
+          samples
+            .map((point) => point.color + ' ' + (100 * (point.value - min)) / (max - min) + '%')
+            .join(', ') +
+          ')';
+      }
+      if (nextModel.mode === 'threshold' && points.length > 1) {
+        const end = document.createElement('span');
+        end.className = 'atlas-color-scale-end';
+        end.style.backgroundColor = points.at(-1).color;
+        bar.append(end);
+      }
+      const grades = document.createElement('div');
+      grades.className = 'atlas-color-scale-grades';
+      const samples = nextModel.grades(steps);
+      grades.style.gridTemplateColumns =
+        'repeat(' + Math.min(samples.length, steps) + ', minmax(0, 1fr))';
+      const positions = samples.map((point) =>
+        max === min ? 0 : (point.value - min) / (max - min),
+      );
+      const bounds = [0, ...positions.slice(1).map((x, i) => (x + positions[i]) / 2), 1];
+      const widths = samples.map((_, i) => bounds[i + 1] - bounds[i]);
+      const axis =
+        !sampleStyle &&
+        samples.length > 1 &&
+        samples.length <= steps &&
+        widths.every((w) => w >= 0.06);
+      if (axis) grades.style.gridTemplateColumns = widths.map((w) => w + 'fr').join(' ');
+      for (const [i, point] of samples.entries()) {
+        const cell = document.createElement('div');
+        cell.className = 'atlas-color-scale-grade';
+        if (sampleStyle) {
+          const patch = document.createElement('span');
+          patch.className = 'atlas-color-scale-patch';
+          patch.style.backgroundColor = point.color;
+          Object.assign(patch.style, sampleStyle(point.value, point.color));
+          patch.setAttribute('aria-hidden', 'true');
+          cell.append(patch);
+        } else {
+          const tick = document.createElement('span');
+          tick.className = 'atlas-color-scale-tick';
+          tick.style.left =
+            point.value === max
+              ? 'calc(100% - 1px)'
+              : (min === max ? 0 : (100 * (point.value - min)) / (max - min)) + '%';
+          bar.append(tick);
+        }
+        const value = document.createElement('span');
+        value.textContent = formatValue(point.value);
+        if (axis) {
+          if (i === 0) value.style.textAlign = 'left';
+          else if (i === samples.length - 1) value.style.textAlign = 'right';
+          else {
+            const left = positions[i] - bounds[i],
+              right = bounds[i + 1] - positions[i];
+            const width = 2 * Math.min(left, right);
+            value.style.width = (100 * width) / widths[i] + '%';
+            value.style.marginLeft = (100 * (left - width / 2)) / widths[i] + '%';
+            value.style.textAlign = 'center';
+          }
+        }
+        cell.title = formatValue(point.value) + ' · ' + point.color;
+        cell.append(value);
+        grades.append(cell);
+      }
+      if (!sampleStyle) element.append(bar);
+      element.append(grades);
+    };
+    Object.defineProperty(element, 'update', { value: update });
+    update(model);
+    return element;
+  }
+  Object.assign((root.AtlasUI ||= {}), { createColorScale });
+  root.AtlasUI.controls = Object.freeze({ ...root.AtlasUI.controls, createColorScale });
+  if (typeof module !== 'undefined' && module.exports) module.exports = { createColorScale };
+})(globalThis);
+
+;
+/* Reusable, domain-free rows and trees. Data is always inserted as text. */
+(function (root) {
+  'use strict';
+  function createDataRow(label, value, { id } = {}) {
+    const row = document.createElement('div'),
+      name = document.createElement('span'),
+      line = document.createElement('span'),
+      result = document.createElement('span');
+    row.className = 'atlas-data-row';
+    if (id !== undefined) row.dataset.stat = id;
+    name.className = 'data-name';
+    name.textContent = label;
+    line.className = 'data-leader';
+    line.setAttribute('aria-hidden', 'true');
+    result.className = 'data-value';
+    result.textContent = value;
+    row.append(name, line, result);
+    return row;
+  }
+  function createDataGroup(label, { id, open = true, onToggle } = {}) {
+    const element = document.createElement('details'),
+      summary = document.createElement('summary'),
+      name = document.createElement('span'),
+      body = document.createElement('div');
+    element.className = 'atlas-data-group';
+    if (id !== undefined) element.dataset.group = id;
+    element.open = open;
+    name.className = 'data-group-name';
+    name.textContent = label;
+    summary.append(name);
+    body.className = 'data-children';
+    element.append(summary, body);
+    if (onToggle) element.addEventListener('toggle', () => onToggle(element.open));
+    return { element, body };
+  }
+  function renderDataTree(
+    parent,
+    nodes,
+    {
+      expanded = new Map(),
+      formatValue = (node) => String(node.value) + (node.unit ? ' ' + node.unit : ''),
+    } = {},
+  ) {
+    const tree = document.createElement('div');
+    tree.className = 'atlas-data-tree';
+    const render = (node, container, path) => {
+      const nextPath = [...path, node.id],
+        key = JSON.stringify(nextPath);
+      if (node.type === 'folder') {
+        let mounted = false;
+        const mount = () => {
+          if (mounted) return;
+          mounted = true;
+          for (const child of node.children) render(child, group.body, nextPath);
+        };
+        const group = createDataGroup(node.title, {
+          id: node.id,
+          open: expanded.has(key) ? expanded.get(key) : (node.defaultOpen ?? path.length < 3),
+          onToggle: (open) => {
+            expanded.set(key, open);
+            if (open) mount();
+          },
+        });
+        if (group.element.open) mount();
+        container.append(group.element);
+      } else container.append(createDataRow(node.title, formatValue(node), { id: node.id }));
+    };
+    for (const node of nodes) render(node, tree, []);
+    parent.append(tree);
+    return tree;
+  }
+  const api = { createDataRow, createDataGroup, renderDataTree };
+  Object.assign((root.AtlasUI ||= {}), { dataView: api });
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(globalThis);
+
+;
+/* Public UI foundation: no game state, map, extension host or startup side effects. */
+(function (root) {
+  'use strict';
+  const commonJS = typeof module !== 'undefined' && module.exports;
+  const controls = commonJS ? require('./controls.js') : root.AtlasUI.controls;
+  const dataView = commonJS ? require('./data-view.js') : root.AtlasUI.dataView;
+  const { ColorScale } = commonJS ? require('./color-scale-model.js') : root.AtlasUI;
+  const { createColorScale } = commonJS ? require('./color-scale.js') : root.AtlasUI;
+  const api = Object.freeze({ ...controls, ...dataView, ColorScale, createColorScale });
+  Object.assign((root.AtlasUI ||= {}), { components: api });
+  if (commonJS) module.exports = api;
+})(globalThis);
+
+;
+/* A real consumer of the UI foundation, without game core, map or interface startup. */
+(function () {
+  'use strict';
+  const {
+    el,
+    field,
+    button,
+    createSwitch,
+    createSelect,
+    createTextInput,
+    createNumberInput,
+    createTextArea,
+    createDataRow,
+    createDataGroup,
+    renderDataTree,
+    ColorScale,
+    createColorScale,
+  } = AtlasUI.components;
+  const main = document.getElementById('components');
+  main.append(createDataRow('Базовая библиотека интерфейса', 'AtlasUI.components'));
+  const grid = el('div', 'component-grid');
+  main.append(grid);
+  const inputs = createDataGroup('Поля ввода', { open: true });
+  const result = createDataRow('Последний ввод', '—');
+  const show = (value) => {
+    result.querySelector('.data-value').textContent = value || 'Пусто';
+  };
+  const name = createTextInput({
+    label: 'Название примера',
+    value: 'Северная область',
+    maxLength: 80,
+    onInput: show,
+  });
+  const amount = createNumberInput({
+    label: 'Количество примера',
+    value: 12.5,
+    min: -100,
+    max: 1000,
+    step: 'any',
+    onInput: (value, event) =>
+      show(Number.isNaN(event.currentTarget.valueAsNumber) ? 'Нет числа' : value),
+  });
+  const description = createTextArea({
+    label: 'Описание примера',
+    value: 'Производственная зона\nЗапасы и примечания',
+    rows: 3,
+    maxLength: 8000,
+    onInput: show,
+  });
+  inputs.body.append(
+    field('Название', name),
+    field('Количество', amount),
+    field('Описание', description),
+    result,
+    button('Сбросить поля', () => {
+      name.value = 'Северная область';
+      amount.value = '12.5';
+      description.value = 'Производственная зона\nЗапасы и примечания';
+      show('Сброс');
+    }),
+  );
+  const controls = createDataGroup('Кнопки и списки', { open: true });
+  const modeRow = createDataRow('Выбрано', 'Добыча');
+  const choice = createSelect(
+    [
+      ['extraction', 'Добыча'],
+      ['production', 'Производство'],
+      { value: 'unavailable', label: 'Недоступный вариант', disabled: true },
+    ],
+    (value) => {
+      modeRow.querySelector('.data-value').textContent =
+        value === 'extraction' ? 'Добыча' : 'Производство';
+    },
+    { label: 'Вид примера', value: 'extraction' },
+  );
+  const enabled = createDataRow('Подсветка', 'Выключена');
+  controls.body.append(
+    field('Вид', choice),
+    modeRow,
+    createSwitch('Подсветка', (checked) => {
+      enabled.querySelector('.data-value').textContent = checked ? 'Включена' : 'Выключена';
+    }),
+    enabled,
+    button('Обычная кнопка', () => show('Нажата кнопка')),
+  );
+  const data = createDataGroup('Деревья и строки', { open: true });
+  renderDataTree(data.body, [
+    {
+      id: 'region',
+      type: 'folder',
+      title: 'Северная область',
+      children: [
+        { id: 'production', type: 'value', title: 'Производство', value: 12.5, unit: 'ед./ход' },
+        {
+          id: 'resources',
+          type: 'folder',
+          title: 'Ресурсы',
+          children: [
+            { id: 'coal', type: 'value', title: 'Уголь', value: 8, unit: 'ед./ход' },
+            { id: 'steel', type: 'value', title: 'Сталь', value: 4.5, unit: 'ед./ход' },
+          ],
+        },
+      ],
+    },
+  ]);
+  const scales = createDataGroup('Цветовая шкала', { open: true });
+  const points = [
+    { value: 0, color: '#264caa' },
+    { value: 20, color: '#53cbb9' },
+    { value: 70, color: '#e8d278' },
+    { value: 100, color: '#cb4050' },
+  ];
+  let scale;
+  scale = createColorScale(new ColorScale(points), {
+    label: 'Пример шкалы',
+    onModeChange: (mode) => scale.update(new ColorScale(points, { mode })),
+  });
+  scales.body.append(scale);
+  grid.append(inputs.element, controls.element, data.element, scales.element);
+})();
+</script></html>

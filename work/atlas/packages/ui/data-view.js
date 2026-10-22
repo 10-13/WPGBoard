@@ -69,7 +69,7 @@
     parent.append(tree);
     return tree;
   }
-  Object.assign((root.AtlasUI ||= {}), {
-    dataView: { createDataRow, createDataGroup, renderDataTree },
-  });
+  const api = { createDataRow, createDataGroup, renderDataTree };
+  Object.assign((root.AtlasUI ||= {}), { dataView: api });
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);

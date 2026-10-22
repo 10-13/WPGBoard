@@ -10,7 +10,8 @@
     RESOURCE_BONUSES: bonuses,
   } = root.AtlasExtensions;
   const { drawResourceMarkers } = root.AtlasExtensions;
-  const { createSelect } = root.AtlasUI.controls;
+  const { createSelect, createTextInput, createNumberInput, createTextArea } =
+    root.AtlasUI.components;
   const { createDataRow, createDataGroup } = root.AtlasUI.dataView;
   const format = (n) => n.toLocaleString('ru-RU', { maximumFractionDigits: 4 });
   const definition = {
@@ -98,10 +99,31 @@
           width: 370,
           height: point ? 475 : 540,
           render(pane, scope, tab) {
+            const examples = document.createElement('datalist');
+            examples.id = uid('goods');
+            for (const good of Object.values(catalog.data.resources))
+              examples.append(new Option(good.name));
             const form = el('form'),
-              title = document.createElement('input'),
-              description = document.createElement('textarea'),
-              resource = document.createElement('input'),
+              title = createTextInput({
+                value: initial?.title || (point ? 'Новая ресурсная точка' : 'Новое производство'),
+                required: true,
+                maxLength: 100,
+                label: 'Название объекта',
+              }),
+              description = createTextArea({
+                value: initial?.description || '',
+                rows: 2,
+                maxLength: 8000,
+                label: 'Описание объекта',
+              }),
+              resource = createTextInput({
+                value: initial?.resource === '*' ? '' : initial?.resource || '',
+                placeholder: point ? 'Пусто — все ресурсы' : 'Например, железо',
+                required: !point,
+                maxLength: 80,
+                label: 'Ресурс или продукт',
+                list: examples.id,
+              }),
               activity = createSelect(
                 [...(point ? [['*', 'Все виды']] : []), ...Object.entries(activities)],
                 undefined,
@@ -110,30 +132,12 @@
                   label: 'Вид производства',
                 },
               ),
-              unit = document.createElement('input');
-            title.value =
-              initial?.title || (point ? 'Новая ресурсная точка' : 'Новое производство');
-            title.required = true;
-            title.maxLength = 100;
-            title.setAttribute('aria-label', 'Название объекта');
-            description.value = initial?.description || '';
-            description.rows = 2;
-            description.maxLength = 8000;
-            description.setAttribute('aria-label', 'Описание объекта');
-            resource.value = initial?.resource === '*' ? '' : initial?.resource || '';
-            resource.placeholder = point ? 'Пусто — все ресурсы' : 'Например, железо';
-            resource.required = !point;
-            resource.maxLength = 80;
-            resource.setAttribute('aria-label', 'Ресурс или продукт');
-            const examples = document.createElement('datalist');
-            examples.id = uid('goods');
-            for (const good of Object.values(catalog.data.resources))
-              examples.append(new Option(good.name));
-            resource.setAttribute('list', examples.id);
-            unit.value = initial?.unit === '*' ? '' : initial?.unit || (point ? '' : 'ед./ход');
-            unit.placeholder = point ? 'Пусто — любые единицы' : 'ед./ход';
-            unit.maxLength = 40;
-            unit.setAttribute('aria-label', 'Единица выпуска');
+              unit = createTextInput({
+                value: initial?.unit === '*' ? '' : initial?.unit || (point ? '' : 'ед./ход'),
+                placeholder: point ? 'Пусто — любые единицы' : 'ед./ход',
+                maxLength: 40,
+                label: 'Единица выпуска',
+              });
             form.append(
               el('p', 'muted small', 'Провинция #' + regionId),
               field('Название', title),
@@ -147,21 +151,21 @@
             const buffRows = [],
               inputRows = [];
             if (!point) {
-              rate = document.createElement('input');
-              rate.type = 'number';
-              rate.min = 0;
-              rate.step = 'any';
-              rate.value = initial?.baseOutput ?? 10;
-              rate.required = true;
-              rate.setAttribute('aria-label', 'Базовый выпуск');
-              priority = document.createElement('input');
-              priority.type = 'number';
-              priority.min = 0;
-              priority.max = 1000000;
-              priority.step = 1;
-              priority.value = initial?.priority ?? 0;
-              priority.required = true;
-              priority.setAttribute('aria-label', 'Приоритет снабжения');
+              rate = createNumberInput({
+                min: 0,
+                step: 'any',
+                value: initial?.baseOutput ?? 10,
+                required: true,
+                label: 'Базовый выпуск',
+              });
+              priority = createNumberInput({
+                min: 0,
+                max: 1000000,
+                step: 1,
+                value: initial?.priority ?? 0,
+                required: true,
+                label: 'Приоритет снабжения',
+              });
               form.append(
                 field('Выпуск', rate),
                 field('Приоритет', priority),
@@ -176,25 +180,27 @@
               const addInput = (value = {}) => {
                 const n = ++inputSequence,
                   row = el('div', 'resource-input-row'),
-                  name = document.createElement('input'),
-                  amount = document.createElement('input'),
-                  inputUnit = document.createElement('input');
-                name.value = value.resource || '';
-                name.required = true;
-                name.maxLength = 80;
-                name.placeholder = 'Сырьё';
-                name.setAttribute('list', examples.id);
-                name.setAttribute('aria-label', 'Расход: ресурс ' + n);
-                amount.type = 'number';
-                amount.min = 0;
-                amount.step = 'any';
-                amount.value = value.amount ?? 1;
-                amount.required = true;
-                amount.setAttribute('aria-label', 'Расход: количество ' + n);
-                inputUnit.value = value.unit || unit.value || 'ед./ход';
-                inputUnit.required = true;
-                inputUnit.maxLength = 40;
-                inputUnit.setAttribute('aria-label', 'Расход: единица ' + n);
+                  name = createTextInput({
+                    value: value.resource || '',
+                    required: true,
+                    maxLength: 80,
+                    placeholder: 'Сырьё',
+                    list: examples.id,
+                    label: 'Расход: ресурс ' + n,
+                  }),
+                  amount = createNumberInput({
+                    min: 0,
+                    step: 'any',
+                    value: value.amount ?? 1,
+                    required: true,
+                    label: 'Расход: количество ' + n,
+                  }),
+                  inputUnit = createTextInput({
+                    value: value.unit || unit.value || 'ед./ход',
+                    required: true,
+                    maxLength: 40,
+                    label: 'Расход: единица ' + n,
+                  });
                 const record = { name, amount, unit: inputUnit },
                   controls = el('div', 'resource-input-controls');
                 controls.append(
@@ -234,26 +240,28 @@
                     () => updateFilters(),
                     { value: buff.type, label: 'Тип баффа' },
                   ),
-                  value = document.createElement('input');
-                value.type = 'number';
-                value.min = 0;
-                value.step = 'any';
-                value.value = buff.value;
-                value.required = true;
-                value.setAttribute('aria-label', 'Величина баффа');
-                const inputResource = document.createElement('input'),
-                  inputUnit = document.createElement('input'),
+                  value = createNumberInput({
+                    min: 0,
+                    step: 'any',
+                    value: buff.value,
+                    required: true,
+                    label: 'Величина баффа',
+                  });
+                const inputResource = createTextInput({
+                    value:
+                      buff.inputResource && buff.inputResource !== '*' ? buff.inputResource : '',
+                    placeholder: 'Любое сырьё',
+                    maxLength: 80,
+                    label: 'Бафф: сырьё',
+                    list: examples.id,
+                  }),
+                  inputUnit = createTextInput({
+                    value: buff.inputUnit && buff.inputUnit !== '*' ? buff.inputUnit : '',
+                    placeholder: 'Любые единицы',
+                    maxLength: 40,
+                    label: 'Бафф: единица сырья',
+                  }),
                   filters = el('div', 'resource-input-controls');
-                inputResource.value =
-                  buff.inputResource && buff.inputResource !== '*' ? buff.inputResource : '';
-                inputResource.placeholder = 'Любое сырьё';
-                inputResource.maxLength = 80;
-                inputResource.setAttribute('aria-label', 'Бафф: сырьё');
-                inputResource.setAttribute('list', examples.id);
-                inputUnit.value = buff.inputUnit && buff.inputUnit !== '*' ? buff.inputUnit : '';
-                inputUnit.placeholder = 'Любые единицы';
-                inputUnit.maxLength = 40;
-                inputUnit.setAttribute('aria-label', 'Бафф: единица сырья');
                 filters.append(inputResource, inputUnit);
                 const updateFilters = () => {
                   filters.hidden = !bonuses[type.value].efficiency;

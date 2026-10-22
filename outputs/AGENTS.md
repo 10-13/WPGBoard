@@ -15,6 +15,36 @@
   его старым JSON или демонстрацией. Изменять ключ только при отдельном экспорте
   самостоятельной копии партии.
 
+
+## Базовая библиотека интерфейса
+
+- Общие элементы собраны в `packages/ui/components.js`, публичный вход —
+  `AtlasUI.components`. Библиотека не загружает игровое ядро, карту, singleton
+  интерфейса или расширения; DOM нужен только при создании элемента. Не переносить
+  эти функции в packages/core: игровое ядро остаётся headless.
+- Вход объединяет button/createSwitch/createSelect, createTextInput,
+  createNumberInput/createTextArea, el/field, createDataRow/createDataGroup,
+  renderDataTree и ColorScale/createColorScale. Реализации лежат в controls,
+  data-view и color-scale; фасад не копирует их. AtlasUI.controls/dataView/dom
+  сохраняют прежние совместимые ссылки. Новые окна используют AtlasUI.components.
+- Текстовые и числовые поля создавать через общие функции, включая поиск,
+  описания и динамические строки форм. options содержит value, label (aria-label),
+  placeholder, required/disabled/readOnly, name, maxLength/minLength, pattern,
+  list, min/max/step, rows и onInput/onChange/signal по назначению. createTextInput
+  поддерживает type text/search/email/url/tel/password; число — createNumberInput.
+- Поле возвращает нативный input/textarea. value строковое, valueAsNumber и
+  нативная валидация остаются доступны у чисел. Пустое/некорректное число не
+  преобразовывать в ноль в общем элементе. Числовые ограничения не округляют и не
+  зажимают значение автоматически. Специализированные color/file/checkbox и
+  datetime-local пока остаются нативными элементами в предметных формах.
+- onInput(value,event) и onChange(value,event) — разные нативные события.
+  Присваивание field.value не вызывает обработчики; signal снимает оба при
+  закрытии владельца. Игровая валидация/сохранение принадлежат расширению, а не
+  компоненту. Постоянные поля с внешними подписками привязывать к scope вкладки.
+- Страница `outputs/ui-components-preview.html` собирается без игрового ядра
+  через `tools/build-components-preview.py`: проверять на ней независимость и
+  взаимодействие общих компонентов. Инструкция для библиотеки — packages/ui/README.md.
+
 ## Утверждённый стиль интерфейса
 
 JavaScript отформатирован Prettier 3.6.2: ширина 100, отступ 2, singleQuote,

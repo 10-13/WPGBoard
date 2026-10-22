@@ -2,7 +2,8 @@
 (function (root) {
   'use strict';
   const { el, button, createSwitch, field } = root.AtlasUI.dom;
-  const { createSelect } = root.AtlasUI.controls;
+  const { createSelect, createTextInput, createNumberInput, createTextArea } =
+    root.AtlasUI.components;
   const { createDataRow, createDataGroup, renderDataTree } = root.AtlasUI.dataView;
   const format = (value) =>
     typeof value === 'number'
@@ -93,16 +94,18 @@
           render(pane, scope, tab) {
             pane.classList.add('atlas-data-scope');
             const form = el('form'),
-              title = document.createElement('input'),
-              description = document.createElement('textarea');
-            title.value = original?.title || '';
-            title.maxLength = 100;
-            title.required = true;
-            title.setAttribute('aria-label', 'Название записи');
-            description.value = original?.description || '';
-            description.maxLength = 8000;
-            description.rows = 3;
-            description.setAttribute('aria-label', 'Описание записи');
+              title = createTextInput({
+                value: original?.title || '',
+                maxLength: 100,
+                required: true,
+                label: 'Название записи',
+              }),
+              description = createTextArea({
+                value: original?.description || '',
+                maxLength: 8000,
+                rows: 3,
+                label: 'Описание записи',
+              });
             form.append(
               field('Название', title),
               field('Описание', description),
@@ -114,7 +117,11 @@
             function addStat(stat = '', value = 0) {
               const number = ++sequence,
                 node = el('div', 'metadata-stat-row'),
-                key = document.createElement('input'),
+                key = createTextInput({
+                  value: stat,
+                  placeholder: 'Ключ стата',
+                  label: 'Ключ стата ' + number,
+                }),
                 type = createSelect(
                   [
                     ['number', 'Число'],
@@ -136,9 +143,6 @@
                   },
                 ),
                 controls = el('div', 'metadata-stat-controls');
-              key.value = stat;
-              key.placeholder = 'Ключ стата';
-              key.setAttribute('aria-label', 'Ключ стата ' + number);
               let input;
               const inputForType = () => {
                 const previous = input
@@ -147,16 +151,22 @@
                     : input.value
                   : value;
                 input?.remove();
-                input = document.createElement('input');
-                input.setAttribute('aria-label', 'Значение стата ' + number);
+                const label = 'Значение стата ' + number;
                 if (type.value === 'boolean') {
+                  input = document.createElement('input');
                   input.type = 'checkbox';
+                  input.setAttribute('aria-label', label);
                   input.checked = previous === true || previous === 'true';
                 } else {
-                  input.type = type.value === 'number' ? 'number' : 'text';
-                  input.step = 'any';
-                  input.value =
-                    typeof previous === 'object' ? JSON.stringify(previous) : String(previous);
+                  const options = {
+                    label,
+                    value:
+                      typeof previous === 'object' ? JSON.stringify(previous) : String(previous),
+                  };
+                  input =
+                    type.value === 'number'
+                      ? createNumberInput({ ...options, step: 'any' })
+                      : createTextInput(options);
                 }
                 controls.insertBefore(input, remove);
               };

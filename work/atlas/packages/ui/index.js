@@ -3,18 +3,10 @@
   const { EventBus } = root.AtlasCore;
   const { ExtensionHost } =
     typeof module !== 'undefined' && module.exports ? require('./extensions.js') : root.AtlasUI;
-  const { button, createSwitch, createSelect } = root.AtlasUI.controls;
-  const el = (tag, className = '', text = '') => {
-    const node = document.createElement(tag);
-    node.className = className;
-    if (text) node.textContent = text;
-    return node;
-  };
-  function field(label, input) {
-    const node = el('label', 'field');
-    node.append(el('span', 'field-label', label), input);
-    return node;
-  }
+  const { el, field, button, createSwitch, createSelect } =
+    typeof module !== 'undefined' && module.exports
+      ? require('./components.js')
+      : root.AtlasUI.components;
   const singletonKey = Symbol('Interface');
   let singleton;
   class Interface extends EventBus {

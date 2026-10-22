@@ -5,7 +5,7 @@
     { el, button, field } = root.AtlasUI.dom;
   const { NationsModel, EMPTY_NATIONS: EMPTY, validNationColor: validColor } = root.AtlasExtensions;
   const { createDataRow } = root.AtlasUI.dataView;
-  const { createSelect } = root.AtlasUI.controls;
+  const { createSelect, createTextInput } = root.AtlasUI.components;
   class NationPainter {
     constructor(ctx, model) {
       this.state = ctx.state;
@@ -150,11 +150,12 @@
           width: 285,
           height: 238,
           render(pane, scope, tab) {
-            const name = document.createElement('input');
-            name.value = original?.name || '';
-            name.maxLength = 80;
-            name.placeholder = 'Название нации';
-            name.setAttribute('aria-label', 'Название нации');
+            const name = createTextInput({
+              value: original?.name || '',
+              maxLength: 80,
+              placeholder: 'Название нации',
+              label: 'Название нации',
+            });
             const color = document.createElement('input');
             color.type = 'color';
             color.value = original?.color || '#75937d';
@@ -446,11 +447,12 @@
                 return;
               }
               pane.append(el('div', 'inspector-id', 'ПРОВИНЦИЯ #' + selected));
-              const name = document.createElement('input');
-              name.value = model.data.names[selected] || '';
-              name.placeholder = 'Без названия';
-              name.setAttribute('aria-label', 'Название провинции');
-              name.onchange = protect(() => model.setProvince(selected, { name: name.value }));
+              const name = createTextInput({
+                value: model.data.names[selected] || '',
+                placeholder: 'Без названия',
+                label: 'Название провинции',
+                onChange: protect((value) => model.setProvince(selected, { name: value })),
+              });
               const owner = createSelect(
                 [
                   ['', 'Свободная территория'],

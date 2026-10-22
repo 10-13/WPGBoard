@@ -79,10 +79,10 @@
   };
   let editorSerial = 0;
 
-  const { createSelect } =
+  const { createSelect, createTextInput, createNumberInput } =
     typeof module !== 'undefined' && module.exports
-      ? require('../packages/ui/controls.js')
-      : root.AtlasUI.controls;
+      ? require('../packages/ui/components.js')
+      : root.AtlasUI.components;
   function nameOf(state, id) {
     return '#' + id + (state.meta.nations?.names?.[id] ? ' · ' + state.meta.nations.names[id] : '');
   }
@@ -186,18 +186,21 @@
           });
           const inputs = [];
           const makeInput = (value, label, numeric = true) => {
-            const input = document.createElement('input');
-            input.type = numeric ? 'number' : 'text';
-            input.value = value ?? '';
-            if (numeric) {
-              input.min = spec[0];
-              input.max = spec[1];
-              input.step = key === 'time.offsetMinutes' ? '1' : 'any';
-            } else input.maxLength = 100;
-            input.setAttribute('aria-label', label);
-            input.oninput = () => {
-              toggle.checked = true;
+            const options = {
+              value: value ?? '',
+              label,
+              onInput: () => {
+                toggle.checked = true;
+              },
             };
+            const input = numeric
+              ? createNumberInput({
+                  ...options,
+                  min: spec[0],
+                  max: spec[1],
+                  step: key === 'time.offsetMinutes' ? '1' : 'any',
+                })
+              : createTextInput({ ...options, maxLength: 100 });
             inputs.push(input);
             return input;
           };

@@ -2662,11 +2662,89 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       );
     return node;
   }
-  Object.assign((root.AtlasUI ||= {}), {
-    controls: Object.freeze({ button, createSwitch, createSelect }),
-  });
-  if (typeof module !== 'undefined' && module.exports)
-    module.exports = { button, createSwitch, createSelect };
+  function valueInput(tag, type, options) {
+    const { value = '', label, className = '', onInput, onChange, signal } = options;
+    for (const callback of [onInput, onChange])
+      if (callback != null && typeof callback !== 'function')
+        throw new TypeError('Обработчик поля ввода должен быть функцией.');
+    const node = document.createElement(tag);
+    if (type) node.type = type;
+    node.className = [tag === 'textarea' ? 'atlas-textarea' : 'atlas-input', className]
+      .filter(Boolean)
+      .join(' ');
+    for (const key of [
+      'id',
+      'name',
+      'title',
+      'placeholder',
+      'required',
+      'disabled',
+      'readOnly',
+      'minLength',
+      'maxLength',
+      'pattern',
+      'min',
+      'max',
+      'step',
+      'rows',
+      'cols',
+      'autocomplete',
+      'inputMode',
+      'spellcheck',
+      'wrap',
+    ])
+      if (options[key] !== undefined) node[key] = options[key];
+    if (label !== undefined) node.setAttribute('aria-label', label);
+    if (options.list !== undefined) node.setAttribute('list', options.list);
+    node.value = value == null ? '' : String(value);
+    for (const [event, callback] of [
+      ['input', onInput],
+      ['change', onChange],
+    ])
+      if (callback)
+        node.addEventListener(
+          event,
+          (event) => callback(node.value, event),
+          signal ? { signal } : undefined,
+        );
+    return node;
+  }
+  function createTextInput({ type = 'text', ...options } = {}) {
+    if (!['text', 'search', 'email', 'url', 'tel', 'password'].includes(type))
+      throw new TypeError(
+        'Текстовое поле поддерживает text, search, email, url, tel или password.',
+      );
+    return valueInput('input', type, options);
+  }
+  function createNumberInput(options = {}) {
+    return valueInput('input', 'number', options);
+  }
+  function createTextArea(options = {}) {
+    return valueInput('textarea', null, options);
+  }
+  function el(tag, className = '', text = '') {
+    const node = document.createElement(tag);
+    node.className = className;
+    node.textContent = text;
+    return node;
+  }
+  function field(label, input) {
+    const node = el('label', 'field');
+    node.append(el('span', 'field-label', label), input);
+    return node;
+  }
+  const api = {
+    button,
+    createSwitch,
+    createSelect,
+    createTextInput,
+    createNumberInput,
+    createTextArea,
+    el,
+    field,
+  };
+  Object.assign((root.AtlasUI ||= {}), { controls: Object.freeze(api) });
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);
 
 ;
@@ -4310,9 +4388,23 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     parent.append(tree);
     return tree;
   }
-  Object.assign((root.AtlasUI ||= {}), {
-    dataView: { createDataRow, createDataGroup, renderDataTree },
-  });
+  const api = { createDataRow, createDataGroup, renderDataTree };
+  Object.assign((root.AtlasUI ||= {}), { dataView: api });
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(globalThis);
+
+;
+/* Public UI foundation: no game state, map, extension host or startup side effects. */
+(function (root) {
+  'use strict';
+  const commonJS = typeof module !== 'undefined' && module.exports;
+  const controls = commonJS ? require('./controls.js') : root.AtlasUI.controls;
+  const dataView = commonJS ? require('./data-view.js') : root.AtlasUI.dataView;
+  const { ColorScale } = commonJS ? require('./color-scale-model.js') : root.AtlasUI;
+  const { createColorScale } = commonJS ? require('./color-scale.js') : root.AtlasUI;
+  const api = Object.freeze({ ...controls, ...dataView, ColorScale, createColorScale });
+  Object.assign((root.AtlasUI ||= {}), { components: api });
+  if (commonJS) module.exports = api;
 })(globalThis);
 
 ;
@@ -4767,18 +4859,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   const { EventBus } = root.AtlasCore;
   const { ExtensionHost } =
     typeof module !== 'undefined' && module.exports ? require('./extensions.js') : root.AtlasUI;
-  const { button, createSwitch, createSelect } = root.AtlasUI.controls;
-  const el = (tag, className = '', text = '') => {
-    const node = document.createElement(tag);
-    node.className = className;
-    if (text) node.textContent = text;
-    return node;
-  };
-  function field(label, input) {
-    const node = el('label', 'field');
-    node.append(el('span', 'field-label', label), input);
-    return node;
-  }
+  const { el, field, button, createSwitch, createSelect } =
+    typeof module !== 'undefined' && module.exports
+      ? require('./components.js')
+      : root.AtlasUI.components;
   const singletonKey = Symbol('Interface');
   let singleton;
   class Interface extends EventBus {
@@ -5988,7 +6072,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     { el, button, field } = root.AtlasUI.dom;
   const { NationsModel, EMPTY_NATIONS: EMPTY, validNationColor: validColor } = root.AtlasExtensions;
   const { createDataRow } = root.AtlasUI.dataView;
-  const { createSelect } = root.AtlasUI.controls;
+  const { createSelect, createTextInput } = root.AtlasUI.components;
   class NationPainter {
     constructor(ctx, model) {
       this.state = ctx.state;
@@ -6133,11 +6217,12 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           width: 285,
           height: 238,
           render(pane, scope, tab) {
-            const name = document.createElement('input');
-            name.value = original?.name || '';
-            name.maxLength = 80;
-            name.placeholder = 'Название нации';
-            name.setAttribute('aria-label', 'Название нации');
+            const name = createTextInput({
+              value: original?.name || '',
+              maxLength: 80,
+              placeholder: 'Название нации',
+              label: 'Название нации',
+            });
             const color = document.createElement('input');
             color.type = 'color';
             color.value = original?.color || '#75937d';
@@ -6429,11 +6514,12 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                 return;
               }
               pane.append(el('div', 'inspector-id', 'ПРОВИНЦИЯ #' + selected));
-              const name = document.createElement('input');
-              name.value = model.data.names[selected] || '';
-              name.placeholder = 'Без названия';
-              name.setAttribute('aria-label', 'Название провинции');
-              name.onchange = protect(() => model.setProvince(selected, { name: name.value }));
+              const name = createTextInput({
+                value: model.data.names[selected] || '',
+                placeholder: 'Без названия',
+                label: 'Название провинции',
+                onChange: protect((value) => model.setProvince(selected, { name: value })),
+              });
               const owner = createSelect(
                 [
                   ['', 'Свободная территория'],
@@ -7095,6 +7181,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   'use strict';
   const { el, button, field } = root.AtlasUI.dom,
     { createDataRow } = root.AtlasUI.dataView;
+  const { createTextInput } = root.AtlasUI.components;
   const definition = {
     id: 'regions',
     name: 'Регионы',
@@ -7152,11 +7239,12 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           height: 180,
           render(pane, scope, tab) {
             const form = el('form'),
-              name = document.createElement('input');
-            name.value = original?.name || '';
-            name.required = true;
-            name.maxLength = 80;
-            name.setAttribute('aria-label', 'Название региона');
+              name = createTextInput({
+                value: original?.name || '',
+                required: true,
+                maxLength: 80,
+                label: 'Название региона',
+              });
             form.append(field('Название', name));
             if (!id)
               form.append(
@@ -7360,6 +7448,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   'use strict';
   const { el, button } = root.AtlasUI.dom,
     { download, chooseFile, safeName } = root.AtlasPlatform;
+  const { createTextInput } = root.AtlasUI.components;
   const definition = {
     id: 'history',
     name: 'Ветки и журнал',
@@ -7476,10 +7565,11 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                 pane.append(row);
               }
               const row = el('form', 'inline-form'),
-                name = document.createElement('input');
-              name.placeholder = 'Название новой ветки';
-              name.maxLength = 80;
-              name.setAttribute('aria-label', 'Название новой ветки');
+                name = createTextInput({
+                  placeholder: 'Название новой ветки',
+                  maxLength: 80,
+                  label: 'Название новой ветки',
+                });
               const create = button('+ Ветка', () => {});
               create.type = 'submit';
               row.append(name, create);
@@ -7592,9 +7682,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           width: 315,
           height: 185,
           render(pane, scope, tab) {
-            const input = document.createElement('input');
-            input.setAttribute('aria-label', 'Имя импортируемой ветки');
-            input.value = String(bundle.name || 'proposal') + '-импорт';
+            const input = createTextInput({
+              label: 'Имя импортируемой ветки',
+              value: String(bundle.name || 'proposal') + '-импорт',
+            });
             pane.append(
               el('p', 'muted', 'Изменения останутся отдельной веткой до слияния в main.'),
               input,
@@ -7655,6 +7746,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   'use strict';
   const { el, button, field } = root.AtlasUI.dom,
     { download, chooseFile, safeName, createProject } = root.AtlasPlatform;
+  const { createTextInput, createNumberInput } = root.AtlasUI.components;
   function createFilesExtension(services) {
     return {
       id: 'files',
@@ -7719,10 +7811,11 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             width: 300,
             height: 180,
             render(pane, scope, tab) {
-              const input = document.createElement('input');
-              input.value = title();
-              input.maxLength = 80;
-              input.setAttribute('aria-label', 'Название партии');
+              const input = createTextInput({
+                value: title(),
+                maxLength: 80,
+                label: 'Название партии',
+              });
               pane.append(
                 field('Название партии', input),
                 button(
@@ -7764,12 +7857,12 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
               color.type = 'color';
               color.value = '#808080';
               color.setAttribute('aria-label', 'Цвет суши');
-              const tolerance = document.createElement('input');
-              tolerance.type = 'number';
-              tolerance.min = 0;
-              tolerance.max = 80;
-              tolerance.value = 12;
-              tolerance.setAttribute('aria-label', 'Допуск цвета');
+              const tolerance = createNumberInput({
+                min: 0,
+                max: 80,
+                value: 12,
+                label: 'Допуск цвета',
+              });
               const submit = button('Разобрать карту', () => {}, { className: 'accent wide' });
               submit.type = 'submit';
               form.append(
@@ -7870,7 +7963,8 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
 (function (root) {
   'use strict';
   const { el, button, createSwitch, field } = root.AtlasUI.dom;
-  const { createSelect } = root.AtlasUI.controls;
+  const { createSelect, createTextInput, createNumberInput, createTextArea } =
+    root.AtlasUI.components;
   const { createDataRow, createDataGroup, renderDataTree } = root.AtlasUI.dataView;
   const format = (value) =>
     typeof value === 'number'
@@ -7961,16 +8055,18 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           render(pane, scope, tab) {
             pane.classList.add('atlas-data-scope');
             const form = el('form'),
-              title = document.createElement('input'),
-              description = document.createElement('textarea');
-            title.value = original?.title || '';
-            title.maxLength = 100;
-            title.required = true;
-            title.setAttribute('aria-label', 'Название записи');
-            description.value = original?.description || '';
-            description.maxLength = 8000;
-            description.rows = 3;
-            description.setAttribute('aria-label', 'Описание записи');
+              title = createTextInput({
+                value: original?.title || '',
+                maxLength: 100,
+                required: true,
+                label: 'Название записи',
+              }),
+              description = createTextArea({
+                value: original?.description || '',
+                maxLength: 8000,
+                rows: 3,
+                label: 'Описание записи',
+              });
             form.append(
               field('Название', title),
               field('Описание', description),
@@ -7982,7 +8078,11 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             function addStat(stat = '', value = 0) {
               const number = ++sequence,
                 node = el('div', 'metadata-stat-row'),
-                key = document.createElement('input'),
+                key = createTextInput({
+                  value: stat,
+                  placeholder: 'Ключ стата',
+                  label: 'Ключ стата ' + number,
+                }),
                 type = createSelect(
                   [
                     ['number', 'Число'],
@@ -8004,9 +8104,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                   },
                 ),
                 controls = el('div', 'metadata-stat-controls');
-              key.value = stat;
-              key.placeholder = 'Ключ стата';
-              key.setAttribute('aria-label', 'Ключ стата ' + number);
               let input;
               const inputForType = () => {
                 const previous = input
@@ -8015,16 +8112,22 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                     : input.value
                   : value;
                 input?.remove();
-                input = document.createElement('input');
-                input.setAttribute('aria-label', 'Значение стата ' + number);
+                const label = 'Значение стата ' + number;
                 if (type.value === 'boolean') {
+                  input = document.createElement('input');
                   input.type = 'checkbox';
+                  input.setAttribute('aria-label', label);
                   input.checked = previous === true || previous === 'true';
                 } else {
-                  input.type = type.value === 'number' ? 'number' : 'text';
-                  input.step = 'any';
-                  input.value =
-                    typeof previous === 'object' ? JSON.stringify(previous) : String(previous);
+                  const options = {
+                    label,
+                    value:
+                      typeof previous === 'object' ? JSON.stringify(previous) : String(previous),
+                  };
+                  input =
+                    type.value === 'number'
+                      ? createNumberInput({ ...options, step: 'any' })
+                      : createTextInput(options);
                 }
                 controls.insertBefore(input, remove);
               };
@@ -9644,7 +9747,8 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   'use strict';
   const { el, button, field } = root.AtlasUI.dom,
     { createDataRow, createDataGroup } = root.AtlasUI.dataView;
-  const { createSelect } = root.AtlasUI.controls;
+  const { createSelect, createTextInput, createNumberInput, createTextArea } =
+    root.AtlasUI.components;
   const format = (n) => n.toLocaleString('ru-RU', { maximumSignificantDigits: 8 });
   class ResourceCatalogUI {
     constructor(ctx, catalog) {
@@ -9777,10 +9881,13 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             ),
           );
           pane.append(button('+ Чертёж', () => this.editRecipe(), { className: 'wide' }));
-          const search = document.createElement('input');
-          search.type = 'search';
-          search.placeholder = 'Поиск по названию или ресурсу';
-          search.setAttribute('aria-label', 'Поиск чертежей');
+          const search = createTextInput({
+            type: 'search',
+            placeholder: 'Поиск по названию или ресурсу',
+            label: 'Поиск чертежей',
+            onInput: () => draw(),
+            signal: scope.signal,
+          });
           const body = el('div', 'atlas-data-scope');
           pane.append(search, body);
           const draw = () => {
@@ -9828,7 +9935,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             }
             if (!categories.size) body.append(el('p', 'muted', 'Чертежи не найдены.'));
           };
-          search.oninput = draw;
           this.watch(scope, draw);
           draw();
         },
@@ -9847,10 +9953,13 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           const expanded = new Map();
           this.navigation(pane);
           pane.append(button('+ Ресурс', () => this.editResource(), { className: 'wide' }));
-          const search = document.createElement('input');
-          search.type = 'search';
-          search.placeholder = 'Название ресурса';
-          search.setAttribute('aria-label', 'Поиск ресурсов');
+          const search = createTextInput({
+            type: 'search',
+            placeholder: 'Название ресурса',
+            label: 'Поиск ресурсов',
+            onInput: () => draw(),
+            signal: scope.signal,
+          });
           const body = el('div', 'atlas-data-scope');
           pane.append(search, body);
           const draw = () => {
@@ -9894,7 +10003,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             }
             if (!categories.size) body.append(el('p', 'muted', 'Ресурсы не найдены.'));
           };
-          search.oninput = draw;
           this.watch(scope, draw);
           draw();
         },
@@ -9911,9 +10019,24 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         height: 350,
         render: (pane, scope, tab) => {
           const form = el('form'),
-            name = document.createElement('input'),
-            category = document.createElement('input'),
-            unit = document.createElement('input'),
+            name = createTextInput({
+              value: original?.name || '',
+              required: true,
+              maxLength: 80,
+              label: 'Название ресурса',
+            }),
+            category = createTextInput({
+              value: original?.category || 'Прочее',
+              required: true,
+              maxLength: 80,
+              label: 'Категория ресурса',
+            }),
+            unit = createTextInput({
+              value: original?.unit || 'ед.',
+              required: true,
+              maxLength: 40,
+              label: 'Единица ресурса',
+            }),
             kind = createSelect(
               [
                 ['raw', 'Природный ресурс'],
@@ -9922,38 +10045,30 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
               undefined,
               { value: original?.kind || 'product', label: 'Тип ресурса' },
             ),
-            description = document.createElement('textarea');
+            description = createTextArea({
+              value: original?.description || '',
+              maxLength: 4000,
+              rows: 4,
+              label: 'Описание ресурса',
+            });
           const color = document.createElement('input'),
-            colorHex = document.createElement('input'),
+            colorHex = createTextInput({
+              value: this.catalog.color(original?.id || 'Новый ресурс'),
+              required: true,
+              maxLength: 7,
+              pattern: '#[0-9a-fA-F]{6}',
+              label: 'Цвет ресурса HEX',
+              title: 'Цвет в формате #RRGGBB',
+              onInput: (value) => {
+                if (root.AtlasExtensions.isResourceColor(value)) color.value = value;
+              },
+            }),
             colorControls = el('div', 'resource-color-controls');
-          for (const [node, label, value, limit] of [
-            [name, 'Название ресурса', original?.name || '', 80],
-            [category, 'Категория ресурса', original?.category || 'Прочее', 80],
-            [unit, 'Единица ресурса', original?.unit || 'ед.', 40],
-          ]) {
-            node.value = value;
-            node.required = true;
-            node.maxLength = limit;
-            node.setAttribute('aria-label', label);
-          }
-          description.value = original?.description || '';
-          description.maxLength = 4000;
-          description.rows = 4;
-          description.setAttribute('aria-label', 'Описание ресурса');
           color.type = 'color';
           color.value = this.catalog.color(original?.id || 'Новый ресурс');
           color.setAttribute('aria-label', 'Цвет ресурса');
-          colorHex.value = color.value;
-          colorHex.required = true;
-          colorHex.maxLength = 7;
-          colorHex.pattern = '#[0-9a-fA-F]{6}';
-          colorHex.setAttribute('aria-label', 'Цвет ресурса HEX');
-          colorHex.title = 'Цвет в формате #RRGGBB';
           color.oninput = () => {
             colorHex.value = color.value;
-          };
-          colorHex.oninput = () => {
-            if (root.AtlasExtensions.isResourceColor(colorHex.value)) color.value = colorHex.value;
           };
           colorControls.append(color, colorHex);
           form.append(
@@ -10004,16 +10119,18 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
         height: 550,
         render: (pane, scope, tab) => {
           const form = el('form'),
-            name = document.createElement('input'),
-            description = document.createElement('textarea');
-          name.value = original?.name || '';
-          name.required = true;
-          name.maxLength = 100;
-          name.setAttribute('aria-label', 'Название чертежа');
-          description.value = original?.description || '';
-          description.rows = 2;
-          description.maxLength = 4000;
-          description.setAttribute('aria-label', 'Описание чертежа');
+            name = createTextInput({
+              value: original?.name || '',
+              required: true,
+              maxLength: 100,
+              label: 'Название чертежа',
+            }),
+            description = createTextArea({
+              value: original?.description || '',
+              rows: 2,
+              maxLength: 4000,
+              label: 'Описание чертежа',
+            });
           form.append(field('Название', name), field('Описание', description));
           const sides = {};
           for (const [side, label] of [
@@ -10042,19 +10159,19 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                     label: label + ': ресурс ' + n,
                   },
                 ),
-                amount = document.createElement('input'),
+                amount = createNumberInput({
+                  min: 0,
+                  step: 'any',
+                  required: true,
+                  value: initial.amount ?? 1,
+                  label: label + ': объём ' + n,
+                }),
                 controls = el('div', 'resource-input-controls'),
                 unit = el('span', 'muted');
               const showUnit = () => {
                 unit.textContent = this.catalog.data.resources[resource.value]?.unit || '';
               };
               showUnit();
-              amount.type = 'number';
-              amount.min = '0';
-              amount.step = 'any';
-              amount.required = true;
-              amount.value = initial.amount ?? 1;
-              amount.setAttribute('aria-label', label + ': объём ' + n);
               const record = { resource, amount };
               controls.append(
                 amount,
@@ -10137,14 +10254,19 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                 signal: scope.signal,
               },
             ),
-            amount = document.createElement('input'),
+            amount = createNumberInput({
+              min: 0,
+              step: 'any',
+              value: this.amount,
+              required: true,
+              label: 'Объём для расчёта',
+              signal: scope.signal,
+              onInput: (value) => {
+                this.amount = Number(value);
+                draw();
+              },
+            }),
             body = el('div', 'atlas-data-scope');
-          amount.type = 'number';
-          amount.min = '0';
-          amount.step = 'any';
-          amount.value = this.amount;
-          amount.required = true;
-          amount.setAttribute('aria-label', 'Объём для расчёта');
           pane.append(
             field('Ресурс', resource),
             field('Объём выхода', amount),
@@ -10275,10 +10397,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
               if (path !== 'chain') costs(node, group.body, key + ':cost', false);
             };
             render(plan, body, 'chain');
-          };
-          amount.oninput = () => {
-            this.amount = Number(amount.value);
-            draw();
           };
           this.watch(scope, draw);
           this.ctx.ui.on('resources:catalog-tree', draw, { signal: scope.signal });
@@ -11324,7 +11442,8 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
     RESOURCE_BONUSES: bonuses,
   } = root.AtlasExtensions;
   const { drawResourceMarkers } = root.AtlasExtensions;
-  const { createSelect } = root.AtlasUI.controls;
+  const { createSelect, createTextInput, createNumberInput, createTextArea } =
+    root.AtlasUI.components;
   const { createDataRow, createDataGroup } = root.AtlasUI.dataView;
   const format = (n) => n.toLocaleString('ru-RU', { maximumFractionDigits: 4 });
   const definition = {
@@ -11412,10 +11531,31 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           width: 370,
           height: point ? 475 : 540,
           render(pane, scope, tab) {
+            const examples = document.createElement('datalist');
+            examples.id = uid('goods');
+            for (const good of Object.values(catalog.data.resources))
+              examples.append(new Option(good.name));
             const form = el('form'),
-              title = document.createElement('input'),
-              description = document.createElement('textarea'),
-              resource = document.createElement('input'),
+              title = createTextInput({
+                value: initial?.title || (point ? 'Новая ресурсная точка' : 'Новое производство'),
+                required: true,
+                maxLength: 100,
+                label: 'Название объекта',
+              }),
+              description = createTextArea({
+                value: initial?.description || '',
+                rows: 2,
+                maxLength: 8000,
+                label: 'Описание объекта',
+              }),
+              resource = createTextInput({
+                value: initial?.resource === '*' ? '' : initial?.resource || '',
+                placeholder: point ? 'Пусто — все ресурсы' : 'Например, железо',
+                required: !point,
+                maxLength: 80,
+                label: 'Ресурс или продукт',
+                list: examples.id,
+              }),
               activity = createSelect(
                 [...(point ? [['*', 'Все виды']] : []), ...Object.entries(activities)],
                 undefined,
@@ -11424,30 +11564,12 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                   label: 'Вид производства',
                 },
               ),
-              unit = document.createElement('input');
-            title.value =
-              initial?.title || (point ? 'Новая ресурсная точка' : 'Новое производство');
-            title.required = true;
-            title.maxLength = 100;
-            title.setAttribute('aria-label', 'Название объекта');
-            description.value = initial?.description || '';
-            description.rows = 2;
-            description.maxLength = 8000;
-            description.setAttribute('aria-label', 'Описание объекта');
-            resource.value = initial?.resource === '*' ? '' : initial?.resource || '';
-            resource.placeholder = point ? 'Пусто — все ресурсы' : 'Например, железо';
-            resource.required = !point;
-            resource.maxLength = 80;
-            resource.setAttribute('aria-label', 'Ресурс или продукт');
-            const examples = document.createElement('datalist');
-            examples.id = uid('goods');
-            for (const good of Object.values(catalog.data.resources))
-              examples.append(new Option(good.name));
-            resource.setAttribute('list', examples.id);
-            unit.value = initial?.unit === '*' ? '' : initial?.unit || (point ? '' : 'ед./ход');
-            unit.placeholder = point ? 'Пусто — любые единицы' : 'ед./ход';
-            unit.maxLength = 40;
-            unit.setAttribute('aria-label', 'Единица выпуска');
+              unit = createTextInput({
+                value: initial?.unit === '*' ? '' : initial?.unit || (point ? '' : 'ед./ход'),
+                placeholder: point ? 'Пусто — любые единицы' : 'ед./ход',
+                maxLength: 40,
+                label: 'Единица выпуска',
+              });
             form.append(
               el('p', 'muted small', 'Провинция #' + regionId),
               field('Название', title),
@@ -11461,21 +11583,21 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             const buffRows = [],
               inputRows = [];
             if (!point) {
-              rate = document.createElement('input');
-              rate.type = 'number';
-              rate.min = 0;
-              rate.step = 'any';
-              rate.value = initial?.baseOutput ?? 10;
-              rate.required = true;
-              rate.setAttribute('aria-label', 'Базовый выпуск');
-              priority = document.createElement('input');
-              priority.type = 'number';
-              priority.min = 0;
-              priority.max = 1000000;
-              priority.step = 1;
-              priority.value = initial?.priority ?? 0;
-              priority.required = true;
-              priority.setAttribute('aria-label', 'Приоритет снабжения');
+              rate = createNumberInput({
+                min: 0,
+                step: 'any',
+                value: initial?.baseOutput ?? 10,
+                required: true,
+                label: 'Базовый выпуск',
+              });
+              priority = createNumberInput({
+                min: 0,
+                max: 1000000,
+                step: 1,
+                value: initial?.priority ?? 0,
+                required: true,
+                label: 'Приоритет снабжения',
+              });
               form.append(
                 field('Выпуск', rate),
                 field('Приоритет', priority),
@@ -11490,25 +11612,27 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
               const addInput = (value = {}) => {
                 const n = ++inputSequence,
                   row = el('div', 'resource-input-row'),
-                  name = document.createElement('input'),
-                  amount = document.createElement('input'),
-                  inputUnit = document.createElement('input');
-                name.value = value.resource || '';
-                name.required = true;
-                name.maxLength = 80;
-                name.placeholder = 'Сырьё';
-                name.setAttribute('list', examples.id);
-                name.setAttribute('aria-label', 'Расход: ресурс ' + n);
-                amount.type = 'number';
-                amount.min = 0;
-                amount.step = 'any';
-                amount.value = value.amount ?? 1;
-                amount.required = true;
-                amount.setAttribute('aria-label', 'Расход: количество ' + n);
-                inputUnit.value = value.unit || unit.value || 'ед./ход';
-                inputUnit.required = true;
-                inputUnit.maxLength = 40;
-                inputUnit.setAttribute('aria-label', 'Расход: единица ' + n);
+                  name = createTextInput({
+                    value: value.resource || '',
+                    required: true,
+                    maxLength: 80,
+                    placeholder: 'Сырьё',
+                    list: examples.id,
+                    label: 'Расход: ресурс ' + n,
+                  }),
+                  amount = createNumberInput({
+                    min: 0,
+                    step: 'any',
+                    value: value.amount ?? 1,
+                    required: true,
+                    label: 'Расход: количество ' + n,
+                  }),
+                  inputUnit = createTextInput({
+                    value: value.unit || unit.value || 'ед./ход',
+                    required: true,
+                    maxLength: 40,
+                    label: 'Расход: единица ' + n,
+                  });
                 const record = { name, amount, unit: inputUnit },
                   controls = el('div', 'resource-input-controls');
                 controls.append(
@@ -11548,26 +11672,28 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                     () => updateFilters(),
                     { value: buff.type, label: 'Тип баффа' },
                   ),
-                  value = document.createElement('input');
-                value.type = 'number';
-                value.min = 0;
-                value.step = 'any';
-                value.value = buff.value;
-                value.required = true;
-                value.setAttribute('aria-label', 'Величина баффа');
-                const inputResource = document.createElement('input'),
-                  inputUnit = document.createElement('input'),
+                  value = createNumberInput({
+                    min: 0,
+                    step: 'any',
+                    value: buff.value,
+                    required: true,
+                    label: 'Величина баффа',
+                  });
+                const inputResource = createTextInput({
+                    value:
+                      buff.inputResource && buff.inputResource !== '*' ? buff.inputResource : '',
+                    placeholder: 'Любое сырьё',
+                    maxLength: 80,
+                    label: 'Бафф: сырьё',
+                    list: examples.id,
+                  }),
+                  inputUnit = createTextInput({
+                    value: buff.inputUnit && buff.inputUnit !== '*' ? buff.inputUnit : '',
+                    placeholder: 'Любые единицы',
+                    maxLength: 40,
+                    label: 'Бафф: единица сырья',
+                  }),
                   filters = el('div', 'resource-input-controls');
-                inputResource.value =
-                  buff.inputResource && buff.inputResource !== '*' ? buff.inputResource : '';
-                inputResource.placeholder = 'Любое сырьё';
-                inputResource.maxLength = 80;
-                inputResource.setAttribute('aria-label', 'Бафф: сырьё');
-                inputResource.setAttribute('list', examples.id);
-                inputUnit.value = buff.inputUnit && buff.inputUnit !== '*' ? buff.inputUnit : '';
-                inputUnit.placeholder = 'Любые единицы';
-                inputUnit.maxLength = 40;
-                inputUnit.setAttribute('aria-label', 'Бафф: единица сырья');
                 filters.append(inputResource, inputUnit);
                 const updateFilters = () => {
                   filters.hidden = !bonuses[type.value].efficiency;
@@ -12591,10 +12717,10 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
   };
   let editorSerial = 0;
 
-  const { createSelect } =
+  const { createSelect, createTextInput, createNumberInput } =
     typeof module !== 'undefined' && module.exports
-      ? require('../packages/ui/controls.js')
-      : root.AtlasUI.controls;
+      ? require('../packages/ui/components.js')
+      : root.AtlasUI.components;
   function nameOf(state, id) {
     return '#' + id + (state.meta.nations?.names?.[id] ? ' · ' + state.meta.nations.names[id] : '');
   }
@@ -12698,18 +12824,21 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
           });
           const inputs = [];
           const makeInput = (value, label, numeric = true) => {
-            const input = document.createElement('input');
-            input.type = numeric ? 'number' : 'text';
-            input.value = value ?? '';
-            if (numeric) {
-              input.min = spec[0];
-              input.max = spec[1];
-              input.step = key === 'time.offsetMinutes' ? '1' : 'any';
-            } else input.maxLength = 100;
-            input.setAttribute('aria-label', label);
-            input.oninput = () => {
-              toggle.checked = true;
+            const options = {
+              value: value ?? '',
+              label,
+              onInput: () => {
+                toggle.checked = true;
+              },
             };
+            const input = numeric
+              ? createNumberInput({
+                  ...options,
+                  min: spec[0],
+                  max: spec[1],
+                  step: key === 'time.offsetMinutes' ? '1' : 'any',
+                })
+              : createTextInput({ ...options, maxLength: 100 });
             inputs.push(input);
             return input;
           };
@@ -13332,7 +13461,7 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
       this.selectedId = regionId;
       const { ctx } = this,
         { el, field } = root.AtlasUI.dom,
-        { button, createSwitch } = root.AtlasUI.controls,
+        { button, createSwitch, createTextInput, createNumberInput } = root.AtlasUI.components,
         { createDataRow, createDataGroup } = root.AtlasUI.dataView;
       return ctx.window({
         id: 'time',
@@ -13359,8 +13488,8 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
             current = createDataGroup('Выбранная провинция', { open: true }),
             currentData = el('div'),
             editor = createDataGroup('Изменить часовой пояс', { open: false }),
-            offset = el('input'),
-            zoneName = el('input'),
+            offset = createNumberInput({ min: -840, max: 840, step: 1 }),
+            zoneName = createTextInput({ maxLength: 100 }),
             editorTarget = el('p', 'muted'),
             pins = createDataGroup('Местное время', { open: true }),
             clockRows = el('div'),
@@ -13393,12 +13522,6 @@ small,.small,.mono { font-size:inherit; font-family:inherit }
                 throw new Error('Укажите дату и время UTC между 1800 и 2200 годами.');
               this.setUTC(utc.value + 'Z');
             });
-          offset.type = 'number';
-          offset.min = '-840';
-          offset.max = '840';
-          offset.step = '1';
-          zoneName.type = 'text';
-          zoneName.maxLength = 100;
           const stop = () => {
             if (timer !== null) clearInterval(timer);
             timer = null;

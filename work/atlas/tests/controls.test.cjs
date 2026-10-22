@@ -186,3 +186,109 @@ test('invalid and duplicate select items fail atomically before replacing the vi
     }
     assert.throws(() => createSelect([], true));
   }));
+
+test('text and multiline fields preserve drafts, constraints and native form attributes without invoking callbacks', () =>
+  fixture(() => {
+    const { createTextInput, createTextArea } = require('../packages/ui/components.js');
+    const calls = [];
+    const node = createTextInput({
+      value: '<b>Название</b>',
+      type: 'search',
+      label: 'Название',
+      name: 'title',
+      placeholder: 'Найти',
+      maxLength: 80,
+      minLength: 1,
+      required: true,
+      readOnly: true,
+      disabled: true,
+      list: 'goods',
+      autocomplete: 'off',
+      onInput: (value) => calls.push(value),
+    });
+    assert.equal(node.type, 'search');
+    assert.equal(node.value, '<b>Название</b>');
+    assert.equal(node.getAttribute('aria-label'), 'Название');
+    assert.equal(node.name, 'title');
+    assert.equal(node.placeholder, 'Найти');
+    assert.equal(node.maxLength, 80);
+    assert.equal(node.minLength, 1);
+    assert.equal(node.readOnly, true);
+    assert.equal(node.required, true);
+    assert.equal(node.disabled, true);
+    assert.equal(node.getAttribute('list'), 'goods');
+    assert.equal(node.autocomplete, 'off');
+    node.value = 'Модель обновилась';
+    assert.deepEqual(calls, []);
+    const area = createTextArea({
+      value: 'Первая\nВторая',
+      rows: 3,
+      maxLength: 8000,
+      label: 'Описание',
+    });
+    assert.equal(area.tag, 'textarea');
+    assert.equal(area.value, 'Первая\nВторая');
+    assert.equal(area.rows, 3);
+    assert.equal(area.maxLength, 8000);
+    assert.equal(createTextInput({ value: null }).value, '');
+    assert.throws(() => createTextInput({ type: 'number' }));
+    assert.throws(() => createTextInput({ onInput: true }));
+  }));
+
+test('number fields keep blank values distinct from zero and leave range validation to the native input', () =>
+  fixture(() => {
+    const { createNumberInput } = require('../packages/ui/components.js');
+    const node = createNumberInput({
+      value: -12.5,
+      min: -840,
+      max: 840,
+      step: 'any',
+      required: true,
+      label: 'Смещение',
+    });
+    assert.equal(node.type, 'number');
+    assert.equal(node.value, '-12.5');
+    assert.equal(node.min, -840);
+    assert.equal(node.max, 840);
+    assert.equal(node.step, 'any');
+    assert.equal(node.required, true);
+    assert.equal(createNumberInput().value, '');
+    assert.equal(createNumberInput({ value: 0 }).value, '0');
+    assert.equal(createNumberInput({ value: null }).value, '');
+    node.value = '';
+    assert.equal(node.value, '', 'the component never substitutes zero');
+  }));
+
+test('all value fields separate input and change events and release both with their owner', () =>
+  fixture(() => {
+    const {
+      createTextInput,
+      createNumberInput,
+      createTextArea,
+    } = require('../packages/ui/components.js');
+    for (const create of [createTextInput, createNumberInput, createTextArea]) {
+      const lifetime = new AbortController(),
+        calls = [];
+      const node = create({
+        value: '1',
+        signal: lifetime.signal,
+        onInput: (value, event) => {
+          assert.equal(value, node.value);
+          calls.push([event.type, value]);
+        },
+        onChange: (value, event) => calls.push([event.type, value]),
+      });
+      node.value = '2';
+      assert.equal(calls.length, 0);
+      node.dispatchEvent(new Event('input'));
+      node.dispatchEvent(new Event('change'));
+      assert.deepEqual(calls, [
+        ['input', '2'],
+        ['change', '2'],
+      ]);
+      lifetime.abort();
+      node.dispatchEvent(new Event('input'));
+      node.dispatchEvent(new Event('change'));
+      assert.equal(calls.length, 2);
+    }
+  }));

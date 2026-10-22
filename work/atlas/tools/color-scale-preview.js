@@ -1,15 +1,17 @@
 /* Isolated UI preview: uses the production model, controls, menus and windows. */
 (function () {
   'use strict';
-  const { ColorScale, WindowManager, TreeMenu, controls, dataView } = AtlasUI;
-  const { button, createColorScale } = controls;
-  const { createDataRow, createDataGroup } = dataView;
-  const el = (tag, className = '', text = '') => {
-    const node = document.createElement(tag);
-    node.className = className;
-    node.textContent = text;
-    return node;
-  };
+  const { WindowManager, TreeMenu } = AtlasUI;
+  const {
+    ColorScale,
+    button,
+    createColorScale,
+    createDataRow,
+    createDataGroup,
+    createNumberInput,
+    el,
+    field,
+  } = AtlasUI.components;
   const windows = new WindowManager(document.getElementById('workspace'));
   let points = [
     { value: 0, color: '#264caa' },
@@ -34,11 +36,15 @@
         const comparison = el('div');
         const error = el('p', 'form-error');
         error.setAttribute('role', 'status');
-        const probe = document.createElement('input');
-        probe.type = 'number';
-        probe.step = 'any';
-        probe.value = sample;
-        probe.setAttribute('aria-label', 'Значение для проверки цвета');
+        const probe = createNumberInput({
+          step: 'any',
+          value: sample,
+          label: 'Значение для проверки цвета',
+          onInput: (_, event) => {
+            sample = event.currentTarget.valueAsNumber;
+            update();
+          },
+        });
         const raw = createDataGroup('Сырые точки', { open: false });
         const rawText = el('pre', 'scale-preview-json');
         raw.body.append(rawText);
@@ -76,15 +82,15 @@
           editor.body.replaceChildren();
           for (const [i, point] of points.entries()) {
             const row = el('div', 'scale-preview-point');
-            const value = document.createElement('input');
-            value.type = 'number';
-            value.step = 'any';
-            value.value = point.value;
-            value.setAttribute('aria-label', 'Значение точки ' + (i + 1));
-            value.oninput = () => {
-              point.value = value.valueAsNumber;
-              update();
-            };
+            const value = createNumberInput({
+              step: 'any',
+              value: point.value,
+              label: 'Значение точки ' + (i + 1),
+              onInput: (_, event) => {
+                point.value = event.currentTarget.valueAsNumber;
+                update();
+              },
+            });
             const color = document.createElement('input');
             color.type = 'color';
             color.value = point.color;
@@ -116,12 +122,6 @@
             }),
           );
         };
-        probe.oninput = () => {
-          sample = probe.valueAsNumber;
-          update();
-        };
-        const field = el('label', 'field');
-        field.append(el('span', 'field-label', 'Проверить значение'), probe);
         content.append(
           el(
             'p',
@@ -130,7 +130,7 @@
           ),
           editor.element,
           error,
-          field,
+          field('Проверить значение', probe),
           comparison,
           raw.element,
           el(

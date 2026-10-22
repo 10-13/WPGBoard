@@ -90,9 +90,87 @@
       );
     return node;
   }
-  Object.assign((root.AtlasUI ||= {}), {
-    controls: Object.freeze({ button, createSwitch, createSelect }),
-  });
-  if (typeof module !== 'undefined' && module.exports)
-    module.exports = { button, createSwitch, createSelect };
+  function valueInput(tag, type, options) {
+    const { value = '', label, className = '', onInput, onChange, signal } = options;
+    for (const callback of [onInput, onChange])
+      if (callback != null && typeof callback !== 'function')
+        throw new TypeError('Обработчик поля ввода должен быть функцией.');
+    const node = document.createElement(tag);
+    if (type) node.type = type;
+    node.className = [tag === 'textarea' ? 'atlas-textarea' : 'atlas-input', className]
+      .filter(Boolean)
+      .join(' ');
+    for (const key of [
+      'id',
+      'name',
+      'title',
+      'placeholder',
+      'required',
+      'disabled',
+      'readOnly',
+      'minLength',
+      'maxLength',
+      'pattern',
+      'min',
+      'max',
+      'step',
+      'rows',
+      'cols',
+      'autocomplete',
+      'inputMode',
+      'spellcheck',
+      'wrap',
+    ])
+      if (options[key] !== undefined) node[key] = options[key];
+    if (label !== undefined) node.setAttribute('aria-label', label);
+    if (options.list !== undefined) node.setAttribute('list', options.list);
+    node.value = value == null ? '' : String(value);
+    for (const [event, callback] of [
+      ['input', onInput],
+      ['change', onChange],
+    ])
+      if (callback)
+        node.addEventListener(
+          event,
+          (event) => callback(node.value, event),
+          signal ? { signal } : undefined,
+        );
+    return node;
+  }
+  function createTextInput({ type = 'text', ...options } = {}) {
+    if (!['text', 'search', 'email', 'url', 'tel', 'password'].includes(type))
+      throw new TypeError(
+        'Текстовое поле поддерживает text, search, email, url, tel или password.',
+      );
+    return valueInput('input', type, options);
+  }
+  function createNumberInput(options = {}) {
+    return valueInput('input', 'number', options);
+  }
+  function createTextArea(options = {}) {
+    return valueInput('textarea', null, options);
+  }
+  function el(tag, className = '', text = '') {
+    const node = document.createElement(tag);
+    node.className = className;
+    node.textContent = text;
+    return node;
+  }
+  function field(label, input) {
+    const node = el('label', 'field');
+    node.append(el('span', 'field-label', label), input);
+    return node;
+  }
+  const api = {
+    button,
+    createSwitch,
+    createSelect,
+    createTextInput,
+    createNumberInput,
+    createTextArea,
+    el,
+    field,
+  };
+  Object.assign((root.AtlasUI ||= {}), { controls: Object.freeze(api) });
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);

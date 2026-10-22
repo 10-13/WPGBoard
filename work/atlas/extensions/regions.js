@@ -2,6 +2,7 @@
   'use strict';
   const { el, button, field } = root.AtlasUI.dom,
     { createDataRow } = root.AtlasUI.dataView;
+  const { createTextInput } = root.AtlasUI.components;
   const definition = {
     id: 'regions',
     name: 'Регионы',
@@ -59,11 +60,12 @@
           height: 180,
           render(pane, scope, tab) {
             const form = el('form'),
-              name = document.createElement('input');
-            name.value = original?.name || '';
-            name.required = true;
-            name.maxLength = 80;
-            name.setAttribute('aria-label', 'Название региона');
+              name = createTextInput({
+                value: original?.name || '',
+                required: true,
+                maxLength: 80,
+                label: 'Название региона',
+              });
             form.append(field('Название', name));
             if (!id)
               form.append(

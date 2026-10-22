@@ -2,6 +2,7 @@
   'use strict';
   const { el, button } = root.AtlasUI.dom,
     { download, chooseFile, safeName } = root.AtlasPlatform;
+  const { createTextInput } = root.AtlasUI.components;
   const definition = {
     id: 'history',
     name: 'Ветки и журнал',
@@ -118,10 +119,11 @@
                 pane.append(row);
               }
               const row = el('form', 'inline-form'),
-                name = document.createElement('input');
-              name.placeholder = 'Название новой ветки';
-              name.maxLength = 80;
-              name.setAttribute('aria-label', 'Название новой ветки');
+                name = createTextInput({
+                  placeholder: 'Название новой ветки',
+                  maxLength: 80,
+                  label: 'Название новой ветки',
+                });
               const create = button('+ Ветка', () => {});
               create.type = 'submit';
               row.append(name, create);
@@ -234,9 +236,10 @@
           width: 315,
           height: 185,
           render(pane, scope, tab) {
-            const input = document.createElement('input');
-            input.setAttribute('aria-label', 'Имя импортируемой ветки');
-            input.value = String(bundle.name || 'proposal') + '-импорт';
+            const input = createTextInput({
+              label: 'Имя импортируемой ветки',
+              value: String(bundle.name || 'proposal') + '-импорт',
+            });
             pane.append(
               el('p', 'muted', 'Изменения останутся отдельной веткой до слияния в main.'),
               input,

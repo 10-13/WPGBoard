@@ -108,7 +108,12 @@ test('nation ownership uses the shared one-pass layer; colors, scope, undo and v
   const sandbox = {
     AtlasCore: core,
     AtlasExtensions: { ...global.AtlasExtensions },
-    AtlasUI: { dom: {}, dataView: {}, controls: require('../packages/ui/controls.js') },
+    AtlasUI: {
+      dom: {},
+      dataView: {},
+      controls: require('../packages/ui/controls.js'),
+      components: require('../packages/ui/components.js'),
+    },
     document: {
       createElement() {
         return {

@@ -7,7 +7,7 @@ files = [
     'packages/core/province-topology.js', 'packages/core/index.js',
     'packages/ui/tree-menu.js', 'packages/ui/controls.js',
     'packages/ui/color-scale-model.js', 'packages/ui/color-scale.js',
-    'packages/ui/data-view.js', 'packages/ui/windows.js',
+    'packages/ui/data-view.js', 'packages/ui/components.js', 'packages/ui/windows.js',
     'tools/color-scale-preview.js',
 ]
 styles = '\n'.join((ROOT / f).read_text() for f in [

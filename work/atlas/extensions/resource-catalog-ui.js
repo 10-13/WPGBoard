@@ -3,7 +3,8 @@
   'use strict';
   const { el, button, field } = root.AtlasUI.dom,
     { createDataRow, createDataGroup } = root.AtlasUI.dataView;
-  const { createSelect } = root.AtlasUI.controls;
+  const { createSelect, createTextInput, createNumberInput, createTextArea } =
+    root.AtlasUI.components;
   const format = (n) => n.toLocaleString('ru-RU', { maximumSignificantDigits: 8 });
   class ResourceCatalogUI {
     constructor(ctx, catalog) {
@@ -136,10 +137,13 @@
             ),
           );
           pane.append(button('+ Чертёж', () => this.editRecipe(), { className: 'wide' }));
-          const search = document.createElement('input');
-          search.type = 'search';
-          search.placeholder = 'Поиск по названию или ресурсу';
-          search.setAttribute('aria-label', 'Поиск чертежей');
+          const search = createTextInput({
+            type: 'search',
+            placeholder: 'Поиск по названию или ресурсу',
+            label: 'Поиск чертежей',
+            onInput: () => draw(),
+            signal: scope.signal,
+          });
           const body = el('div', 'atlas-data-scope');
           pane.append(search, body);
           const draw = () => {
@@ -187,7 +191,6 @@
             }
             if (!categories.size) body.append(el('p', 'muted', 'Чертежи не найдены.'));
           };
-          search.oninput = draw;
           this.watch(scope, draw);
           draw();
         },
@@ -206,10 +209,13 @@
           const expanded = new Map();
           this.navigation(pane);
           pane.append(button('+ Ресурс', () => this.editResource(), { className: 'wide' }));
-          const search = document.createElement('input');
-          search.type = 'search';
-          search.placeholder = 'Название ресурса';
-          search.setAttribute('aria-label', 'Поиск ресурсов');
+          const search = createTextInput({
+            type: 'search',
+            placeholder: 'Название ресурса',
+            label: 'Поиск ресурсов',
+            onInput: () => draw(),
+            signal: scope.signal,
+          });
           const body = el('div', 'atlas-data-scope');
           pane.append(search, body);
           const draw = () => {
@@ -253,7 +259,6 @@
             }
             if (!categories.size) body.append(el('p', 'muted', 'Ресурсы не найдены.'));
           };
-          search.oninput = draw;
           this.watch(scope, draw);
           draw();
         },
@@ -270,9 +275,24 @@
         height: 350,
         render: (pane, scope, tab) => {
           const form = el('form'),
-            name = document.createElement('input'),
-            category = document.createElement('input'),
-            unit = document.createElement('input'),
+            name = createTextInput({
+              value: original?.name || '',
+              required: true,
+              maxLength: 80,
+              label: 'Название ресурса',
+            }),
+            category = createTextInput({
+              value: original?.category || 'Прочее',
+              required: true,
+              maxLength: 80,
+              label: 'Категория ресурса',
+            }),
+            unit = createTextInput({
+              value: original?.unit || 'ед.',
+              required: true,
+              maxLength: 40,
+              label: 'Единица ресурса',
+            }),
             kind = createSelect(
               [
                 ['raw', 'Природный ресурс'],
@@ -281,38 +301,30 @@
               undefined,
               { value: original?.kind || 'product', label: 'Тип ресурса' },
             ),
-            description = document.createElement('textarea');
+            description = createTextArea({
+              value: original?.description || '',
+              maxLength: 4000,
+              rows: 4,
+              label: 'Описание ресурса',
+            });
           const color = document.createElement('input'),
-            colorHex = document.createElement('input'),
+            colorHex = createTextInput({
+              value: this.catalog.color(original?.id || 'Новый ресурс'),
+              required: true,
+              maxLength: 7,
+              pattern: '#[0-9a-fA-F]{6}',
+              label: 'Цвет ресурса HEX',
+              title: 'Цвет в формате #RRGGBB',
+              onInput: (value) => {
+                if (root.AtlasExtensions.isResourceColor(value)) color.value = value;
+              },
+            }),
             colorControls = el('div', 'resource-color-controls');
-          for (const [node, label, value, limit] of [
-            [name, 'Название ресурса', original?.name || '', 80],
-            [category, 'Категория ресурса', original?.category || 'Прочее', 80],
-            [unit, 'Единица ресурса', original?.unit || 'ед.', 40],
-          ]) {
-            node.value = value;
-            node.required = true;
-            node.maxLength = limit;
-            node.setAttribute('aria-label', label);
-          }
-          description.value = original?.description || '';
-          description.maxLength = 4000;
-          description.rows = 4;
-          description.setAttribute('aria-label', 'Описание ресурса');
           color.type = 'color';
           color.value = this.catalog.color(original?.id || 'Новый ресурс');
           color.setAttribute('aria-label', 'Цвет ресурса');
-          colorHex.value = color.value;
-          colorHex.required = true;
-          colorHex.maxLength = 7;
-          colorHex.pattern = '#[0-9a-fA-F]{6}';
-          colorHex.setAttribute('aria-label', 'Цвет ресурса HEX');
-          colorHex.title = 'Цвет в формате #RRGGBB';
           color.oninput = () => {
             colorHex.value = color.value;
-          };
-          colorHex.oninput = () => {
-            if (root.AtlasExtensions.isResourceColor(colorHex.value)) color.value = colorHex.value;
           };
           colorControls.append(color, colorHex);
           form.append(
@@ -363,16 +375,18 @@
         height: 550,
         render: (pane, scope, tab) => {
           const form = el('form'),
-            name = document.createElement('input'),
-            description = document.createElement('textarea');
-          name.value = original?.name || '';
-          name.required = true;
-          name.maxLength = 100;
-          name.setAttribute('aria-label', 'Название чертежа');
-          description.value = original?.description || '';
-          description.rows = 2;
-          description.maxLength = 4000;
-          description.setAttribute('aria-label', 'Описание чертежа');
+            name = createTextInput({
+              value: original?.name || '',
+              required: true,
+              maxLength: 100,
+              label: 'Название чертежа',
+            }),
+            description = createTextArea({
+              value: original?.description || '',
+              rows: 2,
+              maxLength: 4000,
+              label: 'Описание чертежа',
+            });
           form.append(field('Название', name), field('Описание', description));
           const sides = {};
           for (const [side, label] of [
@@ -401,19 +415,19 @@
                     label: label + ': ресурс ' + n,
                   },
                 ),
-                amount = document.createElement('input'),
+                amount = createNumberInput({
+                  min: 0,
+                  step: 'any',
+                  required: true,
+                  value: initial.amount ?? 1,
+                  label: label + ': объём ' + n,
+                }),
                 controls = el('div', 'resource-input-controls'),
                 unit = el('span', 'muted');
               const showUnit = () => {
                 unit.textContent = this.catalog.data.resources[resource.value]?.unit || '';
               };
               showUnit();
-              amount.type = 'number';
-              amount.min = '0';
-              amount.step = 'any';
-              amount.required = true;
-              amount.value = initial.amount ?? 1;
-              amount.setAttribute('aria-label', label + ': объём ' + n);
               const record = { resource, amount };
               controls.append(
                 amount,
@@ -496,14 +510,19 @@
                 signal: scope.signal,
               },
             ),
-            amount = document.createElement('input'),
+            amount = createNumberInput({
+              min: 0,
+              step: 'any',
+              value: this.amount,
+              required: true,
+              label: 'Объём для расчёта',
+              signal: scope.signal,
+              onInput: (value) => {
+                this.amount = Number(value);
+                draw();
+              },
+            }),
             body = el('div', 'atlas-data-scope');
-          amount.type = 'number';
-          amount.min = '0';
-          amount.step = 'any';
-          amount.value = this.amount;
-          amount.required = true;
-          amount.setAttribute('aria-label', 'Объём для расчёта');
           pane.append(
             field('Ресурс', resource),
             field('Объём выхода', amount),
@@ -634,10 +653,6 @@
               if (path !== 'chain') costs(node, group.body, key + ':cost', false);
             };
             render(plan, body, 'chain');
-          };
-          amount.oninput = () => {
-            this.amount = Number(amount.value);
-            draw();
           };
           this.watch(scope, draw);
           this.ctx.ui.on('resources:catalog-tree', draw, { signal: scope.signal });

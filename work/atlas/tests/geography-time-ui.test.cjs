@@ -97,7 +97,7 @@ function fixture(run) {
     clearInterval: global.clearInterval,
   };
   global.document = { createElement: (tag) => new Node(tag), activeElement: null };
-  require('../packages/ui/controls.js');
+  require('../packages/ui/components.js');
   require('../packages/ui/data-view.js');
   global.AtlasUI.dom = {
     el: (tag, name = '', text = '') =>
