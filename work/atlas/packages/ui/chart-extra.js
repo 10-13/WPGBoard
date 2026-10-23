@@ -4,6 +4,10 @@
   const commonJS = typeof module !== 'undefined' && module.exports;
   const { el, button } = commonJS ? require('./controls.js') : root.AtlasUI.controls;
   const model = commonJS ? require('./chart-model.js') : root.AtlasUI.chartModel;
+  const { kinds: hierarchyKinds } = commonJS
+    ? require('./chart-hierarchy-model.js')
+    : root.AtlasUI.hierarchyModel;
+  const hierarchyCharts = commonJS ? require('./chart-hierarchy.js') : root.AtlasUI.hierarchyCharts;
   const { createColorScale } = commonJS ? require('./color-scale.js') : root.AtlasUI;
   const palette = ['#76b6ce', '#d5b16f', '#a3bb83', '#b697c0', '#d18c7c', '#7db5a6'];
   const finite = (value) => typeof value === 'number' && Number.isFinite(value);
@@ -39,8 +43,14 @@
         throw new TypeError('Размеры матрицы и конечные значения должны соответствовать подписям.');
       return { items: [], rows, columns, values: input.values.map((row) => [...row]) };
     }
-    if (kind === 'treemap') {
+    if (hierarchyKinds.includes(kind)) {
       if (options.scale) checkScale(options.scale);
+      const orientations =
+        kind === 'tree' || kind === 'cluster'
+          ? ['horizontal', 'vertical', 'radial']
+          : ['horizontal', 'vertical'];
+      if (options.orientation !== undefined && !orientations.includes(options.orientation))
+        throw new TypeError('Неизвестная ориентация иерархии.');
       return { items: [], tree: model.hierarchy(input) };
     }
     if (!Array.isArray(input)) throw new TypeError('Данные диаграммы — массив.');
@@ -360,111 +370,12 @@
     ctx.caption.textContent = options.unit || 'Значение → цвет · — нет данных';
     return true;
   }
-  function treemap(ctx) {
-    const { model: data, local, plot, options, mark, format, redraw, width } = ctx;
-    const path = [data.tree];
-    for (const id of local.treePath || []) {
-      const child = path.at(-1).children.find((item) => item.id === id);
-      if (!child) break;
-      path.push(child);
-    }
-    local.treePath = path.slice(1).map((item) => item.id);
-    const current = path.at(-1);
-    const nav = el('nav', 'atlas-treemap-nav');
-    nav.setAttribute('aria-label', 'Путь TreeMap');
-    const navigate = (ids) => {
-      local.treePath = ids;
-      redraw();
-      plot.querySelector?.('.atlas-treemap-nav button')?.focus?.({ preventScroll: true });
-    };
-    nav.append(
-      button('← Назад', () => navigate(local.treePath.slice(0, -1)), {
-        disabled: path.length === 1,
-      }),
-    );
-    path.forEach((item, i) =>
-      nav.append(
-        button(item.label, () => navigate(path.slice(1, i + 1).map((n) => n.id)), {
-          disabled: i === path.length - 1,
-        }),
-      ),
-    );
-    plot.append(nav);
-    if (!current.value) return false;
-    const frame = el('div', 'atlas-treemap-frame');
-    frame.style.height = options.height + 'px';
-    plot.append(frame);
-    const draw = (parent, nodes, w, h, ids, depth = 0) => {
-      model.treemap(nodes, w, h).forEach((box, i) => {
-        const item = box.item,
-          container = el('div', 'atlas-treemap-tile');
-        Object.assign(container.style, {
-          left: box.x + 'px',
-          top: box.y + 'px',
-          width: box.width + 'px',
-          height: box.height + 'px',
-        });
-        const color =
-          options.scale && item.colorValue !== undefined
-            ? options.scale.color(item.colorValue)
-            : item.color || palette[i % palette.length];
-        container.style.backgroundColor = color;
-        const control = button('', () => {});
-        control.className = 'atlas-treemap-target';
-        const description = `${item.label} · ${format(item.value)}${item.colorValue !== undefined ? ' · Цвет: ' + format(item.colorValue) : ''}`;
-        const childPath = [...ids, item.id];
-        const nested = item.children.length && box.width >= 72 && box.height >= 64 && depth < 5;
-        const textFits =
-          box.width >= 48 &&
-          box.height >= 20 &&
-          item.label.length * 6 <=
-            (box.width - 8) * (nested ? 1 : Math.floor((box.height - 4) / 16));
-        if (textFits) control.textContent = item.label;
-        control.title = description;
-        control.classList.toggle('atlas-treemap-heading', !!nested);
-        container.append(
-          mark(control, { ...item, description }, item.value, '', { path: childPath }, () =>
-            navigate(childPath),
-          ),
-        );
-        parent.append(container);
-        if (nested) {
-          const inside = el('div', 'atlas-treemap-children');
-          container.append(inside);
-          draw(
-            inside,
-            item.children,
-            Math.max(0, box.width - 4),
-            Math.max(0, box.height - 20),
-            childPath,
-            depth + 1,
-          );
-        }
-      });
-    };
-    if (current.children.length)
-      draw(frame, current.children, width, options.height, local.treePath);
-    else {
-      const item = el('div', 'atlas-treemap-leaf', `${current.label} · ${format(current.value)}`);
-      item.style.backgroundColor =
-        options.scale && current.colorValue !== undefined
-          ? options.scale.color(current.colorValue)
-          : current.color || palette[0];
-      frame.append(item);
-    }
-    ctx.caption.textContent = `${current.label} · Всего: ${format(current.value)} · Нажмите сектор, чтобы раскрыть`;
-    if (options.scale)
-      ctx.legend.append(
-        createColorScale(options.scale, {
-          label: 'Дополнительный показатель',
-          formatValue: format,
-          steps: 5,
-        }),
-      );
-    return true;
-  }
-  const renderers = { histogram, scatter, interval, heatmap, treemap };
-  const api = Object.freeze({ prepare, render: (kind, ctx) => renderers[kind](ctx) });
+  const renderers = { histogram, scatter, interval, heatmap };
+  const api = Object.freeze({
+    prepare,
+    render: (kind, ctx) =>
+      hierarchyKinds.includes(kind) ? hierarchyCharts.render(kind, ctx) : renderers[kind](ctx),
+  });
   Object.assign((root.AtlasUI ||= {}), { chartExtra: api });
   if (commonJS) module.exports = api;
 })(globalThis);

@@ -9,7 +9,8 @@ files = ['packages/core/metadata.js', 'packages/core/overlays.js', 'packages/cor
          'packages/core/index.js', 'packages/ui/controls.js',
          'packages/ui/color-scale-model.js', 'packages/ui/color-scale.js',
          'packages/ui/data-view.js', 'packages/ui/components.js',
-         'packages/ui/windows.js', 'packages/ui/chart-model.js', 'packages/ui/chart-extra.js',
+         'packages/ui/windows.js', 'vendor/d3-hierarchy/d3-hierarchy.cjs', 'packages/ui/chart-model.js',
+         'packages/ui/chart-hierarchy-model.js', 'packages/ui/chart-hierarchy.js', 'packages/ui/chart-extra.js',
          'packages/ui/charts.js', 'packages/ui/table.js', 'tools/chart-gallery.js', 'tools/charts-preview.js']
 code = '\n;\n'.join((ROOT / f).read_text() for f in files)
 styles = '\n'.join((ROOT / f).read_text() for f in
@@ -32,7 +33,11 @@ tree_target = LOCAL / 'previews/charts-tree-preview.html'
 write_changed(tree_target, tree_html)
 print(f'Built {tree_target}: {len(tree_html.encode()):,} bytes')
 gallery_html = html.replace('<html lang="ru">', '<html lang="ru" data-preview="gallery">').replace(
-    '<title>АТЛАС — диаграммы и таблица</title>', '<title>АТЛАС — восемь видов диаграмм</title>')
+    '<title>АТЛАС — диаграммы и таблица</title>', '<title>АТЛАС — каталог диаграмм и иерархий</title>')
 gallery_target = LOCAL / 'previews/charts-gallery-preview.html'
 write_changed(gallery_target, gallery_html)
 print(f'Built {gallery_target}: {len(gallery_html.encode()):,} bytes')
+hierarchies_html = gallery_html.replace('data-preview="gallery"', 'data-preview="hierarchies"')
+hierarchies_target = LOCAL / 'previews/charts-hierarchies-preview.html'
+write_changed(hierarchies_target, hierarchies_html)
+print(f'Built {hierarchies_target}: {len(hierarchies_html.encode()):,} bytes')

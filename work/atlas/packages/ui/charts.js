@@ -557,7 +557,7 @@
       node.classList.toggle('atlas-chart--horizontal', horizontal);
       node.classList.toggle('atlas-chart--compact', width < 280);
       plot.style.minHeight =
-        kind === 'pie' || horizontal || ['interval', 'heatmap', 'treemap'].includes(kind)
+        kind === 'pie' || horizontal || model.tree || ['interval', 'heatmap'].includes(kind)
           ? ''
           : options.height + 'px';
       const items = model.items.filter((item) => !hidden.has(item.id));
@@ -643,6 +643,11 @@
     createIntervalChart: (items, options) => createChart('interval', items, options),
     createHeatmap: (matrix, options) => createChart('heatmap', matrix, options),
     createTreeMap: (tree, options) => createChart('treemap', tree, options),
+    createIcicleChart: (tree, options) => createChart('icicle', tree, options),
+    createSunburstChart: (tree, options) => createChart('sunburst', tree, options),
+    createCirclePack: (tree, options) => createChart('pack', tree, options),
+    createTreeChart: (tree, options) => createChart('tree', tree, options),
+    createClusterChart: (tree, options) => createChart('cluster', tree, options),
   });
   Object.assign((root.AtlasUI ||= {}), { charts: api });
   if (commonJS) module.exports = api;

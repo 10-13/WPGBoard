@@ -484,10 +484,12 @@
     desktop.style.height = Math.max(desktop.parentElement.clientHeight, y + rowHeight + gap) + 'px';
     ['pie', 'bar', 'line', 'table'].forEach((kind, i) => open(kind, positions[i]));
   }
-  const openGallery = () => AtlasUI.openChartGallery({ manager, desktop, views, sample, selected });
+  const openGallery = (initialKind = 'bar') =>
+    AtlasUI.openChartGallery({ manager, desktop, views, sample, selected, initialKind });
   toolbar.append(
     el('strong', '', 'Диаграммы и таблица'),
-    button('8 видов', openGallery),
+    button('Каталог', () => openGallery()),
+    button('Иерархии', () => openGallery('icicle')),
     button('Дерево', openTree),
     button('Четыре окна', () => arrange()),
     button('Окна 220 px', () => {
@@ -528,7 +530,8 @@
       ),
     ),
   );
-  if (document.documentElement.dataset.preview === 'gallery') openGallery();
+  if (document.documentElement.dataset.preview === 'hierarchies') openGallery('icicle');
+  else if (document.documentElement.dataset.preview === 'gallery') openGallery();
   else if (document.documentElement.dataset.preview === 'tree') openTree();
   else arrange();
 })();

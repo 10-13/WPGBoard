@@ -10,8 +10,14 @@ const {
   createIntervalChart,
   createHeatmap,
   createTreeMap,
+  createIcicleChart,
+  createSunburstChart,
+  createCirclePack,
+  createTreeChart,
+  createClusterChart,
 } = require('../packages/ui/charts.js');
 const geometry = require('../packages/ui/chart-model.js');
+const hierarchyLayouts = require('../packages/ui/chart-hierarchy-model.js');
 const { ColorScale } = require('../packages/ui/color-scale-model.js');
 const { createTable } = require('../packages/ui/table.js');
 class Node extends EventTarget {
@@ -419,4 +425,177 @@ test('treemap drill-down and back preserve the path, scope closes every chart ty
   scope.abort();
   assert(observers.every((observer) => observer.disconnected));
   assert(charts.every((chart) => chart.children.length === 0));
+});
+
+const hierarchyData = () => ({
+  id: 'world',
+  label: 'World',
+  color: '#123456',
+  colorValue: 60,
+  children: [
+    { id: 'a', label: 'A', value: 9, colorValue: 90 },
+    {
+      id: 'group',
+      label: 'Branch',
+      colorValue: 50,
+      children: [
+        { id: 'b', label: 'B', value: 3, colorValue: 20 },
+        { id: 'c', label: 'C', value: 1, colorValue: 80 },
+      ],
+    },
+  ],
+});
+const hierarchyFactories = [
+  createTreeMap,
+  createIcicleChart,
+  createSunburstChart,
+  createCirclePack,
+  createTreeChart,
+  createClusterChart,
+];
+test('partition views share totals and preserve quantitative spans across levels and orientations', () => {
+  const input = hierarchyData(),
+    original = structuredClone(input),
+    tree = geometry.hierarchy(input);
+  for (const kind of ['icicle', 'sunburst'])
+    for (const orientation of ['horizontal', 'vertical']) {
+      const result = hierarchyLayouts.layout(kind, tree, { width: 600, height: 320, orientation });
+      assert.equal(result.root.value, 13, 'aggregate parents are not summed a second time');
+      assert.equal(result.nodes.length, 5);
+      for (const node of result.nodes) {
+        assert([node.x0, node.x1, node.y0, node.y1].every(Number.isFinite));
+        if (node.parent)
+          assert(
+            Math.abs(
+              (node.x1 - node.x0) / (node.parent.x1 - node.parent.x0) -
+                node.value / node.parent.value,
+            ) < 1e-10,
+          );
+      }
+    }
+  assert.deepEqual(input, original);
+});
+test('circle packing contains every child, separates siblings and uses proportional leaf areas', () => {
+  const tree = geometry.hierarchy(hierarchyData()),
+    result = hierarchyLayouts.layout('pack', tree, { width: 600, height: 320 });
+  for (const node of result.nodes) {
+    assert([node.x, node.y, node.r].every(Number.isFinite));
+    if (node.parent)
+      assert(
+        Math.hypot(node.x - node.parent.x, node.y - node.parent.y) + node.r <= node.parent.r + 1e-8,
+      );
+    if (node.children)
+      for (let i = 0; i < node.children.length; i++)
+        for (let j = i + 1; j < node.children.length; j++) {
+          const a = node.children[i],
+            b = node.children[j];
+          assert(Math.hypot(a.x - b.x, a.y - b.y) >= a.r + b.r - 1e-8);
+        }
+  }
+  const a = result.nodes.find((node) => node.data.id === 'a'),
+    c = result.nodes.find((node) => node.data.id === 'c');
+  assert(Math.abs(a.r ** 2 / c.r ** 2 - 9) < 1e-10);
+});
+test('cluster aligns leaves while tidy tree preserves depth, with finite radial and Cartesian layouts', () => {
+  const tree = geometry.hierarchy(hierarchyData());
+  for (const orientation of ['horizontal', 'vertical', 'radial']) {
+    const cluster = hierarchyLayouts.layout('cluster', tree, {
+      width: 600,
+      height: 320,
+      orientation,
+    });
+    const tidy = hierarchyLayouts.layout('tree', tree, { width: 600, height: 320, orientation });
+    assert.equal(
+      new Set(cluster.nodes.filter((node) => !node.children).map((node) => node.y)).size,
+      1,
+    );
+    assert.equal(
+      new Set(tidy.nodes.filter((node) => !node.children).map((node) => node.y)).size,
+      2,
+    );
+    assert(
+      cluster.nodes
+        .concat(tidy.nodes)
+        .every((node) => Number.isFinite(node.x) && Number.isFinite(node.y)),
+    );
+  }
+});
+test('every hierarchy view uses explicit parent colors and shared scope, drill-down survives resize and updates', (t) => {
+  const observers = fixture(t),
+    scale = new ColorScale([
+      { value: 0, color: '#000000' },
+      { value: 100, color: '#ffffff' },
+    ]);
+  for (const create of hierarchyFactories) {
+    const scope = new AbortController(),
+      input = hierarchyData(),
+      original = structuredClone(input);
+    const chart = create(input, { scale, signal: scope.signal });
+    const actualColors = walk(chart).flatMap((node) => [
+      node.getAttribute('fill'),
+      node.style.backgroundColor,
+    ]);
+    assert(actualColors.includes(scale.color(50)), 'branch uses the shared metric scale');
+    assert(!actualColors.includes('#123456'), 'metric mode does not mix original family colors');
+    parts(chart)
+      .find((node) => node.getAttribute('aria-label').startsWith('Branch ·'))
+      .dispatchEvent(new Event('click'));
+    assert.equal(
+      walk(chart).find((node) => node.tagName === 'button' && node.textContent === '← Назад')
+        .disabled,
+      false,
+    );
+    chart.clientWidth = 181;
+    observers.at(-1).callback();
+    chart.update(input);
+    assert(
+      walk(chart).some(
+        (node) => node.tagName === 'button' && node.textContent === 'Branch' && node.disabled,
+      ),
+    );
+    const before = chart.children[0].children[0];
+    assert.throws(() => chart.update({ label: 'bad', value: -1 }));
+    assert.equal(chart.children[0].children[0], before);
+    chart.update({
+      id: 'world',
+      label: 'World',
+      children: [{ id: 'new', label: 'New', value: 1 }],
+    });
+    assert.equal(
+      walk(chart).find((node) => node.tagName === 'button' && node.textContent === '← Назад')
+        .disabled,
+      true,
+      'removed branch returns to nearest existing ancestor',
+    );
+    assert.deepEqual(input, original);
+    scope.abort();
+    assert.equal(chart.children.length, 0);
+    assert(observers.at(-1).disconnected);
+  }
+});
+test('missing color metrics use a neutral color, and zero-valued structural trees remain visible', (t) => {
+  fixture(t);
+  const scale = new ColorScale([
+    { value: 0, color: '#000000' },
+    { value: 100, color: '#ffffff' },
+  ]);
+  const chart = createIcicleChart(
+    {
+      label: 'Missing',
+      color: '#123456',
+      children: [{ label: 'Known', value: 3, colorValue: 60 }],
+    },
+    { scale },
+  );
+  assert(walk(chart).some((node) => node.style.backgroundColor === '#576977'));
+  for (const create of [createTreeChart, createClusterChart]) {
+    const structural = create({ label: 'Root', children: [{ label: 'Leaf' }] });
+    assert.equal(parts(structural).length, 2);
+    structural.update({ label: 'Root', children: [{ label: 'Leaf' }] }, { orientation: 'radial' });
+    assert(
+      walk(structural).every((node) =>
+        [...node.attributes.values()].every((value) => !/NaN|Infinity/.test(value)),
+      ),
+    );
+  }
 });

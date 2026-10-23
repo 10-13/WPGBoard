@@ -64,3 +64,13 @@ button.atlas-chart-legend-row:hover { background:#2c3d47 }
 .atlas-treemap-target.atlas-treemap-heading { height:16px; justify-content:flex-start; background:#101b238c; text-indent:4px }
 .atlas-treemap-children { position:absolute; top:18px; left:2px; right:2px; bottom:2px }
 .atlas-treemap-leaf { display:flex; width:100%; height:100%; align-items:center; justify-content:center; padding:8px; overflow-wrap:anywhere; color:#101b23 }
+.atlas-icicle-frame { width:100%; min-width:0; position:relative; background:#101b23 }
+.atlas-icicle-cell { position:absolute; display:flex; align-items:center; justify-content:center; min-width:0; min-height:0; padding:0; line-height:16px; color:#f3f1e9; box-shadow:inset 0 0 0 1px #101b23; overflow-wrap:anywhere; text-align:center }
+.atlas-hierarchy-svg { display:block; width:100%; overflow:visible; font:inherit }
+.atlas-hierarchy-label { font:inherit; fill:#f3f1e9; paint-order:stroke; stroke:#15232b90; stroke-width:2px; stroke-linejoin:round }
+.atlas-hierarchy-circle,.atlas-hierarchy-sector { stroke:#15232b; stroke-width:1 }
+.atlas-hierarchy-link { fill:none; stroke:#718c9c; stroke-width:1 }
+.atlas-hierarchy-node { stroke:#15232b; stroke-width:1 }
+.atlas-hierarchy-key { grid-column:1/-1; min-width:0; margin-top:16px }
+.atlas-hierarchy-key .atlas-data-row { min-width:0 }
+.atlas-chart--icicle>.atlas-chart-legend,.atlas-chart--sunburst>.atlas-chart-legend,.atlas-chart--pack>.atlas-chart-legend,.atlas-chart--tree>.atlas-chart-legend,.atlas-chart--cluster>.atlas-chart-legend { display:block; margin-top:16px }

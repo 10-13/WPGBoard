@@ -1,7 +1,7 @@
 /* Local review gallery; deliberately not part of release bundles. */
 (function (root) {
   'use strict';
-  function openChartGallery({ manager, desktop, views, sample, selected }) {
+  function openChartGallery({ manager, desktop, views, sample, selected, initialKind = 'bar' }) {
     const {
       el,
       field,
@@ -22,14 +22,19 @@
       ['scatter', '5. Точечная'],
       ['interval', '6. Интервальная'],
       ['heatmap', '7. Тепловая матрица'],
-      ['treemap', '8. TreeMap'],
+      ['treemap', '8. Nested TreeMap'],
+      ['icicle', '9. Icicle'],
+      ['sunburst', '10. Sunburst'],
+      ['pack', '11. Circle Packing'],
+      ['tree', '12. Дерево'],
+      ['cluster', '13. Дендрограмма'],
     ];
     const colors = ['#76b6ce', '#d5b16f', '#a3bb83', '#b697c0', '#d18c7c'];
     for (const win of manager.windows) manager.closeWindow(win.id);
     desktop.style.height = desktop.parentElement.clientHeight + 'px';
     return manager.open({
       id: 'chart-gallery',
-      title: 'Диаграммы / 8 видов',
+      title: 'Диаграммы и иерархии / 13 видов',
       x: 16,
       y: 16,
       width: Math.min(960, desktop.clientWidth - 32),
@@ -46,7 +51,7 @@
             'muted',
             'Условные данные · Выберите тип диаграммы и вариант. Исходные данные доступны под каждой диаграммой.',
           );
-        let active = 'bar';
+        let active = types.some(([kind]) => kind === initialKind) ? initialKind : 'bar';
         function choose(kind) {
           active = kind;
           for (const [id, entry] of entries)
@@ -189,6 +194,20 @@
                   },
                 ],
           };
+          // This sample's metric is load: parent values are volume-weighted means.
+          // Aggregation stays in the caller; chart components accept explicit colorValue.
+          const summarize = (item) => {
+            if (item.children?.length) {
+              item.children.forEach(summarize);
+              item.value = item.children.reduce((sum, child) => sum + child.value, 0);
+              if (item.value)
+                item.colorValue = item.children.reduce(
+                  (sum, child) => sum + child.colorValue * (child.value / item.value),
+                  0,
+                );
+            }
+          };
+          summarize(treeData);
           return { base, climate, names, barSeries, values, scatter, intervals, matrix, treeData };
         }
         function add(kind, title, description, factory, initial, makeData, addControls) {
@@ -440,46 +459,109 @@
             toggle('Значения в ячейках', 'values');
           },
         );
-        add(
-          'treemap',
-          'TreeMap',
-          'Площадь — объём, вложенность — структура. Маленькие сектора без текста, полная подпись при наведении. Нажмите сектор, чтобы сделать его корнем.',
-          charts.createTreeMap,
-          { height: 288, colorMetric: false },
-          (data, settings) => {
-            const rows = [],
-              walk = (item, prefix = '') => {
-                if (item.children?.length)
-                  item.children.forEach((child) => walk(child, prefix + item.label + ' / '));
-                else if (item.value)
-                  rows.push({
-                    name: prefix + item.label,
-                    value: item.value,
-                    load: item.colorValue,
-                  });
-              };
-            walk(data.treeData);
-            return {
-              data: data.treeData,
-              options: {
-                scale: settings.colorMetric
-                  ? new ColorScale([
-                      { value: 0, color: '#785781' },
-                      { value: 50, color: '#d5b16f' },
-                      { value: 100, color: '#538f82' },
-                    ])
-                  : null,
-              },
-              columns: [
-                { key: 'name', label: 'Ветка / объект', width: 3 },
-                numberColumn('value', 'Объём'),
-                numberColumn('load', 'Загрузка, %'),
-              ],
-              rows,
+        const hierarchyData = (data, settings) => {
+          const rows = [],
+            visit = (item, prefix = '') => {
+              rows.push({
+                name: prefix + item.label,
+                type: item.children?.length ? 'Раздел' : 'Объект',
+                value: item.value || 0,
+                load: item.colorValue,
+              });
+              item.children?.forEach((child) => visit(child, prefix + item.label + ' / '));
             };
-          },
-          ({ toggle }) => toggle('Цвет: загрузка, %', 'colorMetric'),
-        );
+          visit(data.treeData);
+          return {
+            data: data.treeData,
+            options: {
+              scale: settings.colorMetric
+                ? new ColorScale([
+                    { value: 0, color: '#785781' },
+                    { value: 50, color: '#d5b16f' },
+                    { value: 100, color: '#538f82' },
+                  ])
+                : null,
+              colorLabel: 'Загрузка',
+              colorUnit: '%',
+            },
+            columns: [
+              { key: 'name', label: 'Ветка / объект', width: 3 },
+              { key: 'type', label: 'Тип' },
+              numberColumn('value', 'Объём'),
+              numberColumn('load', 'Загрузка, %'),
+            ],
+            rows,
+          };
+        };
+        const hierarchyExamples = [
+          [
+            'treemap',
+            'Nested TreeMap',
+            charts.createTreeMap,
+            'Вложенные прямоугольники: площадь показывает объём. Это единственный оставленный вариант TreeMap. Нажатие делает сектор корнем.',
+          ],
+          [
+            'icicle',
+            'Icicle',
+            charts.createIcicleChart,
+            'Близок к Sunburst: одинаковое разбиение дерева, здесь — прямоугольниками по уровням. Длина блока показывает объём; направление можно переключить.',
+          ],
+          [
+            'sunburst',
+            'Sunburst',
+            charts.createSunburstChart,
+            'Круговой аналог Icicle: кольца — уровни дерева, угловая доля — объём. Текст остаётся горизонтальным. Нажатие на центр возвращает к родителю.',
+          ],
+          [
+            'pack',
+            'Circle Packing',
+            charts.createCirclePack,
+            'Вложенные круги показывают структуру. Площадь конечных кругов пропорциональна объёму; родительские круги включают зазоры между детьми.',
+          ],
+          [
+            'tree',
+            'Дерево',
+            charts.createTreeChart,
+            'Близко к дендрограмме: глубина узла задаёт его удаление от корня. Горизонтальный, вертикальный и радиальный виды — переключаемые варианты одной диаграммы.',
+          ],
+          [
+            'cluster',
+            'Дендрограмма',
+            charts.createClusterChart,
+            'Близка к дереву: все листья выравниваются по одному краю или внешней окружности, даже при разной глубине. Радиальный вид выбирается переключателем.',
+          ],
+        ];
+        for (const [kind, title, factory, description] of hierarchyExamples)
+          add(
+            kind,
+            title,
+            description,
+            factory,
+            {
+              height: 352,
+              colorMetric: false,
+              labels: true,
+              nodeList: false,
+              orientation: kind === 'icicle' ? 'vertical' : 'horizontal',
+            },
+            hierarchyData,
+            ({ select, toggle }) => {
+              if (kind === 'icicle')
+                select('Направление', 'orientation', [
+                  ['vertical', 'Уровни сверху вниз'],
+                  ['horizontal', 'Уровни слева направо'],
+                ]);
+              if (kind === 'tree' || kind === 'cluster')
+                select('Вид', 'orientation', [
+                  ['horizontal', 'Слева направо'],
+                  ['vertical', 'Сверху вниз'],
+                  ['radial', 'Радиальный'],
+                ]);
+              toggle('Цвет: загрузка, %', 'colorMetric');
+              toggle('Подписи', 'labels');
+              toggle('Список узлов', 'nodeList');
+            },
+          );
         const refresh = () => {
           info.querySelector('.data-value').textContent = sample().context;
           for (const entry of entries.values()) entry.refresh();
