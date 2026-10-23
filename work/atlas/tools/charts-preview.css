@@ -1,0 +1,16 @@
+.charts-preview-shell { height:100dvh; display:grid; grid-template-rows:auto minmax(0,1fr) auto }
+.charts-preview-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:0 8px; padding:0 8px; min-height:32px; background:#18242c; box-shadow:inset 0 -1px #4b5a60 }
+.charts-preview-toolbar>strong { margin-right:8px; color:#b9c9d0 }
+.charts-preview-toolbar>.field { min-width:200px; margin-left:auto }
+.charts-preview-toolbar .field-label { min-width:48px }
+.charts-preview-scroll { overflow:auto; min-height:0 }
+.charts-preview-desktop { position:relative; width:100%; min-height:100%; background-color:#15232b; background-image:linear-gradient(#5672830c 1px,transparent 1px),linear-gradient(90deg,#5672830c 1px,transparent 1px); background-size:32px 32px }
+.charts-preview-desktop .window-pane { display:flex; flex-direction:column; gap:16px }
+.charts-preview-desktop .window-pane[hidden] { display:none }
+.charts-preview-desktop .window-pane>.atlas-data-row { flex-shrink:0 }
+.charts-preview-desktop .form-actions { flex-shrink:0 }
+.charts-preview-desktop .field { flex-shrink:0 }
+.charts-preview-desktop .atlas-data-group { flex-shrink:0 }
+.charts-preview-desktop .atlas-chart { flex-shrink:0 }
+.charts-preview-desktop .atlas-table { flex-shrink:0 }
+.charts-preview-desktop .chart-context { color:#93a7b1 }

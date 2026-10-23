@@ -1,0 +1,40 @@
+/* Experimental charts share the application's 10 px / 16 px typography. */
+.atlas-chart { width:100%; min-width:0; margin:0; padding:0; display:grid; gap:0; line-height:var(--atlas-step) }
+.atlas-chart-plot { position:relative; min-width:0; overflow:visible }
+.atlas-chart-plot>svg { display:block; width:100%; height:100%; overflow:visible; font:inherit }
+.atlas-chart-axis { fill:#8fa5b0; font:inherit }
+.atlas-chart-grid { stroke:#364a55; stroke-width:1; stroke-dasharray:2 3 }
+.atlas-chart-baseline { stroke:#71858e; stroke-width:1 }
+.atlas-chart-line { stroke-linejoin:round; stroke-linecap:round }
+.atlas-chart-mark { cursor:crosshair; outline:none }
+.atlas-chart-mark:hover,.atlas-chart-mark:focus-visible { filter:brightness(1.25) }
+.atlas-chart-mark:focus-visible { outline:1px solid var(--focus) }
+.atlas-chart-point { stroke:#1b252c; stroke-width:1 }
+.atlas-chart-caption { color:var(--muted); min-height:var(--atlas-step); overflow-wrap:anywhere; margin-top:var(--atlas-step) }
+.atlas-chart-legend { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:16px; row-gap:0; min-width:0 }
+.atlas-chart-legend-row { display:flex; align-items:flex-start; gap:6px; margin:0; padding:0; background:none; box-shadow:none; min-width:0; min-height:var(--atlas-step); text-align:left }
+button.atlas-chart-legend-row:hover { background:#2c3d47 }
+.atlas-chart-legend-row>.atlas-data-row { flex:1; min-width:0 }
+.atlas-chart-legend-row[aria-pressed=false] { opacity:.4; text-decoration:line-through }
+.atlas-chart-swatch { width:8px; height:8px; margin-top:4px; flex:0 0 8px; box-shadow:inset 0 0 0 1px #ffffff20 }
+.atlas-chart--pie { grid-template-columns:minmax(80px,128px) minmax(0,1fr); column-gap:16px; align-items:start }
+.atlas-chart--pie>.atlas-chart-plot { aspect-ratio:1 }
+.atlas-chart--pie>.atlas-chart-legend { grid-template-columns:minmax(0,1fr); padding-top:var(--atlas-step) }
+.atlas-chart--pie>.atlas-chart-caption { grid-column:1/-1 }
+.atlas-chart-center { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; pointer-events:none }
+.atlas-chart-empty { position:absolute; inset:0; min-height:48px; display:flex; align-items:center; justify-content:center; color:var(--muted) }
+.atlas-chart--horizontal .atlas-chart-plot { min-height:16px }
+.atlas-chart--horizontal .atlas-chart-empty { position:relative }
+.atlas-chart-labels { display:grid; min-height:var(--atlas-step); color:#8fa5b0 }
+.atlas-chart-labels>span { grid-row:1; min-width:0; overflow-wrap:anywhere }
+.atlas-chart-bar-row { width:100%; display:flex; align-items:center; gap:8px; min-width:0; padding:0; background:none; box-shadow:none; min-height:var(--atlas-step); text-align:left }
+.atlas-chart-bar-row:hover { background:#2c3d47 }
+.atlas-chart-bar-name { flex:0 1 40%; min-width:0; overflow-wrap:anywhere }
+.atlas-chart-bar-track { display:block; position:relative; flex:1; min-width:16px; height:8px; background:#12212a }
+.atlas-chart-bar-track::after { content:''; position:absolute; top:-2px; bottom:-2px; width:1px; left:var(--chart-zero); background:#8fa3ac }
+.atlas-chart-bar-fill { position:absolute; top:0; bottom:0 }
+.atlas-chart-bar-value { flex:0 1 auto; min-width:3ch; text-align:right; overflow-wrap:anywhere }
+.atlas-chart--compact.atlas-chart--pie { grid-template-columns:minmax(0,1fr) }
+.atlas-chart--compact.atlas-chart--pie>.atlas-chart-plot { width:128px; justify-self:center }
+.atlas-chart--compact.atlas-chart--pie>.atlas-chart-legend { padding-top:0 }
+.atlas-chart--compact .atlas-chart-legend { grid-template-columns:minmax(0,1fr) }

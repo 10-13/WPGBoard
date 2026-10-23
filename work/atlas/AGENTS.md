@@ -69,6 +69,12 @@
 - Страница `.local/previews/ui-components-preview.html` собирается без игрового ядра
   через `tools/build-components-preview.py`: проверять на ней независимость и
   взаимодействие общих компонентов. Инструкция для библиотеки — packages/ui/README.md.
+- Экспериментальные диаграммы и таблица — `packages/ui/charts.js` / charts.css
+  и `table.js` / table.css, namespaces AtlasUI.charts и AtlasUI.tables.
+  Пример `.local/previews/charts-preview.html` собирает tools/build-charts-preview.py
+  и использует настоящий WindowManager с тестовыми данными. Компоненты независимы
+  от игры; пока не включены в фасад components и четыре релиза. Сохранять общие
+  10 px / 16 px, полный перенос подписей и освобождение ResizeObserver по scope.
 
 ## Утверждённый стиль интерфейса
 

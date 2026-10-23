@@ -1,0 +1,18 @@
+/* Native table layout preserves complete cell text and the common 16 px rhythm. */
+.atlas-table { min-width:0; width:100%; line-height:var(--atlas-step) }
+.atlas-table table { table-layout:fixed; border-collapse:collapse; width:100%; font:inherit; color:inherit }
+.atlas-table th,.atlas-table td { min-width:0; padding:0 4px; border:0; vertical-align:top; line-height:var(--atlas-step); overflow-wrap:anywhere; white-space:pre-wrap; text-align:left }
+.atlas-table th:first-child,.atlas-table td:first-child { padding-left:0 }
+.atlas-table th:last-child,.atlas-table td:last-child { padding-right:0 }
+.atlas-table th { font-weight:600; color:#c5ba9d }
+.atlas-table-heading { display:flex; align-items:flex-start; gap:4px; width:100%; padding:0; background:none; box-shadow:none; text-align:left; color:inherit; font-weight:inherit }
+.atlas-table-heading>span { min-width:0; overflow-wrap:anywhere }
+.atlas-table-heading::after { content:''; flex:1 0 4px; height:3px; margin-top:7px; border-top:1px solid #68716d; border-bottom:1px solid #68716d }
+.atlas-table-heading:hover { background:#30434b }
+.atlas-table .atlas-table-number { text-align:right; font-variant-numeric:tabular-nums }
+.atlas-table tbody tr:hover { background:#293c46 }
+.atlas-table tbody tr[tabindex] { cursor:pointer; outline:none }
+.atlas-table tbody tr:focus-visible { outline:1px solid var(--focus); outline-offset:-1px }
+.atlas-table tbody tr.is-selected { background:#344b55 }
+.atlas-table .atlas-table-empty { color:var(--muted); text-align:center; padding-top:16px; padding-bottom:16px }
+.atlas-table-caption { min-height:var(--atlas-step); margin-top:var(--atlas-step); color:var(--muted) }

@@ -64,3 +64,54 @@ AbortSignal снимает оба обработчика. Сохранение, 
 Списки сохраняют API createSelect(items,onChange,options) и setItems(items,{value}).
 Деревья и шкалы сохраняют прежние контракты. Все элементы используют общую
 типографику 10 px, моноширинный шрифт и вертикальный шаг 16 px.
+
+## Экспериментальные диаграммы и таблица
+
+`charts.js` / `AtlasUI.charts` предоставляет независимые компоненты
+`createPieChart`, `createBarChart`, `createLineChart`. `table.js` /
+`AtlasUI.tables` — многоколоночный `createTable`. Пока они подключены только
+в локальном примере, вне фасада components и релизных карт.
+
+```js
+const pie = AtlasUI.charts.createPieChart([
+  { id: 'a', label: 'Первый', value: 42, color: '#76b6ce' },
+  { id: 'b', label: 'Второй', value: 18, color: '#d5b16f' },
+], { label: 'Состав', unit: 'ед./ход', signal: scope.signal });
+pane.append(pie);
+pie.update(nextItems, { donut: true });
+
+const table = AtlasUI.tables.createTable([
+  { key: 'name', label: 'Область', width: 2 },
+  { key: 'value', label: 'Выпуск', type: 'number' },
+], [{ id: 'north', name: 'Северная область', value: 42 }], {
+  label: 'Сводка', signal: scope.signal, onSelect: row => inspect(row.id),
+});
+```
+
+Столбцы принимают те же записи, что круг; `orientation: 'horizontal'` меняет
+их на горизонтальные полосы. Линейный график принимает ряды
+`{id,label,color,values}` и `labels` в options. `null` в values означает разрыв,
+а не ноль. Отрицательные числа поддержаны в столбцах/линиях; доли круга
+неотрицательные. Все ряды графика имеют одинаковую длину.
+
+Общие options диаграмм: label, unit, height (96 px и выше, кратно 16),
+formatValue, onSelect(point,event), signal. У линий также grid/points,
+у круга donut. Результат — DOM-элемент с update(data,options) и dispose().
+ResizeObserver подстраивает геометрию под ширину, сохраняя размер текста.
+AbortSignal/dispose освобождает наблюдатель. Легенда круга и линий скрывает
+ряды; проценты круга пересчитываются по видимым долям. Значения доступны по
+наведению, фокусу или нажатию. Подписи переносятся, круг поддерживает пустой
+набор и одну долю. Исходные данные копируются, не изменяются компонентом.
+
+Таблица принимает столбцы `{key,label,type,width,format}` и строки-объекты.
+width — относительная доля ширины. Числовой тип выравнивает значения вправо;
+format(value,row) необязателен. Заголовки сортируют по исходным числам/строкам,
+null остаётся в конце, равные значения сохраняют порядок. onSelect(row,index,
+event) включает выбор строк. update(rows,{columns}) меняет данные/столбцы.
+Подписи и значения выводятся текстом, полностью переносятся с шагом 16 px.
+Исходный массив не сортируется на месте.
+
+Локальный просмотр: `python3 work/atlas/tools/build-charts-preview.py`.
+Страница `.local/previews/charts-preview.html` использует настоящий WindowManager:
+перенос/ресайз окон, объединение вкладок, варианты диаграмм, поиск/сортировку
+таблицы и тестовые данные. Компоненты не создают игровой singleton или историю.

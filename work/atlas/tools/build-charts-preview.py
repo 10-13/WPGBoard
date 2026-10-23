@@ -1,0 +1,27 @@
+"""Build a local chart experiment in the real window manager, with isolated sample data."""
+from pathlib import Path
+import sys
+sys.dont_write_bytecode = True
+from release_layout import LOCAL, write_changed
+
+ROOT = Path(__file__).resolve().parents[1]
+files = ['packages/core/metadata.js', 'packages/core/overlays.js', 'packages/core/province-topology.js',
+         'packages/core/index.js', 'packages/ui/controls.js',
+         'packages/ui/color-scale-model.js', 'packages/ui/color-scale.js',
+         'packages/ui/data-view.js', 'packages/ui/components.js',
+         'packages/ui/windows.js', 'packages/ui/charts.js', 'packages/ui/table.js', 'tools/charts-preview.js']
+code = '\n;\n'.join((ROOT / f).read_text() for f in files)
+styles = '\n'.join((ROOT / f).read_text() for f in
+                   ['style.css', 'packages/ui/data-view.css', 'packages/ui/color-scale.css',
+                    'packages/ui/charts.css', 'packages/ui/table.css', 'tools/charts-preview.css'])
+html = f'''<!doctype html><html lang="ru"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>АТЛАС — диаграммы и таблица</title><style>{styles}</style>
+<div class="charts-preview-shell">
+<header id="chart-toolbar" class="charts-preview-toolbar"></header>
+<main class="charts-preview-scroll"><div id="chart-desktop" class="charts-preview-desktop"></div></main>
+<footer class="shell-footer"><span id="chart-status" class="status-text">Тестовые данные · 10 px / 16 px · Окна можно двигать, объединять и менять их размер</span></footer>
+</div><script>{code}</script></html>'''
+target = LOCAL / 'previews/charts-preview.html'
+write_changed(target, html)
+print(f'Built {target}: {len(html.encode()):,} bytes')
