@@ -253,8 +253,8 @@
       }
       this.setHover(null);
     }
-    regionEvent(e) {
-      const p = this.world(this.local(e)),
+    regionEvent(e, position = this.local(e)) {
+      const p = this.world(position),
         region = this.state.regionIndex.at(p.x, p.y);
       return {
         id: region?.id || null,
@@ -274,7 +274,9 @@
       this.input.emit('pointer:move', { ...world, clientX: e.clientX, clientY: e.clientY });
       if (this.pointers.has(e.pointerId)) {
         if (this.gesture?.stroke && e.pointerType !== 'touch' && e.buttons === 0) {
-          this.cancel();
+          // A release may be reported by a move before pointerup (or without it).
+          // Finish at the last held position; the new hover point is not paint.
+          this.up(e, this.pointers.get(e.pointerId));
           return;
         }
         this.pointers.set(e.pointerId, p);
@@ -316,10 +318,10 @@
         clientY: e.clientY,
       });
     }
-    up(e) {
+    up(e, position) {
       if (!this.pointers.has(e.pointerId)) return;
       const gesture = this.gesture;
-      if (gesture?.stroke) this.regionClicks?.endStroke(this.regionEvent(e));
+      if (gesture?.stroke) this.regionClicks?.endStroke(this.regionEvent(e, position));
       this.pointers.delete(e.pointerId);
       if (this.element.hasPointerCapture(e.pointerId))
         this.element.releasePointerCapture(e.pointerId);
