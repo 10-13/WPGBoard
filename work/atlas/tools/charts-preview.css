@@ -14,3 +14,7 @@
 .charts-preview-desktop .atlas-chart { flex-shrink:0 }
 .charts-preview-desktop .atlas-table { flex-shrink:0 }
 .charts-preview-desktop .chart-context { color:#93a7b1 }
+.chart-preview-tree { min-width:0; width:100% }
+.chart-preview-tree .data-children { min-width:0 }
+.chart-preview-tree .atlas-chart,.chart-preview-tree .atlas-table { margin:0 }
+.tree-preview-pane>.form-actions { position:sticky; top:0; z-index:1; background:#1b252c }

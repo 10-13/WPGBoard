@@ -25,3 +25,8 @@ html = f'''<!doctype html><html lang="ru"><meta charset="utf-8">
 target = LOCAL / 'previews/charts-preview.html'
 write_changed(target, html)
 print(f'Built {target}: {len(html.encode()):,} bytes')
+tree_html = html.replace('<html lang="ru">', '<html lang="ru" data-preview="tree">').replace(
+    '<title>АТЛАС — диаграммы и таблица</title>', '<title>АТЛАС — дерево с таблицами и диаграммами</title>')
+tree_target = LOCAL / 'previews/charts-tree-preview.html'
+write_changed(tree_target, tree_html)
+print(f'Built {tree_target}: {len(tree_html.encode()):,} bytes')

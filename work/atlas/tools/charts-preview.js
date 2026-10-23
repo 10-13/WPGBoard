@@ -159,6 +159,164 @@
       })),
     };
   }
+  function openTree() {
+    for (const win of manager.windows) manager.closeWindow(win.id);
+    const height = Math.max(320, Math.min(736, desktop.parentElement.clientHeight - 32));
+    desktop.style.height = desktop.parentElement.clientHeight + 'px';
+    return manager.open({
+      id: 'chart-tree',
+      title: 'Дерево / таблицы и диаграммы',
+      x: 16,
+      y: 16,
+      width: Math.min(720, desktop.clientWidth - 32),
+      height,
+      render(pane, scope) {
+        pane.classList.add('tree-preview-pane');
+        const tree = el('div', 'atlas-data-tree chart-preview-tree'),
+          groups = new Map();
+        const branch = (parent, title, id, section) => {
+          const group = createDataGroup(title, { id, open: true });
+          groups.set(id, { ...group, section });
+          parent.append(group.element);
+          return group.body;
+        };
+        const root = branch(tree, 'Отчёт выбранной области', 'tree-report', 'root');
+        const context = createDataRow('Область', ''),
+          count = createDataRow('Строк в выборке', '');
+        root.append(context, count);
+        const tables = branch(root, 'Таблицы', 'tree-tables', 'tables');
+        const regions = branch(tables, 'Сводка по областям', 'tree-regions', 'tables');
+        const composition = branch(
+          tables,
+          'Структура выбранного набора',
+          'tree-composition',
+          'tables',
+        );
+        const diagrams = branch(root, 'Диаграммы', 'tree-diagrams', 'diagrams');
+        const pieBody = branch(diagrams, 'Доли / круговая диаграмма', 'tree-pie', 'diagrams');
+        const barBody = branch(
+          diagrams,
+          'Сравнение / столбчатая диаграмма',
+          'tree-bar',
+          'diagrams',
+        );
+        const lineBody = branch(diagrams, 'Изменение / линейный график', 'tree-line', 'diagrams');
+        const extra = branch(root, 'Дополнительно', 'tree-extra', 'extra');
+        const endpoints = branch(extra, 'Начало и конец периода', 'tree-endpoints', 'extra');
+        const selection = (row) => {
+          status.textContent = 'Строка дерева: ' + row.name;
+        };
+        const initial = tableData(),
+          data = sample();
+        const mainTable = createTable(initial.columns, initial.rows, {
+          label: 'Таблица областей в дереве',
+          signal: scope.signal,
+          onSelect: selection,
+        });
+        const shares = createTable(
+          [
+            { key: 'name', label: 'Категория', width: 2 },
+            { key: 'value', label: 'Количество', type: 'number' },
+            {
+              key: 'share',
+              label: 'Доля',
+              type: 'number',
+              format: (value) =>
+                new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 1 }).format(value) + '%',
+            },
+          ],
+          [],
+          { label: 'Таблица состава в дереве', signal: scope.signal, onSelect: selection },
+        );
+        const period = createTable(
+          [
+            { key: 'name', label: 'Ряд', width: 2 },
+            { key: 'start', label: 'Начало', type: 'number' },
+            { key: 'end', label: 'Конец', type: 'number' },
+            { key: 'change', label: 'Изменение', type: 'number' },
+          ],
+          [],
+          { label: 'Таблица периода в дереве', signal: scope.signal, onSelect: selection },
+        );
+        const pie = createPieChart(data.pie, {
+          label: 'Круговая диаграмма в дереве',
+          signal: scope.signal,
+          onSelect: selected,
+        });
+        const bar = createBarChart(data.bars, {
+          label: 'Столбчатая диаграмма в дереве',
+          height: 96,
+          signal: scope.signal,
+          onSelect: selected,
+        });
+        const line = createLineChart(data.lines, {
+          label: 'Линейный график в дереве',
+          labels: data.labels,
+          height: 112,
+          signal: scope.signal,
+          onSelect: selected,
+        });
+        regions.append(mainTable);
+        composition.append(shares);
+        endpoints.append(period);
+        pieBody.append(pie);
+        barBody.append(bar);
+        lineBody.append(line);
+        const tools = el('div', 'form-actions');
+        const expand = (section) => {
+          for (const [id, group] of groups)
+            group.element.open =
+              id === 'tree-report' || section === 'all' || group.section === section;
+        };
+        tools.append(
+          button('Развернуть всё', () => expand('all')),
+          button('Свернуть', () => expand('none')),
+          button('Таблицы', () => {
+            expand('tables');
+            for (const group of groups.values())
+              if (group.section === 'extra') group.element.open = true;
+          }),
+          button('Диаграммы', () => expand('diagrams')),
+        );
+        const refresh = () => {
+          const next = sample(),
+            tabular = tableData();
+          context.querySelector('.data-value').textContent = next.context;
+          count.querySelector('.data-value').textContent = tabular.rows.length;
+          mainTable.update(tabular.rows, { columns: tabular.columns });
+          const total = next.pie.reduce((sum, item) => sum + item.value, 0);
+          shares.update(
+            next.pie.map((item) => ({
+              id: item.id,
+              name: item.label,
+              value: item.value,
+              share: total ? (item.value / total) * 100 : 0,
+            })),
+          );
+          period.update(
+            next.lines.map((item) => {
+              const start = item.values.find((value) => value !== null) ?? null;
+              const end = item.values.findLast((value) => value !== null) ?? null;
+              return {
+                id: item.id,
+                name: item.label,
+                start,
+                end,
+                change: start === null || end === null ? null : end - start,
+              };
+            }),
+          );
+          pie.update(next.pie, { unit: next.pieUnit });
+          bar.update(next.bars, { unit: next.unit });
+          line.update(next.lines, { unit: next.unit, labels: next.labels });
+        };
+        views.set('tree', refresh);
+        scope.defer(() => views.delete('tree'));
+        pane.append(tools, tree);
+        refresh();
+      },
+    });
+  }
   function open(kind, layout) {
     return manager.open({
       id: 'chart-' + kind,
@@ -328,8 +486,13 @@
   }
   toolbar.append(
     el('strong', '', 'Диаграммы и таблица'),
+    button('Дерево', openTree),
     button('Четыре окна', () => arrange()),
-    button('Окна 220 px', () => arrange(true)),
+    button('Окна 220 px', () => {
+      if (manager.windows.some((win) => win.id === 'chart-tree'))
+        manager.resize('chart-tree', 220, Math.min(736, desktop.parentElement.clientHeight - 32));
+      else arrange(true);
+    }),
     button('Объединить вкладки', () => {
       if (manager.windows.length < 4) arrange();
       manager.merge('chart-bar', 'chart-pie');
@@ -357,5 +520,6 @@
       ),
     ),
   );
-  arrange();
+  if (document.documentElement.dataset.preview === 'tree') openTree();
+  else arrange();
 })();
