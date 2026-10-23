@@ -18,3 +18,14 @@
 .chart-preview-tree .data-children { min-width:0 }
 .chart-preview-tree .atlas-chart,.chart-preview-tree .atlas-table { margin:0 }
 .tree-preview-pane>.form-actions { position:sticky; top:0; z-index:1; background:#1b252c }
+.chart-gallery-navigation { display:flex; flex-wrap:wrap; gap:0 8px; position:sticky; top:0; z-index:2; background:#1b252c; flex-shrink:0 }
+.chart-gallery-navigation button[aria-pressed=true] { color:var(--accent); box-shadow:inset 0 -1px var(--accent) }
+.chart-gallery-tree { width:100%; min-width:0 }
+.chart-gallery-tree .atlas-data-group[hidden] { display:none }
+.chart-gallery-tree .data-children { min-width:0 }
+.chart-gallery-tree .data-children>.atlas-chart { margin-top:16px; margin-bottom:16px }
+.chart-gallery-description { overflow-wrap:anywhere }
+.chart-gallery-controls { display:flex; align-items:flex-start; flex-wrap:wrap; gap:0 16px; margin-top:16px }
+.chart-gallery-controls .field { flex:1 1 220px; min-width:0; max-width:352px }
+.chart-gallery-controls select { min-width:0 }
+.chart-gallery-controls .atlas-switch { min-width:0; overflow-wrap:anywhere }

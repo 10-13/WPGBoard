@@ -38,3 +38,29 @@ button.atlas-chart-legend-row:hover { background:#2c3d47 }
 .atlas-chart--compact.atlas-chart--pie>.atlas-chart-plot { width:128px; justify-self:center }
 .atlas-chart--compact.atlas-chart--pie>.atlas-chart-legend { padding-top:0 }
 .atlas-chart--compact .atlas-chart-legend { grid-template-columns:minmax(0,1fr) }
+.atlas-chart-category-key { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:16px; color:var(--muted) }
+.atlas-chart-category-key>span { min-width:0; overflow-wrap:anywhere }
+.atlas-chart--compact .atlas-chart-category-key { grid-template-columns:minmax(0,1fr) }
+.atlas-chart-size-key { grid-column:1/-1; display:flex; gap:16px; align-items:flex-end; color:var(--muted) }
+.atlas-chart-size-key>span { display:flex; align-items:center; gap:4px; overflow-wrap:anywhere; min-width:0 }
+.atlas-chart-size-key svg { width:32px; height:32px; flex-shrink:0 }
+.atlas-chart-interval-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(32px,2fr) minmax(0,1fr); gap:8px; min-height:16px; align-items:center }
+.atlas-chart-interval-row>span { min-width:0; overflow-wrap:anywhere }
+.atlas-chart-interval-row>svg { width:100%; height:16px; display:block; overflow:visible }
+.atlas-chart-range-value { text-align:right }
+.atlas-chart-range-axis { display:flex; justify-content:space-between; margin-left:27%; margin-right:27%; color:var(--muted) }
+.atlas-chart-matrix { width:100%; table-layout:fixed; border-collapse:collapse; font:inherit }
+.atlas-chart-matrix th,.atlas-chart-matrix td { padding:0; min-width:0; vertical-align:middle; overflow-wrap:anywhere; font:inherit; line-height:16px }
+.atlas-chart-matrix th { text-align:center; color:var(--muted) }
+.atlas-chart-matrix th:first-child { text-align:left; padding-right:8px }
+.atlas-chart-cell,.atlas-chart-cell-missing { display:flex; width:100%; min-width:0; min-height:32px; padding:0 2px; align-items:center; justify-content:center; overflow-wrap:anywhere; box-shadow:inset 0 0 0 1px #15232b; line-height:16px }
+.atlas-chart-cell-missing { background:repeating-linear-gradient(135deg,#2c3e48 0 1px,transparent 1px 4px); color:var(--muted) }
+.atlas-chart--heatmap>.atlas-chart-legend,.atlas-chart--treemap>.atlas-chart-legend { display:block; margin-top:16px }
+.atlas-treemap-nav { display:flex; flex-wrap:wrap; gap:0 8px; min-height:16px; margin-bottom:16px }
+.atlas-treemap-nav button { min-width:0; overflow-wrap:anywhere }
+.atlas-treemap-frame { position:relative; min-width:0; width:100%; background:#101b23 }
+.atlas-treemap-tile { position:absolute; min-width:0; min-height:0; box-shadow:inset 0 0 0 1px #101b23 }
+.atlas-treemap-target { display:flex; align-items:center; justify-content:center; width:100%; height:100%; min-height:0; min-width:0; padding:0; box-shadow:none; background:#101b2340; color:#f3f1e9; overflow-wrap:anywhere; line-height:16px; text-align:center }
+.atlas-treemap-target.atlas-treemap-heading { height:16px; justify-content:flex-start; background:#101b238c; text-indent:4px }
+.atlas-treemap-children { position:absolute; top:18px; left:2px; right:2px; bottom:2px }
+.atlas-treemap-leaf { display:flex; width:100%; height:100%; align-items:center; justify-content:center; padding:8px; overflow-wrap:anywhere; color:#101b23 }

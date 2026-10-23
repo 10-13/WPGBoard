@@ -484,12 +484,20 @@
     desktop.style.height = Math.max(desktop.parentElement.clientHeight, y + rowHeight + gap) + 'px';
     ['pie', 'bar', 'line', 'table'].forEach((kind, i) => open(kind, positions[i]));
   }
+  const openGallery = () => AtlasUI.openChartGallery({ manager, desktop, views, sample, selected });
   toolbar.append(
     el('strong', '', 'Диаграммы и таблица'),
+    button('8 видов', openGallery),
     button('Дерево', openTree),
     button('Четыре окна', () => arrange()),
     button('Окна 220 px', () => {
-      if (manager.windows.some((win) => win.id === 'chart-tree'))
+      if (manager.windows.some((win) => win.id === 'chart-gallery'))
+        manager.resize(
+          'chart-gallery',
+          220,
+          Math.min(736, desktop.parentElement.clientHeight - 32),
+        );
+      else if (manager.windows.some((win) => win.id === 'chart-tree'))
         manager.resize('chart-tree', 220, Math.min(736, desktop.parentElement.clientHeight - 32));
       else arrange(true);
     }),
@@ -520,6 +528,7 @@
       ),
     ),
   );
-  if (document.documentElement.dataset.preview === 'tree') openTree();
+  if (document.documentElement.dataset.preview === 'gallery') openGallery();
+  else if (document.documentElement.dataset.preview === 'tree') openTree();
   else arrange();
 })();

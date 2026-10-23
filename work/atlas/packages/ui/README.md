@@ -98,6 +98,35 @@ const table = AtlasUI.tables.createTable([
 formatValue, onSelect(point,event), signal. У линий также grid/points,
 у круга donut. Результат — DOM-элемент с update(data,options) и dispose().
 ResizeObserver подстраивает геометрию под ширину, сохраняя размер текста.
+
+Каталог восьми типов: `.local/previews/charts-gallery-preview.html`, та же сборка
+`python3 -B tools/build-charts-preview.py`. Варианты пока на рассмотрении,
+в релизы и фасад components не включены. В браузере перед charts.js подключаются
+chart-model.js и chart-extra.js. Численные алгоритмы отделены от DOM.
+
+| Компонент | Данные и настройки |
+| --- | --- |
+| createBarChart | Прежние `{id,label,value,color}` либо ряды `{id,label,values,color}` и `labels`. Для рядов `mode`: ordinary (первый видимый ряд), grouped, stacked, percent; `orientation`: vertical/horizontal. |
+| createLineChart | Ряды и labels; `step: true` — ступени в момент следующей точки, `fill: true` — заливка до нуля. Пропуски разрывают и линию, и заливку. |
+| createPieChart | Неотрицательные value; `donut: true` — кольцо. |
+| createHistogram | Массив чисел; `bins` — целое 1…100. Частоты по равным интервалам [min; max), последний включает max. |
+| createScatterChart | `{id,label,x,y,size?,color?}`; `bubble: true` — площадь пропорциональна size, ноль не рисует пузырёк. Подписи xLabel/yLabel/sizeLabel. |
+| createIntervalChart | `{id,label,min,max,center?,color?}`; `center: false` скрывает центральные отметки, все строки используют одну шкалу. |
+| createHeatmap | `{rows:[подписи],columns:[подписи],values:[[число или null]]}`; обязательный `scale: ColorScale`, `values: false` скрывает числа. null отмечен штриховкой. |
+| createTreeMap | Корень `{id,label,children?}`; листья содержат неотрицательный value, ветви суммируют детей. color наследуется; colorValue + необязательная scale кодируют дополнительный показатель. |
+
+Накопление разделяет положительные и отрицательные значения. Процентный вариант
+допускает только неотрицательные, пересчитывает доли после скрытия ряда; нулевая
+сумма остаётся пустой. Матрица и её легенда используют переданный экземпляр шкалы.
+TreeMap не подписывает тесные сектора; aria-label, фокус и подсказка сохраняют
+полное название. Нажатие раскрывает сектор как корень, путь возвращает вверх.
+Навигация сохраняется при resize и обновлении существующей ветки.
+
+Все восемь типов возвращают один контракт update/dispose и принимают AbortSignal;
+закрытие окна освобождает их ResizeObserver. Невалидное обновление не заменяет
+предыдущую картинку. onSelect получает исходные значения: у точек x/y/size,
+интервалов min/max/center, матрицы row/column, столбцов category/share,
+гистограммы min/max/count, TreeMap path. Компоненты не меняют партию.
 AbortSignal/dispose освобождает наблюдатель. Легенда круга и линий скрывает
 ряды; проценты круга пересчитываются по видимым долям. Значения доступны по
 наведению, фокусу или нажатию. Подписи переносятся, круг поддерживает пустой
