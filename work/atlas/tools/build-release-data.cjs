@@ -5,6 +5,7 @@ const path = require('node:path');
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const { History } = require('../packages/core/index.js');
+const { applyTerraExtraction } = require('./build-terra-extraction.cjs');
 const {
   applyGeographySeed,
   mapSignature,
@@ -45,7 +46,7 @@ const bases = {
 };
 const summaries = [];
 for (const release of releases) {
-  const project = structuredClone(bases[release.id]);
+  let project = structuredClone(bases[release.id]);
   project.saveKey = 'atlas-release-' + release.id + '-v1';
   const history =
     release.id === 'empty'
@@ -83,11 +84,14 @@ for (const release of releases) {
     assert.deepEqual(history.snapshot(), after);
   }
   project.history = history.toJSON();
+  if (release.id === 'terra-mirabilis') project = applyTerraExtraction(project);
   project.updatedAt = Date.now();
-  assert.deepEqual(History.fromJSON(project.history).snapshot(), history.snapshot());
+  const finalHistory = History.fromJSON(project.history);
+  if (release.id !== 'terra-mirabilis')
+    assert.deepEqual(finalHistory.snapshot(), history.snapshot());
   const file = path.join(local, 'release-data', release.file.replace(/\.html$/, '.json'));
   fs.writeFileSync(file, JSON.stringify(project));
-  const meta = history.snapshot().meta;
+  const meta = finalHistory.snapshot().meta;
   const entries = Object.values(meta.tiles || {}).flatMap((tile) => Object.values(tile.entries));
   summaries.push({
     release: release.id,

@@ -47,14 +47,22 @@ test('four authored releases have independent saves and the intended datasets', 
       assert.equal(productions.length, 14756);
       assert.equal(points.length, 264);
     } else {
-      assert.equal(productions.length, 0);
-      assert.equal(points.length, 69);
-      assert.deepEqual(
-        meta.resources.catalog,
-        read('assets/terra-mirabilis-resources.json').catalog,
-      );
-      for (const point of read('assets/resource-import-1936.json').points) {
-        assert(meta.tiles[point.provinceId].entries[point.id]);
+      assert.equal(productions.length, 162);
+      assert.equal(points.length, 0);
+      const placement = read('assets/terra-mirabilis-extraction.json');
+      const catalog = read('assets/terra-mirabilis-resources.json').catalog;
+      for (const resource of Object.values(catalog.resources)) resource.unit = placement.unit;
+      assert.deepEqual(meta.resources.catalog, catalog);
+      assert.equal(meta.economy.sourceSha256, placement.source.sha256);
+      for (const nation of placement.nations) {
+        for (const id of nation.provinceIds) {
+          const entry = meta.tiles[id].entries['terra-extraction-' + nation.resourceId + '-' + id];
+          assert.equal(entry.stats['resource.name'], catalog.resources[nation.resourceId].name);
+          assert.equal(entry.stats['resource.activity'], 'extraction');
+          assert.equal(entry.stats['resource.baseOutput'], 1);
+          assert.equal(entry.stats['resource.unit'], 'жила(ы)');
+          assert.deepEqual(entry.stats['resource.inputs'], []);
+        }
       }
     }
   }
