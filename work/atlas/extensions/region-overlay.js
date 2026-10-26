@@ -16,6 +16,7 @@
         id: 'boundaries',
         title: 'Регионы',
         order: 30,
+        visible: false,
         space: 'screen',
         exportDraw: (context) => this.exportTo(context),
       });
