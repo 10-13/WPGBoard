@@ -11,7 +11,9 @@ const placement = read('assets/terra-mirabilis-extraction.json');
 function originalProject() {
   const project = read('releases/atlas-terra-mirabilis.json');
   const history = History.fromJSON(project.history);
-  if (history.snapshot().meta.economy.template === 'terra-mirabilis-extraction-v1') history.undo();
+  while (history.snapshot().meta.economy.template === 'terra-mirabilis-extraction-v1') {
+    assert(history.undo(), 'Expected the original resource-point state in history');
+  }
   project.history = history.toJSON();
   return project;
 }
@@ -26,6 +28,9 @@ test('the captured resource nations produce exactly one vein per assigned provin
   const transformed = applyTerraExtraction(original);
   const history = History.fromJSON(transformed.history);
   const after = history.snapshot();
+  for (const nation of placement.nations) {
+    assert.equal(after.meta.resources.catalog.resources[nation.resourceId].color, nation.color);
+  }
   assert.equal(history.commits.length, History.fromJSON(original.history).commits.length + 1);
   assert.equal(
     entries(before.meta).filter(({ entry }) => entry.kind === 'resource-point').length,

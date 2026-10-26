@@ -31,6 +31,8 @@ function applyTerraExtraction(project, source = placement) {
   const seen = new Set();
   for (const nation of source.nations) {
     assert(catalog.resources[nation.resourceId], 'Unknown resource: ' + nation.resourceId);
+    assert(/^#[0-9a-f]{6}$/i.test(nation.color), 'Invalid source color: ' + nation.name);
+    catalog.resources[nation.resourceId].color = nation.color;
     for (const id of nation.provinceIds) {
       assert(Number.isInteger(id) && provinces.has(id), 'Unknown province: ' + id);
       assert(!seen.has(id), 'Duplicate province: ' + id);
@@ -89,7 +91,12 @@ function applyTerraExtraction(project, source = placement) {
           revision: before.meta.economy.resourceSpecification.revision,
           sha256: before.meta.economy.resourceSpecification.sha256,
         },
-        sourceNations: source.nations.map(({ id, name, resourceId }) => ({ id, name, resourceId })),
+        sourceNations: source.nations.map(({ id, name, resourceId, color }) => ({
+          id,
+          name,
+          resourceId,
+          color,
+        })),
         notes: [
           'Ресурсные точки удалены. Каждая отмеченная провинция содержит одно добывающее производство с выпуском 1 жила(ы), без расходов и бонусов.',
           ...source.source.notes,
@@ -98,7 +105,10 @@ function applyTerraExtraction(project, source = placement) {
     },
     {
       source: 'terra-mirabilis-import',
-      label: 'TerraMirabilis: заменить ресурсные точки добычей по расстановке наций',
+      label:
+        before.meta.economy.template === 'terra-mirabilis-extraction-v1'
+          ? 'TerraMirabilis: сохранить цвета ресурсов из исходной карты'
+          : 'TerraMirabilis: заменить ресурсные точки добычей по расстановке наций',
       actionType: 'core.patch',
       payload: {
         template: 'terra-mirabilis-extraction-v1',

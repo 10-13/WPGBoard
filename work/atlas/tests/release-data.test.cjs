@@ -52,6 +52,8 @@ test('four authored releases have independent saves and the intended datasets', 
       const placement = read('assets/terra-mirabilis-extraction.json');
       const catalog = read('assets/terra-mirabilis-resources.json').catalog;
       for (const resource of Object.values(catalog.resources)) resource.unit = placement.unit;
+      for (const nation of placement.nations)
+        catalog.resources[nation.resourceId].color = nation.color;
       assert.deepEqual(meta.resources.catalog, catalog);
       assert.equal(meta.economy.sourceSha256, placement.source.sha256);
       for (const nation of placement.nations) {
